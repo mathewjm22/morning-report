@@ -9,6 +9,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 // -----------------------------------------------------------------
 // Main entry
 // -----------------------------------------------------------------
+
 export async function extractPdf(file, onProgress = () => {}) {
   const arrayBuffer = await file.arrayBuffer();
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
@@ -17,23 +18,24 @@ export async function extractPdf(file, onProgress = () => {}) {
 
   onProgress({ stage: 'text', pageIndex: 0, numPages });
 
-  // ---- Pass 1: extract text page-by-page in reading order ----
+  // Pass 1: text
   const pageTexts = [];
-  const pageCaptions = []; // per-page list of { text, y }
+  const pageCaptions = [];
+  const pageTableCaptions = []; // NEW: table captions with their y-coordinates
   for (let p = 1; p <= numPages; p++) {
     const page = await pdf.getPage(p);
-    const { text, captions } = await extractPageText(page);
+    const { text, captions, tableCaptions } = await extractPageText(page);
     pageTexts.push(text);
     pageCaptions.push(captions);
+    pageTableCaptions.push(tableCaptions);
     await page.cleanup();
     onProgress({ stage: 'text', pageIndex: p, numPages });
   }
-
   const fullText = pageTexts.join('\n\n');
 
-  // ---- Pass 2: extract images per page, group by caption ----
+  // Pass 2: figure images (unchanged)
   onProgress({ stage: 'images', pageIndex: 0, numPages });
-  const figures = []; // [{ caption, pageNum, images: [{ url, label }] }]
+  const figures = [];
   for (let p = 1; p <= numPages; p++) {
     const page = await pdf.getPage(p);
     const pageImages = await extractPageImages(page);
@@ -46,18 +48,32 @@ export async function extractPdf(file, onProgress = () => {}) {
     onProgress({ stage: 'images', pageIndex: p, numPages });
   }
 
+  // Pass 3: tables — render page regions with "Table N." captions
+  onProgress({ stage: 'tables', pageIndex: 0, numPages });
+  const tables = [];
+  for (let p = 1; p <= numPages; p++) {
+    if (pageTableCaptions[p - 1].length === 0) continue;
+    const page = await pdf.getPage(p);
+    const pageTables = await extractPageTables(page, pageTableCaptions[p - 1]);
+    tables.push(...pageTables.map(t => ({ ...t, pageNum: p })));
+    await page.cleanup();
+    onProgress({ stage: 'tables', pageIndex: p, numPages });
+  }
+
   onProgress({ stage: 'done', numPages });
 
-  return { fullText, figures, numPages };
+  return { fullText, figures, tables, numPages };
 }
 
-// -----------------------------------------------------------------
-// Text extraction with column handling + glyph-spacing repair
-// -----------------------------------------------------------------
+// ----- MODIFY extractPageText() -----
+// It currently returns { text, captions }. Add tableCaptions detection.
+// The relevant new block goes inside the function; here's the full replacement:
+
 async function extractPageText(page) {
   const content = await page.getTextContent();
   const viewport = page.getViewport({ scale: 1 });
   const pageWidth = viewport.width;
+  const pageHeight = viewport.height;
 
   const items = content.items
     .filter(i => i.str && i.str.trim())
@@ -69,12 +85,8 @@ async function extractPageText(page) {
       height: i.height,
     }));
 
-  // Detect column boundaries by looking at x-position histogram.
-  // NEJM often has: narrow sidebar + wide body, OR two roughly equal columns,
-  // OR single column (title pages, figure pages).
   const columnBounds = detectColumns(items, pageWidth);
 
-  // Assign each item to a column, then sort within each column by y then x
   const columnBuckets = columnBounds.map(() => []);
   for (const item of items) {
     const colIdx = columnBounds.findIndex(b => item.x + item.width / 2 >= b.start && item.x + item.width / 2 < b.end);
@@ -88,14 +100,12 @@ async function extractPageText(page) {
     sorted.push(...bucket);
   }
 
-  // Reassemble into lines using y-proximity within a column
   const lines = [];
   let currentLine = [];
   let lastY = null;
   let lastCol = null;
   const lineThreshold = 4;
   for (const item of sorted) {
-    // Determine which column this item belongs to (for line-break logic)
     const col = columnBounds.findIndex(b => item.x + item.width / 2 >= b.start && item.x + item.width / 2 < b.end);
     if (lastY === null || (col === lastCol && Math.abs(item.y - lastY) < lineThreshold)) {
       currentLine.push(item);
@@ -108,13 +118,11 @@ async function extractPageText(page) {
   }
   if (currentLine.length) lines.push(currentLine);
 
-  // Build line texts. NO glyph-spacing repair here — let the Worker handle
-  // fuzzy matching against ornamental headers using space-insensitive regex.
   const lineTexts = lines.map(line =>
     line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
   );
 
-  // Detect figure captions
+  // Figure captions (unchanged)
   const captions = [];
   lineTexts.forEach((text, idx) => {
     const match = text.match(/^(Figure\s+\d+[.:])/i);
@@ -126,7 +134,109 @@ async function extractPageText(page) {
     }
   });
 
-  return { text: lineTexts.join('\n'), captions };
+  // NEW: Table captions
+  const tableCaptions = [];
+  lineTexts.forEach((text, idx) => {
+    const match = text.match(/^Table\s+(\d+)[.:](.*)$/i);
+    if (match) {
+      // Grab caption text (this line + maybe the next short line for the title)
+      const nextLine = lineTexts[idx + 1] || '';
+      const captionText = (text + (nextLine.length < 80 ? ' ' + nextLine : '')).slice(0, 200);
+      const y = lines[idx][0].y;
+      // Also find the x — we need the leftmost x of this line for cropping
+      const x = Math.min(...lines[idx].map(i => i.x));
+      tableCaptions.push({
+        number: match[1],
+        text: captionText,
+        y,
+        x,
+        pageHeight,
+        pageWidth,
+      });
+    }
+  });
+
+  return { text: lineTexts.join('\n'), captions, tableCaptions };
+}
+
+// ============================================================
+// Table extraction: render each table caption's page region to a canvas
+// ============================================================
+async function extractPageTables(page, tableCaptions) {
+  // Render the whole page at 2x resolution for readability, then crop
+  const scale = 2;
+  const viewport = page.getViewport({ scale });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  const ctx = canvas.getContext('2d');
+
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  // For each table caption, crop from the caption's y down to either:
+  //   - the y of the next table caption on the same page, OR
+  //   - the bottom of the page, OR
+  //   - a heuristic: stop when we hit a large blank stripe (>40px of no text)
+  //
+  // We use the caption Y as the TOP of the crop (caption sits above the table),
+  // and estimate table height by finding text density below it.
+  const tables = [];
+  const textContent = await page.getTextContent();
+  const itemsByY = textContent.items
+    .filter(i => i.str && i.str.trim())
+    .map(i => ({
+      y: viewport.height / scale - i.transform[5], // in scale=1 units
+      x: i.transform[4],
+      text: i.str,
+    }))
+    .sort((a, b) => a.y - b.y);
+
+  for (let i = 0; i < tableCaptions.length; i++) {
+    const cap = tableCaptions[i];
+    const nextCapY = i + 1 < tableCaptions.length ? tableCaptions[i + 1].y : cap.pageHeight;
+
+    // Find bottom of this table: scan downward from caption.y and find the last
+    // y where there's still text before hitting a >30px gap OR hitting nextCapY
+    const startY = cap.y - 8; // include the caption itself
+    let lastTextY = cap.y;
+    for (const item of itemsByY) {
+      if (item.y <= cap.y) continue;
+      if (item.y >= nextCapY) break;
+      if (item.y - lastTextY > 30) break; // gap → end of table
+      lastTextY = item.y;
+    }
+    const endY = Math.min(lastTextY + 15, nextCapY, cap.pageHeight);
+
+    // Convert to scaled pixel coordinates
+    const cropTop = Math.max(0, startY * scale);
+    const cropBottom = Math.min(canvas.height, endY * scale);
+    const cropHeight = cropBottom - cropTop;
+    if (cropHeight < 40) continue; // too small, skip
+
+    // Crop the full page width (tables typically span the column or the whole page)
+    // To be safe, crop the full page width — the table centers itself in view
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = canvas.width;
+    cropCanvas.height = cropHeight;
+    const cropCtx = cropCanvas.getContext('2d');
+    cropCtx.fillStyle = 'white';
+    cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+    cropCtx.drawImage(
+      canvas,
+      0, cropTop, canvas.width, cropHeight,
+      0, 0, canvas.width, cropHeight
+    );
+
+    const url = cropCanvas.toDataURL('image/png');
+    tables.push({
+      number: cap.number,
+      caption: cap.text,
+      url,
+    });
+  }
+
+  return tables;
 }
 
 // Detect column layout from item x-positions.
