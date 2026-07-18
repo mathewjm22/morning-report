@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, Eye, EyeOff, ClipboardList, Stethoscope, FlaskConical,
   Image as ImageIcon, Target, CheckCircle2, BookOpen, GraduationCap, Highlighter,
-  Home as HomeIcon, Share2, Copy, Check,
+  Home as HomeIcon, Share2, Copy, Check, Maximize2,
 } from 'lucide-react';
 import { getCase, loadProgress, saveProgress } from '../lib/storage.js';
 import { loadSharedCase, saveCaseShare } from '../lib/api.js';
@@ -11,7 +11,6 @@ import { getSessionFigures } from '../lib/sessionImages.js';
 import Whiteboard from './Whiteboard.jsx';
 import AnnotationCanvas from './AnnotationCanvas.jsx';
 import FigureLightbox from './FigureLightbox.jsx';
-import { Maximize2 } from 'lucide-react';  // add Maximize2 to the existing lucide import
 
 const ICON_MAP = { Stethoscope, ClipboardList, FlaskConical, Target, BookOpen, CheckCircle2, Image: ImageIcon };
 
