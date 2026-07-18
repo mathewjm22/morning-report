@@ -6,7 +6,7 @@ import { parseCase } from '../lib/api.js';
 import { saveCase } from '../lib/storage.js';
 import { setSessionFigures } from '../lib/sessionImages.js';
 
-export default function PdfUploader({ onClose }) {
+export default function PdfUploader({ onClose, onSuccess }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'extracting' | 'parsing' | 'error' | 'success'
   const [progress, setProgress] = useState('');
   const [error, setError] = useState(null);
@@ -60,10 +60,11 @@ export default function PdfUploader({ onClose }) {
         });
       }
 
-      // ---- Save case (text-only) to localStorage; images to session-only store ----
-      saveCase(caseData);
+      // ---- Save case (text-only) to storage; images to session-only store ----
+      await saveCase(caseData);
       setSessionFigures(caseData.id, allFigures);
 
+      if (onSuccess) onSuccess();
       setStatus('success');
       navigate(`/case/${encodeURIComponent(caseData.id)}`);
 
