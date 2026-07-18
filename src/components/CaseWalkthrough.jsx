@@ -10,6 +10,8 @@ import { loadSharedCase, saveCaseShare } from '../lib/api.js';
 import { getSessionFigures } from '../lib/sessionImages.js';
 import Whiteboard from './Whiteboard.jsx';
 import AnnotationCanvas from './AnnotationCanvas.jsx';
+import FigureLightbox from './FigureLightbox.jsx';
+import { Maximize2 } from 'lucide-react';  // add Maximize2 to the existing lucide import
 
 const ICON_MAP = { Stethoscope, ClipboardList, FlaskConical, Target, BookOpen, CheckCircle2, Image: ImageIcon };
 
@@ -30,6 +32,7 @@ export default function CaseWalkthrough({ shared }) {
   const [plan, setPlan] = useState('');
   const [imageReads, setImageReads] = useState({});
   const [annotations, setAnnotations] = useState({});
+  const [lightbox, setLightbox] = useState(null); // { key, url, label, caption } | null
 
   // GLOBAL highlights across all gates: { text: 'positive'|'negative' }
   const [highlights, setHighlights] = useState({});
@@ -350,23 +353,33 @@ export default function CaseWalkthrough({ shared }) {
               {gate.isImageGate ? (
                 <div>
                   {(gate.figures || []).map((fig, figIdx) => (
-                    <div key={figIdx} className="mb-5">
-                      <p className="text-xs font-semibold text-slate-700 mb-2">{fig.caption}</p>
-                      <div className={`grid gap-3 ${(fig.images || []).length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                        {(fig.images || []).map((img, imgIdx) => (
-                          <div key={imgIdx}>
-                            {img.label && <p className="text-xs text-slate-600 mb-1 font-medium">{img.label}</p>}
-                            <AnnotationCanvas
-                              imageKey={`${gate.id}-fig${figIdx}-img${imgIdx}`}
-                              imageUrl={img.url}
-                              annotations={annotations}
-                              setAnnotations={setAnnotations}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+  <div key={figIdx} className="mb-5">
+    <p className="text-xs font-semibold text-slate-700 mb-2">{fig.caption}</p>
+    <div className={`grid gap-3 ${(fig.images || []).length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      {(fig.images || []).map((img, imgIdx) => {
+        const key = `${gate.id}-fig${figIdx}-img${imgIdx}`;
+        return (
+          <div key={imgIdx} className="relative group">
+            {img.label && <p className="text-xs text-slate-600 mb-1 font-medium">{img.label}</p>}
+            <AnnotationCanvas
+              imageKey={key}
+              imageUrl={img.url}
+              annotations={annotations}
+              setAnnotations={setAnnotations}
+            />
+            <button
+              onClick={() => setLightbox({ key, url: img.url, label: img.label || `Figure ${figIdx + 1}`, caption: fig.caption })}
+              className="absolute top-8 right-1 bg-white/90 hover:bg-white border border-slate-300 rounded p-1.5 shadow opacity-0 group-hover:opacity-100 transition"
+              title="Open full size"
+            >
+              <Maximize2 size={14} className="text-slate-700" />
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+))}
                   <div className="mb-3 mt-4">
                     <label className="text-sm font-semibold text-slate-700 block mb-2">Your interpretation:</label>
                     <textarea
@@ -434,6 +447,18 @@ export default function CaseWalkthrough({ shared }) {
           showSnapshots={showSnapshots}
         />
       </div>
+      {lightbox && (
+        <FigureLightbox
+          open={!!lightbox}
+          onClose={() => setLightbox(null)}
+          imageKey={lightbox.key}
+          imageUrl={lightbox.url}
+          label={lightbox.label}
+          caption={lightbox.caption}
+          annotations={annotations}
+          setAnnotations={setAnnotations}
+        />
+      )}
     </div>
   );
 }
