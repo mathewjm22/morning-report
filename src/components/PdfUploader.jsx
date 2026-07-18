@@ -5,6 +5,7 @@ import { extractPdf } from '../lib/pdfExtract.js';
 import { parseCase } from '../lib/api.js';
 import { saveCase } from '../lib/storage.js';
 import { setSessionFigures } from '../lib/sessionImages.js';
+import { validateAndRepairGates } from '../lib/gateValidator.js';
 
 export default function PdfUploader({ onClose, onSuccess }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'extracting' | 'parsing' | 'error' | 'success'
@@ -44,7 +45,7 @@ export default function PdfUploader({ onClose, onSuccess }) {
       setProgress(`Parsing case (this takes ~60 seconds — one call per section)...`);
 
       const result = await parseCase(fullText);
-      const caseData = result.data;
+      const caseData = validateAndRepairGates(result.data);
 
       // ---- Add imaging gate if any figures were extracted or pasted ----
       const allFigures = [...figures, ...manualFigures];
