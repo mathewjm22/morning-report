@@ -161,58 +161,7 @@ const lineTexts = lines.map(line =>
   return { text: isolateSectionHeaders(lineTexts.join('\n')), captions, tableCaptions };
 }
 
-// NEJM section headers that we want to force onto their own lines,
-// even if they got glued to surrounding prose during column-based extraction.
-function isolateSectionHeaders(text) {
-  const HEADERS = [
-    'Presentation of Case',
-    'Differential Diagnosis',
-    'Clinical Impression',
-    'Clinical Diagnosis',
-    'Imaging Studies',
-    'Imaging Diagnosis',
-    'Radiologic Diagnosis',
-    'Diagnostic Testing',
-    'Diagnostic Studies',
-    'Laboratory Testing',
-    'Laboratory Diagnosis',
-    'Pathological Discussion',
-    'Pathological Diagnosis',
-    'Anatomical Diagnosis',
-    'Microbiologic Diagnosis',
-    'Microbiological Diagnosis',
-    'Molecular Diagnosis',
-    'Genetic Diagnosis',
-    'Hospital Course',
-    'Operative Management',
-    'Surgical Management',
-    'Discussion of Management',
-    'Infectious Diseases Management and Follow-up',
-    'Infectious Diseases Management',
-    'Sleep Medicine Management',
-    'Follow-up',
-    'Final Diagnosis',
-    'Patient Perspective',
-    'Lessons Learned',
-  ];
 
-  let out = text;
-  for (const h of HEADERS) {
-    // Match with flexible whitespace between words (handles residual spacing quirks)
-    const pattern = new RegExp(
-      '\\s*' + h.split(/\s+/).map(escapeRe).join('\\s+') + '\\s*',
-      'gi'
-    );
-    out = out.replace(pattern, `\n\n${h}\n\n`);
-  }
-  // Collapse runs of blank lines
-  out = out.replace(/\n{3,}/g, '\n\n');
-  return out;
-}
-
-function escapeRe(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 // ============================================================
 // Table extraction: render each table caption's page region to a canvas
