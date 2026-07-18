@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Maximize2, X } from 'lucide-react';
 
 // Simple table image viewer. Click to zoom into a lightbox.
@@ -149,6 +149,3 @@ function TableLightbox({ table, onClose }) {
     </div>
   );
 }
-
-// Missing import — add at the top
-import { useEffect } from 'react';
