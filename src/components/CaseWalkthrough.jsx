@@ -12,6 +12,9 @@ import Whiteboard from './Whiteboard.jsx';
 import AnnotationCanvas from './AnnotationCanvas.jsx';
 import FigureLightbox from './FigureLightbox.jsx';
 
+import TableViewer from './TableViewer.jsx';
+import { getSessionTables } from '../lib/sessionTables.js';
+
 const ICON_MAP = { Stethoscope, ClipboardList, FlaskConical, Target, BookOpen, CheckCircle2, Image: ImageIcon };
 
 export default function CaseWalkthrough({ shared }) {
@@ -125,15 +128,20 @@ export default function CaseWalkthrough({ shared }) {
 
   const gates = caseData.gates || [];
 
-  // Merge in session-only figures for any imaging gate that has none saved.
-  // (Images live in memory this session; the persisted case has empty figures.)
-  const sessionFigures = !shared ? getSessionFigures(caseData.id) : null;
-  const gatesWithFigures = gates.map(g => {
-    if (g.isImageGate && (!g.figures || g.figures.length === 0) && sessionFigures) {
-      return { ...g, figures: sessionFigures };
-    }
-    return g;
-  });
+
+const sessionFigures = !shared ? getSessionFigures(caseData.id) : null;
+const sessionTables = !shared ? getSessionTables(caseData.id) : null;
+const gatesWithFigures = gates.map(g => {
+  if (g.isImageGate && (!g.figures || g.figures.length === 0) && sessionFigures) {
+    return { ...g, figures: sessionFigures };
+  }
+  if (g.isTableGate && (!g.tables || g.tables.length === 0) && sessionTables) {
+    return { ...g, tables: sessionTables };
+  }
+  return g;
+});
+
+  
 
   const gate = gatesWithFigures[gateIndex];
   const isRevealed = revealed[gateIndex];
@@ -348,37 +356,43 @@ export default function CaseWalkthrough({ shared }) {
               <Highlighter size={12} /> Select text to highlight globally as pertinent + (yellow) or − (blue).
             </p>
 
-            <div ref={contentRef} className="bg-white rounded-lg border border-slate-200 p-5" style={{ userSelect: 'text' }}>
-              {gate.isImageGate ? (
+
+<div ref={contentRef} className="bg-white rounded-lg border border-slate-200 p-5" style={{ userSelect: 'text' }}>
+              {gate.isTableGate ? (
+                <div>
+                  <p className="text-sm text-slate-600 mb-4">{gate.content}</p>
+                  <TableViewer tables={gate.tables || []} />
+                </div>
+              ) : gate.isImageGate ? (
                 <div>
                   {(gate.figures || []).map((fig, figIdx) => (
-  <div key={figIdx} className="mb-5">
-    <p className="text-xs font-semibold text-slate-700 mb-2">{fig.caption}</p>
-    <div className={`grid gap-3 ${(fig.images || []).length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-      {(fig.images || []).map((img, imgIdx) => {
-        const key = `${gate.id}-fig${figIdx}-img${imgIdx}`;
-        return (
-          <div key={imgIdx} className="relative group">
-            {img.label && <p className="text-xs text-slate-600 mb-1 font-medium">{img.label}</p>}
-            <AnnotationCanvas
-              imageKey={key}
-              imageUrl={img.url}
-              annotations={annotations}
-              setAnnotations={setAnnotations}
-            />
-            <button
-              onClick={() => setLightbox({ key, url: img.url, label: img.label || `Figure ${figIdx + 1}`, caption: fig.caption })}
-              className="absolute top-8 right-1 bg-white/90 hover:bg-white border border-slate-300 rounded p-1.5 shadow opacity-0 group-hover:opacity-100 transition"
-              title="Open full size"
-            >
-              <Maximize2 size={14} className="text-slate-700" />
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  </div>
-))}
+                    <div key={figIdx} className="mb-5">
+                      <p className="text-xs font-semibold text-slate-700 mb-2">{fig.caption}</p>
+                      <div className={`grid gap-3 ${(fig.images || []).length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                        {(fig.images || []).map((img, imgIdx) => {
+                          const key = `${gate.id}-fig${figIdx}-img${imgIdx}`;
+                          return (
+                            <div key={imgIdx} className="relative group">
+                              {img.label && <p className="text-xs text-slate-600 mb-1 font-medium">{img.label}</p>}
+                              <AnnotationCanvas
+                                imageKey={key}
+                                imageUrl={img.url}
+                                annotations={annotations}
+                                setAnnotations={setAnnotations}
+                              />
+                              <button
+                                onClick={() => setLightbox({ key, url: img.url, label: img.label || `Figure ${figIdx + 1}`, caption: fig.caption })}
+                                className="absolute top-8 right-1 bg-white/90 hover:bg-white border border-slate-300 rounded p-1.5 shadow opacity-0 group-hover:opacity-100 transition"
+                                title="Open full size"
+                              >
+                                <Maximize2 size={14} className="text-slate-700" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                   <div className="mb-3 mt-4">
                     <label className="text-sm font-semibold text-slate-700 block mb-2">Your interpretation:</label>
                     <textarea
