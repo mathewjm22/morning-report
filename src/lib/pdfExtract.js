@@ -52,75 +52,173 @@ export async function extractPdf(file, onProgress = () => {}) {
 }
 
 // -----------------------------------------------------------------
-// Text extraction with two-column handling
+// Text extraction with column handling + glyph-spacing repair
 // -----------------------------------------------------------------
 async function extractPageText(page) {
   const content = await page.getTextContent();
   const viewport = page.getViewport({ scale: 1 });
   const pageWidth = viewport.width;
 
-  // Items have transform [a, b, c, d, x, y] — x,y is bottom-left of the text.
-  // Sort by column (left half vs right half) then by y (top to bottom).
   const items = content.items
     .filter(i => i.str && i.str.trim())
     .map(i => ({
       text: i.str,
       x: i.transform[4],
-      y: viewport.height - i.transform[5], // flip so y=0 is top
+      y: viewport.height - i.transform[5],
+      width: i.width || (i.str.length * 5),
       height: i.height,
     }));
 
-  // Detect if two-column: are there items in both left and right halves?
-  const mid = pageWidth / 2;
-  const leftCount = items.filter(i => i.x < mid).length;
-  const rightCount = items.filter(i => i.x >= mid).length;
-  const twoColumn = leftCount > 20 && rightCount > 20;
+  // Detect column boundaries by looking at x-position histogram.
+  // NEJM often has: narrow sidebar + wide body, OR two roughly equal columns,
+  // OR single column (title pages, figure pages).
+  const columnBounds = detectColumns(items, pageWidth);
 
-  let sorted;
-  if (twoColumn) {
-    const left = items.filter(i => i.x < mid).sort((a, b) => a.y - b.y || a.x - b.x);
-    const right = items.filter(i => i.x >= mid).sort((a, b) => a.y - b.y || a.x - b.x);
-    sorted = [...left, ...right];
-  } else {
-    sorted = items.sort((a, b) => a.y - b.y || a.x - b.x);
+  // Assign each item to a column, then sort within each column by y then x
+  const columnBuckets = columnBounds.map(() => []);
+  for (const item of items) {
+    const colIdx = columnBounds.findIndex(b => item.x + item.width / 2 >= b.start && item.x + item.width / 2 < b.end);
+    if (colIdx >= 0) columnBuckets[colIdx].push(item);
+    else columnBuckets[columnBuckets.length - 1].push(item);
   }
 
-  // Reassemble into lines using y-proximity
+  const sorted = [];
+  for (const bucket of columnBuckets) {
+    bucket.sort((a, b) => a.y - b.y || a.x - b.x);
+    sorted.push(...bucket);
+  }
+
+  // Reassemble into lines using y-proximity within a column
   const lines = [];
   let currentLine = [];
   let lastY = null;
+  let lastCol = null;
   const lineThreshold = 4;
   for (const item of sorted) {
-    if (lastY === null || Math.abs(item.y - lastY) < lineThreshold) {
+    // Determine which column this item belongs to (for line-break logic)
+    const col = columnBounds.findIndex(b => item.x + item.width / 2 >= b.start && item.x + item.width / 2 < b.end);
+    if (lastY === null || (col === lastCol && Math.abs(item.y - lastY) < lineThreshold)) {
       currentLine.push(item);
     } else {
       if (currentLine.length) lines.push(currentLine);
       currentLine = [item];
     }
     lastY = item.y;
+    lastCol = col;
   }
   if (currentLine.length) lines.push(currentLine);
 
+  // Build line texts. Apply glyph-spacing repair on each line.
   const lineTexts = lines.map(line =>
-    line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
+    repairGlyphSpacing(
+      line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
+    )
   );
 
-  // Detect figure captions on this page: lines that start with "Figure N."
+  // Detect figure captions
   const captions = [];
   lineTexts.forEach((text, idx) => {
     const match = text.match(/^(Figure\s+\d+[.:])/i);
     if (match) {
-      // Take this line plus the next 1-2 lines as the caption
       const captionText = [text, lineTexts[idx + 1], lineTexts[idx + 2]]
-        .filter(Boolean)
-        .join(' ')
-        .slice(0, 300);
+        .filter(Boolean).join(' ').slice(0, 300);
       const y = lines[idx][0].y;
       captions.push({ text: captionText, y });
     }
   });
 
   return { text: lineTexts.join('\n'), captions };
+}
+
+// Detect column layout from item x-positions.
+// Returns array of {start, end} intervals.
+function detectColumns(items, pageWidth) {
+  if (items.length < 20) return [{ start: 0, end: pageWidth }];
+
+  // Build histogram of x-positions in 30px buckets
+  const bucketSize = 30;
+  const buckets = new Array(Math.ceil(pageWidth / bucketSize)).fill(0);
+  for (const item of items) {
+    const idx = Math.floor(item.x / bucketSize);
+    if (idx >= 0 && idx < buckets.length) buckets[idx]++;
+  }
+
+  // Find "gaps" — buckets with few items surrounded by populated ones
+  // A column boundary is a run of low-density buckets between high-density regions
+  const threshold = Math.max(2, items.length / 100);
+  const isDense = buckets.map(c => c > threshold);
+
+  // Find contiguous dense regions = columns
+  const columns = [];
+  let start = null;
+  for (let i = 0; i < isDense.length; i++) {
+    if (isDense[i] && start === null) start = i;
+    else if (!isDense[i] && start !== null) {
+      columns.push({ startBucket: start, endBucket: i });
+      start = null;
+    }
+  }
+  if (start !== null) columns.push({ startBucket: start, endBucket: isDense.length });
+
+  // Merge columns that are very close together (< 2 buckets apart)
+  const merged = [];
+  for (const col of columns) {
+    const last = merged[merged.length - 1];
+    if (last && col.startBucket - last.endBucket < 3) {
+      last.endBucket = col.endBucket;
+    } else {
+      merged.push({ ...col });
+    }
+  }
+
+  if (merged.length === 0) return [{ start: 0, end: pageWidth }];
+
+  // Convert to x-position ranges, extending each to cover the gap to the next column
+  const result = [];
+  for (let i = 0; i < merged.length; i++) {
+    const col = merged[i];
+    const s = col.startBucket * bucketSize;
+    const e = i + 1 < merged.length
+      ? ((col.endBucket + merged[i + 1].startBucket) / 2) * bucketSize
+      : pageWidth;
+    const prevEnd = result.length > 0 ? result[result.length - 1].end : 0;
+    result.push({ start: Math.max(prevEnd, i === 0 ? 0 : s - bucketSize), end: e });
+  }
+  return result;
+}
+
+// Repair text where PDF.js extracted glyphs with spaces between them due to
+// small-caps or ornamental typography. E.g. "Pr esen tation of C a se" → "Presentation of Case"
+function repairGlyphSpacing(text) {
+  if (!text) return text;
+  // Rule: collapse runs of very short "tokens" (1-3 chars) that are separated by single spaces
+  // AND all start with letters. This catches fancy-typography headers without disturbing
+  // real prose (which has longer words).
+  const tokens = text.split(' ');
+  const out = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    // Look ahead: how many consecutive short letter-tokens starting here?
+    let runEnd = i;
+    while (runEnd < tokens.length && isShortLetterToken(tokens[runEnd])) runEnd++;
+    const runLength = runEnd - i;
+    // If we have 3+ consecutive short letter tokens, merge them into fewer words.
+    // Strategy: rejoin all letters, then re-split on natural case boundaries or original word gaps.
+    if (runLength >= 3) {
+      const merged = tokens.slice(i, runEnd).join('');
+      out.push(merged);
+      i = runEnd;
+    } else {
+      out.push(t);
+      i++;
+    }
+  }
+  return out.join(' ');
+}
+
+function isShortLetterToken(t) {
+  return t.length > 0 && t.length <= 4 && /^[A-Za-z]+$/.test(t);
 }
 
 // -----------------------------------------------------------------
