@@ -108,11 +108,10 @@ async function extractPageText(page) {
   }
   if (currentLine.length) lines.push(currentLine);
 
-  // Build line texts. Apply glyph-spacing repair on each line.
+  // Build line texts. NO glyph-spacing repair here — let the Worker handle
+  // fuzzy matching against ornamental headers using space-insensitive regex.
   const lineTexts = lines.map(line =>
-    repairGlyphSpacing(
-      line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
-    )
+    line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
   );
 
   // Detect figure captions
@@ -188,37 +187,11 @@ function detectColumns(items, pageWidth) {
 }
 
 // Repair text where PDF.js extracted glyphs with spaces between them due to
-// small-caps or ornamental typography. E.g. "Pr esen tation of C a se" → "Presentation of Case"
-function repairGlyphSpacing(text) {
-  if (!text) return text;
-  // Rule: collapse runs of very short "tokens" (1-3 chars) that are separated by single spaces
-  // AND all start with letters. This catches fancy-typography headers without disturbing
-  // real prose (which has longer words).
-  const tokens = text.split(' ');
-  const out = [];
-  let i = 0;
-  while (i < tokens.length) {
-    const t = tokens[i];
-    // Look ahead: how many consecutive short letter-tokens starting here?
-    let runEnd = i;
-    while (runEnd < tokens.length && isShortLetterToken(tokens[runEnd])) runEnd++;
-    const runLength = runEnd - i;
-    // If we have 3+ consecutive short letter tokens, merge them into fewer words.
-    // Strategy: rejoin all letters, then re-split on natural case boundaries or original word gaps.
-    if (runLength >= 3) {
-      const merged = tokens.slice(i, runEnd).join('');
-      out.push(merged);
-      i = runEnd;
-    } else {
-      out.push(t);
-      i++;
-    }
-  }
-  return out.join(' ');
-}
-
-function isShortLetterToken(t) {
-  return t.length > 0 && t.length <= 4 && /^[A-Za-z]+$/.test(t);
+// small-caps or ornamental typography. NOT currently used — the Worker's
+// fuzzy matching handles this better because it uses space-insensitive regex.
+// Kept here in case we need item-level repair later.
+function repairGlyphSpacing_unused(text) {
+  return text;
 }
 
 // -----------------------------------------------------------------
