@@ -118,9 +118,11 @@ async function extractPageText(page) {
   }
   if (currentLine.length) lines.push(currentLine);
 
-  const lineTexts = lines.map(line =>
-    line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
-  );
+const lineTexts = lines.map(line =>
+  line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
+);
+
+  const repairedLineTexts = lineTexts.map(repairSpacedGlyphs);
 
   // Figure captions (unchanged)
   const captions = [];
@@ -237,6 +239,59 @@ async function extractPageTables(page, tableCaptions) {
   }
 
   return tables;
+}
+
+function repairSpacedGlyphs(line) {
+  if (!line || line.length < 6) return line;
+  const words = line.split(/\s+/);
+  if (words.length < 4) return line;
+
+  const shortWords = words.filter(w => w.length <= 2).length;
+  if (shortWords / words.length < 0.5) return line;
+
+  // Squash all spaces
+  const squashed = words.join('');
+
+  // Try known NEJM header patterns first (case-insensitive)
+  const knownHeaders = [
+    'Presentation of Case',
+    'Differential Diagnosis',
+    'Clinical Impression',
+    'Clinical Diagnosis',
+    'Imaging Studies',
+    'Imaging Diagnosis',
+    'Radiologic Diagnosis',
+    'Diagnostic Testing',
+    'Diagnostic Studies',
+    'Laboratory Testing',
+    'Laboratory Diagnosis',
+    'Pathological Discussion',
+    'Pathological Diagnosis',
+    'Anatomical Diagnosis',
+    'Microbiologic Diagnosis',
+    'Microbiological Diagnosis',
+    'Molecular Diagnosis',
+    'Genetic Diagnosis',
+    'Hospital Course',
+    'Operative Management',
+    'Surgical Management',
+    'Discussion of Management',
+    'Infectious Diseases Management',
+    'Infectious Diseases Management and Follow-up',
+    'Sleep Medicine Management',
+    'Follow-up',
+    'Final Diagnosis',
+    'Patient Perspective',
+    'Lessons Learned',
+  ];
+  for (const known of knownHeaders) {
+    if (squashed.toLowerCase() === known.toLowerCase().replace(/[-\s]/g, '')) {
+      return known;
+    }
+  }
+
+  // Fallback: split at camelCase transitions (handles "Dr.SandraB.Nelson'sDiagnosis")
+  return squashed.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
 // Detect column layout from item x-positions.
