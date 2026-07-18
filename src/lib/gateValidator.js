@@ -37,7 +37,12 @@ export function validateAndRepairGates(caseData) {
 
     // Skip repair if this gate already looks well-scoped (e.g. is discussant-ddx
     // which is legitimately long).
-    const nonRepairable = ['discussant-ddx', 'management', 'confirmatory', 'clinical-impression', 'teaching', 'hospital-course', 'imaging-diagnosis', 'discussant-dx'];
+    const nonRepairable = [
+      'discussant-ddx', 'management', 'confirmatory', 'clinical-impression',
+      'teaching', 'hospital-course', 'imaging-diagnosis', 'discussant-dx',
+      'imaging-studies', 'diagnostic-testing', 'laboratory-testing',
+      'additional-pathological', 'additional-surgical', 'operative-management',
+    ];
     if (nonRepairable.includes(gate.id)) {
       newGates.push(gate);
       continue;
@@ -111,10 +116,19 @@ export function validateAndRepairGates(caseData) {
     }
   }
 
-  // Preserve canonical ordering: hpi → pmh-social → exam-labs → workup → the rest
-  const order = ['hpi', 'pmh-social', 'exam-labs', 'imaging', 'workup', 'discussant-ddx',
-                 'clinical-impression', 'discussant-dx', 'imaging-diagnosis', 'hospital-course',
-                 'confirmatory', 'management', 'followup', 'teaching'];
+  // Preserve canonical ordering: hpi → pmh-social → exam-labs → imaging → workup
+  // → discussant-ddx → clinical-impression → discussant-dx → imaging-studies
+  // → imaging-diagnosis → hospital-course → operative-management
+  // → diagnostic-testing → laboratory-testing → confirmatory
+  // → additional-pathological → additional-surgical → management → followup → teaching
+  const order = [
+    'hpi', 'pmh-social', 'exam-labs', 'imaging', 'workup',
+    'discussant-ddx', 'clinical-impression', 'discussant-dx',
+    'imaging-studies', 'imaging-diagnosis', 'hospital-course',
+    'operative-management', 'diagnostic-testing', 'laboratory-testing',
+    'confirmatory', 'additional-pathological', 'additional-surgical',
+    'management', 'followup', 'teaching',
+  ];
   newGates.sort((a, b) => {
     const ai = order.indexOf(a.id); const bi = order.indexOf(b.id);
     return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
