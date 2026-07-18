@@ -1,31 +1,46 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Trash2, Clock, BookOpen } from 'lucide-react';
-import { listCases, saveCase, deleteCase } from '../lib/storage.js';
+import { listCases, saveCase, deleteCase, migrateOldLocalStorageCases } from '../lib/storage.js';
 import { clearSessionFigures } from '../lib/sessionImages.js';
 import { SAMPLE_CASE } from '../data/sampleCase.js';
 import PdfUploader from './PdfUploader.jsx';
 
 export default function Home() {
   const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showUploader, setShowUploader] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setCases(listCases());
-  }, []);
-
-  const addSampleCase = () => {
-    saveCase(SAMPLE_CASE);
-    setCases(listCases());
+  const refresh = async () => {
+    setLoading(true);
+    const all = await listCases();
+    setCases(all);
+    setLoading(false);
   };
 
-  const removeCase = (id, e) => {
+  useEffect(() => {
+    (async () => {
+      await migrateOldLocalStorageCases();
+      await refresh();
+    })();
+  }, []);
+
+  const addSampleCase = async () => {
+    try {
+      await saveCase(SAMPLE_CASE);
+      await refresh();
+    } catch (e) {
+      alert('Failed to save sample case: ' + e.message);
+    }
+  };
+
+  const removeCase = async (id, e) => {
     e.stopPropagation();
     if (!confirm('Delete this case from your library? This cannot be undone.')) return;
-    deleteCase(id);
+    await deleteCase(id);
     clearSessionFigures(id);
-    setCases(listCases());
+    await refresh();
   };
 
   return (
@@ -73,7 +88,11 @@ export default function Home() {
 
         <div>
           <h2 className="text-lg font-semibold text-slate-800 mb-3">Your Library</h2>
-          {cases.length === 0 ? (
+          {loading ? (
+            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+              <p className="text-slate-500 text-sm">Loading...</p>
+            </div>
+          ) : cases.length === 0 ? (
             <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
               <p className="text-slate-500">No cases yet. Upload a PDF or load the sample case to get started.</p>
             </div>
@@ -92,7 +111,7 @@ export default function Home() {
                       <Clock size={12} />
                       <span>Added {new Date(c.addedAt).toLocaleDateString()}</span>
                       <span className="mx-1">•</span>
-                      <span>{c.caseData.gates?.length || 0} gates</span>
+                      <span>{c.caseData?.gates?.length || 0} gates</span>
                     </div>
                   </div>
                   <button
@@ -109,7 +128,7 @@ export default function Home() {
         </div>
       </div>
 
-      {showUploader && <PdfUploader onClose={() => setShowUploader(false)} />}
+      {showUploader && <PdfUploader onClose={() => setShowUploader(false)} onSuccess={refresh} />}
     </div>
   );
 }
