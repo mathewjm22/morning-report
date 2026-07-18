@@ -35,14 +35,14 @@ export function validateAndRepairGates(caseData) {
       continue;
     }
 
-    // Skip repair if this gate already looks well-scoped (e.g. is discussant-ddx
-    // which is legitimately long).
-    const nonRepairable = [
-      'discussant-ddx', 'management', 'confirmatory', 'clinical-impression',
-      'teaching', 'hospital-course', 'imaging-diagnosis', 'discussant-dx',
-      'imaging-studies', 'diagnostic-testing', 'laboratory-testing',
-      'additional-pathological', 'additional-surgical', 'operative-management',
-    ];
+    // Skip repair if this gate isn't one we know how to split from.
+    // Only 'followup', 'hpi', and unknown/uncategorized gates get repaired —
+    // everything else is trusted as-is from the generic header detector.
+    const repairable = ['followup', 'hpi', null, undefined];
+    if (!repairable.includes(gate.id) && !gate.id.startsWith('additional')) {
+      newGates.push(gate);
+      continue;
+    }
     if (nonRepairable.includes(gate.id)) {
       newGates.push(gate);
       continue;
