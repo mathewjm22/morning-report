@@ -8,7 +8,14 @@ export async function parseCase(text, imageMetadata = []) {
     body: JSON.stringify({ text, imageMetadata }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  if (!res.ok) {
+    // Log full response for debugging structure/parse failures
+    console.error('parseCase failed:', data);
+    const err = new Error(data.error || `HTTP ${res.status}`);
+    err.detail = data.detail;
+    err.debug = data.debug;
+    throw err;
+  }
   return data;
 }
 
