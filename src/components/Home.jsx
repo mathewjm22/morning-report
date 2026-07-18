@@ -5,6 +5,7 @@ import { listCases, saveCase, deleteCase, migrateOldLocalStorageCases } from '..
 import { clearSessionFigures } from '../lib/sessionImages.js';
 import { SAMPLE_CASE } from '../data/sampleCase.js';
 import PdfUploader from './PdfUploader.jsx';
+import TableViewer from './TableViewer.jsx';
 
 export default function Home() {
   const [cases, setCases] = useState([]);
@@ -40,6 +41,7 @@ export default function Home() {
     if (!confirm('Delete this case from your library? This cannot be undone.')) return;
     await deleteCase(id);
     clearSessionFigures(id);
+    clearSessionTables(id);
     await refresh();
   };
 
