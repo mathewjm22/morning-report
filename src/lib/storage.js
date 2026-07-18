@@ -1,183 +1,134 @@
-// Case storage using IndexedDB (essentially unlimited).
-// Progress (per-case user work) still in localStorage — it's small.
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Plus, Trash2, Clock, BookOpen } from 'lucide-react';
+import { listCases, saveCase, deleteCase, migrateOldLocalStorageCases } from '../lib/storage.js';
+import { clearSessionFigures } from '../lib/sessionImages.js';
+import { SAMPLE_CASE } from '../data/sampleCase.js';
+import PdfUploader from './PdfUploader.jsx';
 
-const DB_NAME = 'morning-report-db';
-const DB_VERSION = 1;
-const STORE = 'cases';
+export default function Home() {
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showUploader, setShowUploader] = useState(false);
+  const navigate = useNavigate();
 
-let dbPromise = null;
-
-function openDb() {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        const store = db.createObjectStore(STORE, { keyPath: 'id' });
-        store.createIndex('addedAt', 'addedAt');
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  return dbPromise;
-}
-
-async function tx(mode, fn) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE, mode);
-    const store = transaction.objectStore(STORE);
-    const result = fn(store);
-    transaction.oncomplete = () => resolve(result);
-    transaction.onerror = () => reject(transaction.error);
-    transaction.onabort = () => reject(transaction.error);
-  });
-}
-
-// Wrap IndexedDB requests as promises
-function req2promise(request) {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-// ---- Public API (async now) ----
-
-export async function listCases() {
-  try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readonly');
-      const store = transaction.objectStore(STORE);
-      const req = store.getAll();
-      req.onsuccess = () => {
-        const all = req.result || [];
-        // Sort newest first
-        all.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-        resolve(all);
-      };
-      req.onerror = () => reject(req.error);
-    });
-  } catch (e) {
-    console.error('listCases failed', e);
-    return [];
-  }
-}
-
-export async function getCase(id) {
-  try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readonly');
-      const store = transaction.objectStore(STORE);
-      const req = store.get(id);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (e) {
-    console.error('getCase failed', e);
-    return null;
-  }
-}
-
-export async function saveCase(caseData) {
-  const entry = {
-    id: caseData.id,
-    title: caseData.title,
-    source: caseData.source,
-    addedAt: Date.now(),
-    caseData,
+  const refresh = async () => {
+    setLoading(true);
+    const all = await listCases();
+    setCases(all);
+    setLoading(false);
   };
-  try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readwrite');
-      const store = transaction.objectStore(STORE);
-      const req = store.put(entry);
-      req.onsuccess = () => resolve(entry);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (e) {
-    console.error('saveCase failed', e);
-    throw e;
-  }
-}
 
-export async function deleteCase(id) {
-  try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readwrite');
-      const store = transaction.objectStore(STORE);
-      const req = store.delete(id);
-      req.onsuccess = () => resolve(true);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (e) {
-    console.error('deleteCase failed', e);
-    return false;
-  }
-}
+  useEffect(() => {
+    (async () => {
+      await migrateOldLocalStorageCases();
+      await refresh();
+    })();
+  }, []);
 
-// ---- Progress: still localStorage (small: ddx + highlights + a few strings) ----
-const PROGRESS_PREFIX = 'morning-report.progress.';
-
-export function loadProgress(caseId) {
-  try {
-    const raw = localStorage.getItem(PROGRESS_PREFIX + caseId);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveProgress(caseId, progress) {
-  try {
-    localStorage.setItem(PROGRESS_PREFIX + caseId, JSON.stringify(progress));
-  } catch (e) {
-    // Localstorage full — drop the oldest progress entries
-    console.warn('localStorage full for progress, attempting cleanup', e);
+  const addSampleCase = async () => {
     try {
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith(PROGRESS_PREFIX)) keys.push(k);
-      }
-      // Drop oldest half
-      keys.slice(0, Math.ceil(keys.length / 2)).forEach(k => localStorage.removeItem(k));
-      localStorage.setItem(PROGRESS_PREFIX + caseId, JSON.stringify(progress));
-    } catch (e2) {
-      console.error('Progress save failed even after cleanup', e2);
+      await saveCase(SAMPLE_CASE);
+      await refresh();
+    } catch (e) {
+      alert('Failed to save sample case: ' + e.message);
     }
-  }
-}
+  };
 
-export function clearProgress(caseId) {
-  localStorage.removeItem(PROGRESS_PREFIX + caseId);
-}
+  const removeCase = async (id, e) => {
+    e.stopPropagation();
+    if (!confirm('Delete this case from your library? This cannot be undone.')) return;
+    await deleteCase(id);
+    clearSessionFigures(id);
+    await refresh();
+  };
 
-// ---- Migration: move any old localStorage cases into IndexedDB ----
-// Run once on app load.
-const OLD_KEY = 'morning-report.cases.v1';
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-4xl mx-auto p-6">
+        <header className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="bg-blue-600 text-white p-2 rounded-lg">
+              <BookOpen size={24} />
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900">Morning Report</h1>
+          </div>
+          <p className="text-slate-600">
+            Stepwise clinical reasoning practice from NEJM Case Records. Upload a case PDF and work through it like morning report.
+          </p>
+        </header>
 
-export async function migrateOldLocalStorageCases() {
-  try {
-    const raw = localStorage.getItem(OLD_KEY);
-    if (!raw) return;
-    const oldCases = JSON.parse(raw);
-    if (!Array.isArray(oldCases)) return;
-    for (const entry of oldCases) {
-      if (entry && entry.caseData) {
-        try { await saveCase(entry.caseData); } catch {}
-      }
-    }
-    // Remove old localStorage entry to free the quota
-    localStorage.removeItem(OLD_KEY);
-    console.log(`Migrated ${oldCases.length} cases from localStorage to IndexedDB`);
-  } catch (e) {
-    console.warn('Migration failed', e);
-  }
+        <div className="grid gap-4 mb-8 sm:grid-cols-2">
+          <button
+            onClick={() => setShowUploader(true)}
+            className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-left hover:border-blue-400 hover:shadow-md transition"
+          >
+            <div className="flex items-center gap-2 mb-2 text-slate-700">
+              <Plus size={20} />
+              <span className="font-semibold">Upload PDF</span>
+            </div>
+            <p className="text-sm text-slate-500">
+              Drop an NEJM Case Records PDF to parse it into a walkthrough. Takes ~60 seconds.
+            </p>
+          </button>
+
+          <button
+            onClick={addSampleCase}
+            className="bg-white border-2 border-slate-200 rounded-lg p-6 text-left hover:border-blue-400 hover:shadow-md transition"
+          >
+            <div className="flex items-center gap-2 mb-2 text-slate-700">
+              <FileText size={20} />
+              <span className="font-semibold">Load Sample Case</span>
+            </div>
+            <p className="text-sm text-slate-500">
+              Add the alpha-gal syndrome case to your library to test the walkthrough.
+            </p>
+          </button>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-semibold text-slate-800 mb-3">Your Library</h2>
+          {loading ? (
+            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+              <p className="text-slate-500 text-sm">Loading...</p>
+            </div>
+          ) : cases.length === 0 ? (
+            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
+              <p className="text-slate-500">No cases yet. Upload a PDF or load the sample case to get started.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {cases.map(c => (
+                <div
+                  key={c.id}
+                  onClick={() => navigate(`/case/${encodeURIComponent(c.id)}`)}
+                  className="bg-white rounded-lg border border-slate-200 p-4 hover:border-blue-400 hover:shadow-md transition cursor-pointer flex items-start justify-between gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 truncate">{c.title}</h3>
+                    <p className="text-sm text-slate-500 truncate">{c.source}</p>
+                    <div className="flex items-center gap-1 mt-2 text-xs text-slate-400">
+                      <Clock size={12} />
+                      <span>Added {new Date(c.addedAt).toLocaleDateString()}</span>
+                      <span className="mx-1">•</span>
+                      <span>{c.caseData?.gates?.length || 0} gates</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => removeCase(c.id, e)}
+                    className="text-slate-400 hover:text-red-600 p-1 rounded transition"
+                    title="Delete"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showUploader && <PdfUploader onClose={() => setShowUploader(false)} onSuccess={refresh} />}
+    </div>
+  );
 }
