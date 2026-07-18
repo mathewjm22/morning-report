@@ -5,6 +5,7 @@ import { extractPdf } from '../lib/pdfExtract.js';
 import { parseCase } from '../lib/api.js';
 import { saveCase } from '../lib/storage.js';
 import { setSessionFigures } from '../lib/sessionImages.js';
+import { setSessionTables } from '../lib/sessionTables.js'; // ← NEW
 import { validateAndRepairGates } from '../lib/gateValidator.js';
 
 export default function PdfUploader({ onClose, onSuccess }) {
@@ -29,10 +30,12 @@ export default function PdfUploader({ onClose, onSuccess }) {
 
     try {
       // ---- Extract text + images locally ----
-      const { fullText, figures, numPages } = await extractPdf(file, (p) => {
-        if (p.stage === 'text') setProgress(`Extracting text: page ${p.pageIndex}/${p.numPages}`);
-        else if (p.stage === 'images') setProgress(`Extracting images: page ${p.pageIndex}/${p.numPages}`);
-      });
+
+const { fullText, figures, tables, numPages } = await extractPdf(file, (p) => {
+  if (p.stage === 'text') setProgress(`Extracting text: page ${p.pageIndex}/${p.numPages}`);
+  else if (p.stage === 'images') setProgress(`Extracting images: page ${p.pageIndex}/${p.numPages}`);
+  else if (p.stage === 'tables') setProgress(`Extracting tables: page ${p.pageIndex}/${p.numPages}`);
+});
 
       if (!fullText || fullText.length < 500) {
         throw new Error('PDF text is too short — is this really a NEJM Case Record?');
@@ -61,10 +64,25 @@ export default function PdfUploader({ onClose, onSuccess }) {
         });
       }
 
+
+if (tables && tables.length > 0) {
+  caseData.gates.push({
+    id: 'tables',
+    icon: 'ClipboardList',
+    label: 'Tables',
+    title: 'Tables from this Case',
+    isTableGate: true,       // NEW flag, parallel to isImageGate
+    tables: [],              // empty; session store holds the real ones
+    content: `${tables.length} table${tables.length === 1 ? '' : 's'} extracted from source PDF. Click a table to zoom in.`,
+  });
+}
+
+      
       // ---- Save case (text-only) to storage; images to session-only store ----
       await saveCase(caseData);
       setSessionFigures(caseData.id, allFigures);
-
+      setSessionTables(caseData.id, tables || []);
+      
       if (onSuccess) onSuccess();
       setStatus('success');
       navigate(`/case/${encodeURIComponent(caseData.id)}`);
