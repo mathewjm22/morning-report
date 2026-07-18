@@ -37,14 +37,14 @@ export default function Home() {
     }
   };
 
-  const removeCase = async (id, e) => {
-    e.stopPropagation();
-    if (!confirm('Delete this case from your library? This cannot be undone.')) return;
-    await deleteCase(id);
-    clearSessionFigures(id);
-    clearSessionTables(id);
-    await refresh();
-  };
+const removeCase = async (id, e) => {
+  e.stopPropagation();
+  if (!confirm('Delete this case from your library? This cannot be undone.')) return;
+  await deleteCase(id);
+  clearSessionFigures(id);
+  clearSessionTables(id);   // ← add this line
+  await refresh();
+};
 
   return (
     <div className="min-h-screen bg-slate-50">
