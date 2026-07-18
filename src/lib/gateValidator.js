@@ -43,10 +43,6 @@ export function validateAndRepairGates(caseData) {
       newGates.push(gate);
       continue;
     }
-    if (nonRepairable.includes(gate.id)) {
-      newGates.push(gate);
-      continue;
-    }
 
     // Find anchors inside this gate's content
     const found = [];
