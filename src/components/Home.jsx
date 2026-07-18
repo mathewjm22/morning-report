@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Trash2, Clock, BookOpen } from 'lucide-react';
 import { listCases, saveCase, deleteCase } from '../lib/storage.js';
+import { clearSessionFigures } from '../lib/sessionImages.js';
 import { SAMPLE_CASE } from '../data/sampleCase.js';
+import PdfUploader from './PdfUploader.jsx';
 
 export default function Home() {
   const [cases, setCases] = useState([]);
+  const [showUploader, setShowUploader] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +24,7 @@ export default function Home() {
     e.stopPropagation();
     if (!confirm('Delete this case from your library? This cannot be undone.')) return;
     deleteCase(id);
+    clearSessionFigures(id);
     setCases(listCases());
   };
 
@@ -41,16 +45,15 @@ export default function Home() {
 
         <div className="grid gap-4 mb-8 sm:grid-cols-2">
           <button
-            disabled
-            className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-left hover:border-blue-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
-            title="PDF upload coming in the next update"
+            onClick={() => setShowUploader(true)}
+            className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-left hover:border-blue-400 hover:shadow-md transition"
           >
             <div className="flex items-center gap-2 mb-2 text-slate-700">
               <Plus size={20} />
               <span className="font-semibold">Upload PDF</span>
             </div>
             <p className="text-sm text-slate-500">
-              Drop an NEJM Case Records PDF to parse it into a walkthrough. <em>(Coming next round)</em>
+              Drop an NEJM Case Records PDF to parse it into a walkthrough. Takes ~60 seconds.
             </p>
           </button>
 
@@ -72,7 +75,7 @@ export default function Home() {
           <h2 className="text-lg font-semibold text-slate-800 mb-3">Your Library</h2>
           {cases.length === 0 ? (
             <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-              <p className="text-slate-500">No cases yet. Load the sample case to get started.</p>
+              <p className="text-slate-500">No cases yet. Upload a PDF or load the sample case to get started.</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -105,6 +108,8 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {showUploader && <PdfUploader onClose={() => setShowUploader(false)} />}
     </div>
   );
 }
