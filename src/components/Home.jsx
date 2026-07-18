@@ -5,7 +5,8 @@ import { listCases, saveCase, deleteCase, migrateOldLocalStorageCases } from '..
 import { clearSessionFigures } from '../lib/sessionImages.js';
 import { SAMPLE_CASE } from '../data/sampleCase.js';
 import PdfUploader from './PdfUploader.jsx';
-import TableViewer from './TableViewer.jsx';
+import { getSessionTables } from '../lib/sessionTables.js';
+
 
 export default function Home() {
   const [cases, setCases] = useState([]);
