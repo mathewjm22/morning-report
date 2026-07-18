@@ -120,9 +120,7 @@ async function extractPageText(page) {
 
 const lineTexts = lines.map(line =>
   line.sort((a, b) => a.x - b.x).map(i => i.text).join(' ').replace(/\s+/g, ' ').trim()
-);
-
-  const repairedLineTexts = lineTexts.map(repairSpacedGlyphs);
+).map(repairSpacedGlyphs);
 
   // Figure captions (unchanged)
   const captions = [];
