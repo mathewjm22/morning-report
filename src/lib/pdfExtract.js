@@ -158,7 +158,7 @@ const lineTexts = lines.map(line =>
 
 
   
-  return { text: isolateSectionHeaders(lineTexts.join('\n')), captions, tableCaptions };
+  return { text: lineTexts.join('\n'), captions, tableCaptions };
 }
 
 
