@@ -156,7 +156,62 @@ const lineTexts = lines.map(line =>
     }
   });
 
-  return { text: lineTexts.join('\n'), captions, tableCaptions };
+
+  
+  return { text: isolateSectionHeaders(lineTexts.join('\n')), captions, tableCaptions };
+}
+
+// NEJM section headers that we want to force onto their own lines,
+// even if they got glued to surrounding prose during column-based extraction.
+function isolateSectionHeaders(text) {
+  const HEADERS = [
+    'Presentation of Case',
+    'Differential Diagnosis',
+    'Clinical Impression',
+    'Clinical Diagnosis',
+    'Imaging Studies',
+    'Imaging Diagnosis',
+    'Radiologic Diagnosis',
+    'Diagnostic Testing',
+    'Diagnostic Studies',
+    'Laboratory Testing',
+    'Laboratory Diagnosis',
+    'Pathological Discussion',
+    'Pathological Diagnosis',
+    'Anatomical Diagnosis',
+    'Microbiologic Diagnosis',
+    'Microbiological Diagnosis',
+    'Molecular Diagnosis',
+    'Genetic Diagnosis',
+    'Hospital Course',
+    'Operative Management',
+    'Surgical Management',
+    'Discussion of Management',
+    'Infectious Diseases Management and Follow-up',
+    'Infectious Diseases Management',
+    'Sleep Medicine Management',
+    'Follow-up',
+    'Final Diagnosis',
+    'Patient Perspective',
+    'Lessons Learned',
+  ];
+
+  let out = text;
+  for (const h of HEADERS) {
+    // Match with flexible whitespace between words (handles residual spacing quirks)
+    const pattern = new RegExp(
+      '\\s*' + h.split(/\s+/).map(escapeRe).join('\\s+') + '\\s*',
+      'gi'
+    );
+    out = out.replace(pattern, `\n\n${h}\n\n`);
+  }
+  // Collapse runs of blank lines
+  out = out.replace(/\n{3,}/g, '\n\n');
+  return out;
+}
+
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // ============================================================
@@ -243,52 +298,11 @@ function repairSpacedGlyphs(line) {
   if (!line || line.length < 6) return line;
   const words = line.split(/\s+/);
   if (words.length < 4) return line;
-
   const shortWords = words.filter(w => w.length <= 2).length;
   if (shortWords / words.length < 0.5) return line;
-
-  // Squash all spaces
   const squashed = words.join('');
-
-  // Try known NEJM header patterns first (case-insensitive)
-  const knownHeaders = [
-    'Presentation of Case',
-    'Differential Diagnosis',
-    'Clinical Impression',
-    'Clinical Diagnosis',
-    'Imaging Studies',
-    'Imaging Diagnosis',
-    'Radiologic Diagnosis',
-    'Diagnostic Testing',
-    'Diagnostic Studies',
-    'Laboratory Testing',
-    'Laboratory Diagnosis',
-    'Pathological Discussion',
-    'Pathological Diagnosis',
-    'Anatomical Diagnosis',
-    'Microbiologic Diagnosis',
-    'Microbiological Diagnosis',
-    'Molecular Diagnosis',
-    'Genetic Diagnosis',
-    'Hospital Course',
-    'Operative Management',
-    'Surgical Management',
-    'Discussion of Management',
-    'Infectious Diseases Management',
-    'Infectious Diseases Management and Follow-up',
-    'Sleep Medicine Management',
-    'Follow-up',
-    'Final Diagnosis',
-    'Patient Perspective',
-    'Lessons Learned',
-  ];
-  for (const known of knownHeaders) {
-    if (squashed.toLowerCase() === known.toLowerCase().replace(/[-\s]/g, '')) {
-      return known;
-    }
-  }
-
-  // Fallback: split at camelCase transitions (handles "Dr.SandraB.Nelson'sDiagnosis")
+  const letterRatio = (squashed.match(/[a-zA-Z]/g) || []).length / squashed.length;
+  if (letterRatio < 0.8) return line;
   return squashed.replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
