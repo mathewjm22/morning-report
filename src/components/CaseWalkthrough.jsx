@@ -48,9 +48,9 @@ export default function CaseWalkthrough({ shared }) {
           const data = await loadSharedCase(shareId);
           if (!cancelled) setCaseData(data);
         } else {
-          const entry = getCase(decodeURIComponent(caseId));
+          const entry = await getCase(decodeURIComponent(caseId));
           if (!entry) {
-            setLoadError('Case not found in library');
+            if (!cancelled) setLoadError('Case not found in library');
             return;
           }
           if (!cancelled) setCaseData(entry.caseData);
