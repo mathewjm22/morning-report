@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { getCase, loadProgress, saveProgress } from '../lib/storage.js';
 import { loadSharedCase, saveCaseShare } from '../lib/api.js';
+import { getSessionFigures } from '../lib/sessionImages.js';
 import Whiteboard from './Whiteboard.jsx';
 import AnnotationCanvas from './AnnotationCanvas.jsx';
 
@@ -121,11 +122,22 @@ export default function CaseWalkthrough({ shared }) {
   }
 
   const gates = caseData.gates || [];
-  const gate = gates[gateIndex];
+
+  // Merge in session-only figures for any imaging gate that has none saved.
+  // (Images live in memory this session; the persisted case has empty figures.)
+  const sessionFigures = !shared ? getSessionFigures(caseData.id) : null;
+  const gatesWithFigures = gates.map(g => {
+    if (g.isImageGate && (!g.figures || g.figures.length === 0) && sessionFigures) {
+      return { ...g, figures: sessionFigures };
+    }
+    return g;
+  });
+
+  const gate = gatesWithFigures[gateIndex];
   const isRevealed = revealed[gateIndex];
 
   const goNext = () => {
-    if (gateIndex < gates.length - 1) {
+    if (gateIndex < gatesWithFigures.length - 1) {
       const newIdx = gateIndex + 1;
       setGateIndex(newIdx);
       if (!revealed[newIdx]) {
@@ -290,7 +302,7 @@ export default function CaseWalkthrough({ shared }) {
 
       {/* Progress bar */}
       <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-1 overflow-x-auto">
-        {gates.map((g, i) => (
+        {gatesWithFigures.map((g, i) => (
           <button
             key={g.id}
             onClick={() => setGateIndex(i)}
@@ -406,7 +418,7 @@ export default function CaseWalkthrough({ shared }) {
               <button onClick={goPrev} disabled={gateIndex === 0} className="flex items-center gap-1 px-4 py-2 text-sm bg-white border border-slate-300 rounded disabled:opacity-40 hover:bg-slate-50">
                 <ChevronLeft size={16} /> Previous
               </button>
-              <button onClick={goNext} disabled={gateIndex === gates.length - 1} className="flex items-center gap-1 px-4 py-2 text-sm bg-blue-600 text-white rounded disabled:opacity-40 hover:bg-blue-700">
+              <button onClick={goNext} disabled={gateIndex === gatesWithFigures.length - 1} className="flex items-center gap-1 px-4 py-2 text-sm bg-blue-600 text-white rounded disabled:opacity-40 hover:bg-blue-700">
                 Next <ChevronRight size={16} />
               </button>
             </div>
@@ -418,7 +430,7 @@ export default function CaseWalkthrough({ shared }) {
           highlights={highlights} removeHighlight={removeHighlight}
           plan={plan} setPlan={setPlan}
           ddxSnapshots={ddxSnapshots}
-          gates={gates}
+          gates={gatesWithFigures}
           showSnapshots={showSnapshots}
         />
       </div>
