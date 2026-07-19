@@ -33,7 +33,11 @@ export default function PdfViewer({
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const buf = await caseEntry.pdfBlob.arrayBuffer();
+      // pdfBlob might be an ArrayBuffer (from IndexedDB) or a Blob/File (fresh upload).
+// Handle both.
+const buf = caseEntry.pdfBlob instanceof ArrayBuffer
+  ? caseEntry.pdfBlob
+  : await caseEntry.pdfBlob.arrayBuffer();
       const doc = await loadPdf(buf);
       if (cancelled) return;
       setPdf(doc);
