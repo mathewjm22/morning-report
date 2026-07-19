@@ -1,13 +1,17 @@
+
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Home from './components/Home.jsx';
-import CaseWalkthrough from './components/CaseWalkthrough.jsx';
+import CaseWorkspace from './components/CaseWorkspace.jsx';
+import CaseAuthor from './components/CaseAuthor.jsx';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/case/:caseId" element={<CaseWalkthrough />} />
-      <Route path="/shared/:shareId" element={<CaseWalkthrough shared />} />
+      <Route path="/author" element={<CaseAuthor />} />
+      <Route path="/author/:caseId" element={<CaseAuthor />} />
+      <Route path="/case/:caseId" element={<CaseWorkspace />} />
+      <Route path="/shared/:shareId" element={<CaseWorkspace shared />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
