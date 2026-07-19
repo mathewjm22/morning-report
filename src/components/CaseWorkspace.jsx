@@ -11,7 +11,7 @@ import Whiteboard from './Whiteboard.jsx';
 import PinnedTray from './PinnedTray.jsx';
 import Lightbox from './Lightbox.jsx';
 import HighlightsTray from './HighlightsTray.jsx';
-
+import DdxCompareModal from './DdxCompareModal.jsx';
 
 export default function CaseWorkspace({ shared }) {
   const { caseId, shareId } = useParams();
@@ -27,6 +27,10 @@ export default function CaseWorkspace({ shared }) {
   const [rightTab, setRightTab] = useState('whiteboard');
   const [shareState, setShareState] = useState({ loading: false, url: null, copied: false, error: null });
   const highlightCount = Object.values(annotations).flat().filter(s => s.type === 'highlight').length;
+  const [committedDdx, setCommittedDdx] = useState(null); // snapshot when user commits
+  const [finalOutcome, setFinalOutcome] = useState(null); // { actualDiagnosis, learningPoints, matchInfo }
+  const [showRevealModal, setShowRevealModal] = useState(false);
+
   
   // Load case
   useEffect(() => {
@@ -44,22 +48,26 @@ export default function CaseWorkspace({ shared }) {
 
   // Load progress
   useEffect(() => {
-    if (!caseEntry || shared) return;
-    loadProgress(caseEntry.id).then(p => {
-      if (p) {
-        setDdx(p.ddx || []);
-        setPlan(p.plan || '');
-        setAnnotations(p.annotations || {});
-        setPinned(p.pinned || []);
-      }
-    });
-  }, [caseEntry, shared]);
+  if (!caseEntry || shared) return;
+  loadProgress(caseEntry.id).then(p => {
+    if (p) {
+      setDdx(p.ddx || []);
+      setPlan(p.plan || []);
+      setAnnotations(p.annotations || {});
+      setPinned(p.pinned || []);
+      setCommittedDdx(p.committedDdx || null);
+      setFinalOutcome(p.finalOutcome || null);
+    }
+  });
+}, [caseEntry, shared]);
 
   // Save progress
   useEffect(() => {
-    if (!caseEntry || shared) return;
-    saveProgress(caseEntry.id, { ddx, plan, annotations, pinned });
-  }, [caseEntry, shared, ddx, plan, annotations]);
+  if (!caseEntry || shared) return;
+  saveProgress(caseEntry.id, {
+    ddx, plan, annotations, pinned, committedDdx, finalOutcome,
+  });
+}, [caseEntry, shared, ddx, plan, annotations, pinned, committedDdx, finalOutcome]);
 
   if (loadError) return <ErrorScreen message={loadError} />;
   if (!caseEntry) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">Loading...</div>;
@@ -83,6 +91,26 @@ export default function CaseWorkspace({ shared }) {
 
   const pinElement = (el) => setPinned(prev => [...prev, { ...el, pinnedAt: Date.now() }]);
   const unpin = (id) => setPinned(prev => prev.filter(e => e.id !== id));
+
+  const handleCommitDdx = () => {
+    const snapshot = ddx.map((d, i) => ({
+      id: d.id,
+      name: d.name,
+      notes: d.notes,
+      rank: i + 1,
+    }));
+    setCommittedDdx(snapshot);
+  };
+
+  const handleUncommitDdx = () => {
+    if (!confirm('Un-commit your DDx? You can keep editing after this.')) return;
+    setCommittedDdx(null);
+  };
+
+  const handleSaveOutcome = (outcome) => {
+    setFinalOutcome(outcome);
+    setShowRevealModal(false);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
@@ -168,7 +196,16 @@ export default function CaseWorkspace({ shared }) {
       {pinned.length > 0 && <span className="ml-1 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
     </button>
   </div>
-  {rightTab === 'whiteboard' && <Whiteboard ddx={ddx} setDdx={setDdx} plan={plan} setPlan={setPlan} />}
+  {rightTab === 'whiteboard' && (
+  <Whiteboard
+    ddx={ddx} setDdx={setDdx}
+    plan={plan} setPlan={setPlan}
+    committedDdx={committedDdx}
+    onCommitDdx={handleCommitDdx}
+    onUncommitDdx={handleUncommitDdx}
+    onOpenReveal={() => setShowRevealModal(true)}
+  />
+)}
   {rightTab === 'highlights' && <HighlightsTray annotations={annotations} setAnnotations={setAnnotations} />}
   {rightTab === 'pinned' && <PinnedTray elements={pinned} onUnpin={unpin} onOpenLightbox={setLightbox} />}
 </div>
@@ -181,6 +218,14 @@ export default function CaseWorkspace({ shared }) {
           onClose={() => setLightbox(null)}
         />
       )}
+      {showRevealModal && committedDdx && (
+  <DdxCompareModal
+    committedDdx={committedDdx}
+    existingOutcome={finalOutcome}
+    onSave={handleSaveOutcome}
+    onClose={() => setShowRevealModal(false)}
+  />
+)}
     </div>
   );
 }
