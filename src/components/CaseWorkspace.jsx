@@ -63,8 +63,6 @@ export default function CaseWorkspace({ shared }) {
   if (loadError) return <ErrorScreen message={loadError} />;
   if (!caseEntry) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">Loading...</div>;
 
-  const gate = caseEntry.gates[gateIdx];
-
   const generateShare = async () => {
     setShareState({ loading: true, url: null, copied: false, error: null });
     try {
