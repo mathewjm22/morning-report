@@ -432,17 +432,20 @@ function distToSegment(p, a, b) {
   return Math.hypot(p.x - (a.x + t * (b.x - a.x)), p.y - (a.y + t * (b.y - a.y)));
 }
 
+
+
+
 // Return a single word whose bounding box contains the point, or null.
 // Uses tight bounds — no fudge — so clicking between lines returns null.
 function wordAtPoint(pt, textItems) {
   if (!textItems) return null;
-  // Iterate in reverse so foreground/later items win ties (rare but possible)
   for (let i = textItems.length - 1; i >= 0; i--) {
     const it = textItems[i];
     if (
       pt.x >= it.x && pt.x <= it.x + it.w &&
       pt.y >= it.y && pt.y <= it.y + it.h
     ) {
+      console.log('CLICKED ITEM:', JSON.stringify(it));
       return it;
     }
   }
