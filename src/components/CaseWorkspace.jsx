@@ -10,6 +10,8 @@ import PdfViewer from './PdfViewer.jsx';
 import Whiteboard from './Whiteboard.jsx';
 import PinnedTray from './PinnedTray.jsx';
 import Lightbox from './Lightbox.jsx';
+import HighlightsTray from './HighlightsTray.jsx';
+
 
 export default function CaseWorkspace({ shared }) {
   const { caseId, shareId } = useParams();
