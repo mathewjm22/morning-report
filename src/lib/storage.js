@@ -1,9 +1,12 @@
-// Case storage using IndexedDB (essentially unlimited).
-// Progress (per-case user work) still in localStorage — it's small.
+
+// IndexedDB-backed case storage. Each case entry stores:
+//   { id, title, source, addedAt, pdfBlob, gates, contentPages }
+// Progress (annotations, DDx, plan, highlights) is a separate object per case.
 
 const DB_NAME = 'morning-report-db';
-const DB_VERSION = 1;
-const STORE = 'cases';
+const DB_VERSION = 2;
+const CASES_STORE = 'cases';
+const PROGRESS_STORE = 'progress';
 
 let dbPromise = null;
 
@@ -13,9 +16,11 @@ function openDb() {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        const store = db.createObjectStore(STORE, { keyPath: 'id' });
-        store.createIndex('addedAt', 'addedAt');
+      if (!db.objectStoreNames.contains(CASES_STORE)) {
+        db.createObjectStore(CASES_STORE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(PROGRESS_STORE)) {
+        db.createObjectStore(PROGRESS_STORE, { keyPath: 'caseId' });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -24,43 +29,23 @@ function openDb() {
   return dbPromise;
 }
 
-async function tx(mode, fn) {
+async function txReq(store, mode, action) {
   const db = await openDb();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE, mode);
-    const store = transaction.objectStore(STORE);
-    const result = fn(store);
-    transaction.oncomplete = () => resolve(result);
-    transaction.onerror = () => reject(transaction.error);
-    transaction.onabort = () => reject(transaction.error);
+    const tx = db.transaction(store, mode);
+    const s = tx.objectStore(store);
+    const req = action(s);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
   });
 }
-
-// Wrap IndexedDB requests as promises
-function req2promise(request) {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-// ---- Public API (async now) ----
 
 export async function listCases() {
   try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readonly');
-      const store = transaction.objectStore(STORE);
-      const req = store.getAll();
-      req.onsuccess = () => {
-        const all = req.result || [];
-        // Sort newest first
-        all.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
-        resolve(all);
-      };
-      req.onerror = () => reject(req.error);
-    });
+    const all = await txReq(CASES_STORE, 'readonly', s => s.getAll());
+    all.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+    // Return metadata only (skip blobs to keep list light)
+    return all.map(({ pdfBlob, ...meta }) => meta);
   } catch (e) {
     console.error('listCases failed', e);
     return [];
@@ -69,14 +54,7 @@ export async function listCases() {
 
 export async function getCase(id) {
   try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readonly');
-      const store = transaction.objectStore(STORE);
-      const req = store.get(id);
-      req.onsuccess = () => resolve(req.result || null);
-      req.onerror = () => reject(req.error);
-    });
+    return await txReq(CASES_STORE, 'readonly', s => s.get(id));
   } catch (e) {
     console.error('getCase failed', e);
     return null;
@@ -87,97 +65,34 @@ export async function saveCase(caseData) {
   const entry = {
     id: caseData.id,
     title: caseData.title,
-    source: caseData.source,
-    addedAt: Date.now(),
-    caseData,
+    source: caseData.source || '',
+    addedAt: caseData.addedAt || Date.now(),
+    pdfBlob: caseData.pdfBlob, // Blob or ArrayBuffer
+    gates: caseData.gates || [],
+    contentPages: caseData.contentPages || null, // { start, end } or null = all pages
+    totalPages: caseData.totalPages,
   };
-  try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readwrite');
-      const store = transaction.objectStore(STORE);
-      const req = store.put(entry);
-      req.onsuccess = () => resolve(entry);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (e) {
-    console.error('saveCase failed', e);
-    throw e;
-  }
+  return await txReq(CASES_STORE, 'readwrite', s => s.put(entry));
 }
 
 export async function deleteCase(id) {
-  try {
-    const db = await openDb();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORE, 'readwrite');
-      const store = transaction.objectStore(STORE);
-      const req = store.delete(id);
-      req.onsuccess = () => resolve(true);
-      req.onerror = () => reject(req.error);
-    });
-  } catch (e) {
-    console.error('deleteCase failed', e);
-    return false;
-  }
+  await txReq(CASES_STORE, 'readwrite', s => s.delete(id));
+  await txReq(PROGRESS_STORE, 'readwrite', s => s.delete(id));
 }
 
-// ---- Progress: still localStorage (small: ddx + highlights + a few strings) ----
-const PROGRESS_PREFIX = 'morning-report.progress.';
-
-export function loadProgress(caseId) {
+export async function loadProgress(caseId) {
   try {
-    const raw = localStorage.getItem(PROGRESS_PREFIX + caseId);
-    return raw ? JSON.parse(raw) : null;
+    const entry = await txReq(PROGRESS_STORE, 'readonly', s => s.get(caseId));
+    return entry?.data || null;
   } catch {
     return null;
   }
 }
 
-export function saveProgress(caseId, progress) {
+export async function saveProgress(caseId, data) {
   try {
-    localStorage.setItem(PROGRESS_PREFIX + caseId, JSON.stringify(progress));
+    await txReq(PROGRESS_STORE, 'readwrite', s => s.put({ caseId, data }));
   } catch (e) {
-    // Localstorage full — drop the oldest progress entries
-    console.warn('localStorage full for progress, attempting cleanup', e);
-    try {
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith(PROGRESS_PREFIX)) keys.push(k);
-      }
-      // Drop oldest half
-      keys.slice(0, Math.ceil(keys.length / 2)).forEach(k => localStorage.removeItem(k));
-      localStorage.setItem(PROGRESS_PREFIX + caseId, JSON.stringify(progress));
-    } catch (e2) {
-      console.error('Progress save failed even after cleanup', e2);
-    }
-  }
-}
-
-export function clearProgress(caseId) {
-  localStorage.removeItem(PROGRESS_PREFIX + caseId);
-}
-
-// ---- Migration: move any old localStorage cases into IndexedDB ----
-// Run once on app load.
-const OLD_KEY = 'morning-report.cases.v1';
-
-export async function migrateOldLocalStorageCases() {
-  try {
-    const raw = localStorage.getItem(OLD_KEY);
-    if (!raw) return;
-    const oldCases = JSON.parse(raw);
-    if (!Array.isArray(oldCases)) return;
-    for (const entry of oldCases) {
-      if (entry && entry.caseData) {
-        try { await saveCase(entry.caseData); } catch {}
-      }
-    }
-    // Remove old localStorage entry to free the quota
-    localStorage.removeItem(OLD_KEY);
-    console.log(`Migrated ${oldCases.length} cases from localStorage to IndexedDB`);
-  } catch (e) {
-    console.warn('Migration failed', e);
+    console.warn('saveProgress failed', e);
   }
 }
