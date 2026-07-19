@@ -15,6 +15,27 @@ export async function loadPdf(source) {
   return await task.promise;
 }
 
+// Add this to pdfLoader.js
+export async function getPageTextItems(pdf, pageNum, viewport) {
+  const page = await pdf.getPage(pageNum);
+  const content = await page.getTextContent();
+  return content.items
+    .filter(i => i.str && i.str.trim())
+    .map(i => {
+      // Transform item position to viewport coordinates
+      const tx = pdfjsLib.Util.transform(viewport.transform, i.transform);
+      const x = tx[4];
+      const y = tx[5] - i.height * viewport.scale;
+      return {
+        text: i.str,
+        x,
+        y,
+        w: i.width * viewport.scale,
+        h: i.height * viewport.scale,
+      };
+    });
+}
+
 // Render one page to a supplied canvas at the given scale.
 // Returns the viewport used (for coordinate conversions).
 export async function renderPage(pdf, pageNum, canvas, scale = 1.5) {
