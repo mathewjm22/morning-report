@@ -273,6 +273,7 @@ export default function AnnotationLayer({
     )}
   </>
 );
+}
 
 function StrokeRenderer({ stroke: s, selected, preview, onEditNote }) {
   const sw = s.strokeWidth || 2.5;
