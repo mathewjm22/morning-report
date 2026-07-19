@@ -6,6 +6,7 @@ const HANDLE_R = 5;
 export default function AnnotationLayer({
   width, height, tool, color, strokeWidth,
   strokes, setStrokes,
+  textItems, pageNum,  // ← NEW
 }) {
   const svgRef = useRef(null);
   const [dragging, setDragging] = useState(null); // { strokeIdx, handle: 'start'|'end'|'whole'|'note', origPt, origStroke }
@@ -137,13 +138,30 @@ export default function AnnotationLayer({
   const handleMouseUp = () => {
     if (dragging) { setDragging(null); return; }
     if (isCreating && preview) {
-      // Reject degenerate strokes (single click)
-      const isDegenerate =
-        (preview.type === 'pen' || preview.type === 'highlight') && preview.points.length < 2 ||
-        (preview.start && preview.end &&
-          Math.hypot(preview.end.x - preview.start.x, preview.end.y - preview.start.y) < 4);
-      if (!isDegenerate) setStrokes([...strokes, preview]);
+  const isDegenerate =
+    ((preview.type === 'pen' || preview.type === 'highlight') && preview.points.length < 2) ||
+    (preview.start && preview.end &&
+      Math.hypot(preview.end.x - preview.start.x, preview.end.y - preview.start.y) < 4);
+
+  if (!isDegenerate) {
+    let final = preview;
+
+    // For highlights: extract underlying text from PDF text items
+    if (preview.type === 'highlight' && textItems && textItems.length > 0) {
+      const bbox = strokeBoundingBox(preview);
+      const captured = textItems
+        .filter(it => rectIntersects(bbox, it))
+        .sort((a, b) => (a.y - b.y) || (a.x - b.x))
+        .map(it => it.text)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      final = { ...preview, capturedText: captured, pageNum };
     }
+
+    setStrokes([...strokes, final]);
+  }
+}
     setIsCreating(false);
     setStartPt(null);
     setPreview(null);
@@ -348,4 +366,27 @@ function distToSegment(p, a, b) {
   let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2;
   t = Math.max(0, Math.min(1, t));
   return Math.hypot(p.x - (a.x + t * (b.x - a.x)), p.y - (a.y + t * (b.y - a.y)));
+}
+
+function strokeBoundingBox(s) {
+  if (s.points) {
+    const xs = s.points.map(p => p.x);
+    const ys = s.points.map(p => p.y);
+    return {
+      x: Math.min(...xs), y: Math.min(...ys),
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+    };
+  }
+  return { x: 0, y: 0, w: 0, h: 0 };
+}
+
+function rectIntersects(r, item) {
+  // item has x, y, w, h; r has x, y, w, h
+  return !(
+    r.x > item.x + item.w ||
+    r.x + r.w < item.x ||
+    r.y > item.y + item.h ||
+    r.y + r.h < item.y
+  );
 }
