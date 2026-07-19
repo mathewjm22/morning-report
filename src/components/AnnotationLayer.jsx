@@ -24,9 +24,15 @@ export default function AnnotationLayer({
   };
 
   const strokeHit = (s, pt, thresh = 10) => {
-    if (s.type === 'pen' || s.type === 'highlight') {
-      return s.points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < thresh);
-    }
+    if (s.type === 'pen') {
+  return s.points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < thresh);
+}
+if (s.type === 'highlight') {
+  return (s.words || []).some(w =>
+    pt.x >= w.x - 2 && pt.x <= w.x + w.w + 2 &&
+    pt.y >= w.y - 2 && pt.y <= w.y + w.h + 2
+  );
+}
     if (s.type === 'note') {
       return pt.x >= s.x && pt.x <= s.x + (s.w || 140) &&
              pt.y >= s.y && pt.y <= s.y + (s.h || 70);
@@ -86,10 +92,20 @@ export default function AnnotationLayer({
     }
 
     setStartPt(pt);
-    setIsCreating(true);
-    if (tool === 'pen' || tool === 'highlight') {
-      setPreview({ type: tool, color, strokeWidth, points: [pt] });
-    }
+setIsCreating(true);
+if (tool === 'pen') {
+  setPreview({ type: 'pen', color, strokeWidth, points: [pt] });
+} else if (tool === 'highlight') {
+  // Start collecting words as the user drags.
+  // The highlight is a set of per-word rects, not a freehand path.
+  const initialWords = wordsAtPoint(pt, textItems);
+  setPreview({
+    type: 'highlight',
+    color,
+    words: initialWords, // [{ x, y, w, h, text }]
+    pageNum,
+  });
+}
     setSelectedIdx(null);
   };
 
@@ -109,9 +125,11 @@ export default function AnnotationLayer({
         updated = { ...orig, end: { x: orig.end.x + dx, y: orig.end.y + dy } };
       } else {
         // Translate whole stroke
-        if (orig.type === 'pen' || orig.type === 'highlight') {
-          updated = { ...orig, points: orig.points.map(p => ({ x: p.x + dx, y: p.y + dy })) };
-        } else if (orig.type === 'note') {
+        if (orig.type === 'pen') {
+  updated = { ...orig, points: orig.points.map(p => ({ x: p.x + dx, y: p.y + dy })) };
+} else if (orig.type === 'highlight') {
+  updated = { ...orig, words: (orig.words || []).map(w => ({ ...w, x: w.x + dx, y: w.y + dy })) };
+} else if (orig.type === 'note') {
           updated = { ...orig, x: orig.x + dx, y: orig.y + dy };
         } else {
           updated = {
@@ -128,39 +146,51 @@ export default function AnnotationLayer({
 
     // Continue creating a new stroke
     if (!isCreating) return;
-    if (tool === 'pen' || tool === 'highlight') {
-      setPreview(p => p ? { ...p, points: [...p.points, pt] } : null);
-    } else if (['arrow', 'circle', 'ruler', 'caliper'].includes(tool)) {
-      setPreview({ type: tool, color, strokeWidth, start: startPt, end: pt });
-    }
+    if (tool === 'pen') {
+  setPreview(p => p ? { ...p, points: [...p.points, pt] } : null);
+} else if (tool === 'highlight') {
+  setPreview(p => {
+    if (!p) return null;
+    const newWords = wordsAtPoint(pt, textItems);
+    // Also add all words on the line between the previous cursor point and this one,
+    // so fast drags don't skip words.
+    const lineWords = wordsAlongSegment(startPt, pt, textItems);
+    const combined = mergeWords([...p.words, ...newWords, ...lineWords]);
+    return { ...p, words: combined };
+  });
+} else if (['arrow', 'circle', 'ruler', 'caliper'].includes(tool)) {
+  setPreview({ type: tool, color, strokeWidth, start: startPt, end: pt });
+}
   };
 
   const handleMouseUp = () => {
     if (dragging) { setDragging(null); return; }
     if (isCreating && preview) {
-  const isDegenerate =
-    ((preview.type === 'pen' || preview.type === 'highlight') && preview.points.length < 2) ||
-    (preview.start && preview.end &&
-      Math.hypot(preview.end.x - preview.start.x, preview.end.y - preview.start.y) < 4);
+  let final = preview;
+  let isDegenerate = false;
 
-  if (!isDegenerate) {
-    let final = preview;
-
-    // For highlights: extract underlying text from PDF text items
-    if (preview.type === 'highlight' && textItems && textItems.length > 0) {
-      const bbox = strokeBoundingBox(preview);
-      const captured = textItems
-        .filter(it => rectIntersects(bbox, it))
-        .sort((a, b) => (a.y - b.y) || (a.x - b.x))
-        .map(it => it.text)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      final = { ...preview, capturedText: captured, pageNum };
+  if (preview.type === 'pen') {
+    isDegenerate = preview.points.length < 2;
+  } else if (preview.type === 'highlight') {
+    isDegenerate = !preview.words || preview.words.length === 0;
+    if (!isDegenerate) {
+      // Sort words in reading order and join text
+      const sorted = [...preview.words].sort((a, b) => {
+        // Same line (within 6px vertical) → left-to-right
+        if (Math.abs(a.y - b.y) < 6) return a.x - b.x;
+        return a.y - b.y;
+      });
+      final = {
+        ...preview,
+        capturedText: sorted.map(w => w.text).join(' ').replace(/\s+/g, ' ').trim(),
+      };
     }
-
-    setStrokes([...strokes, final]);
+  } else if (preview.start && preview.end) {
+    isDegenerate = Math.hypot(preview.end.x - preview.start.x, preview.end.y - preview.start.y) < 4;
   }
+
+  if (!isDegenerate) setStrokes([...strokes, final]);
+}
 }
     setIsCreating(false);
     setStartPt(null);
@@ -229,17 +259,37 @@ function StrokeRenderer({ stroke: s, selected, preview, onEditNote }) {
   const opacity = s.type === 'highlight' ? 0.35 : 1;
   const sw = s.strokeWidth || 2.5;
 
-  if (s.type === 'pen' || s.type === 'highlight') {
-    const d = s.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-    return (
-      <path d={d} fill="none" stroke={s.color}
-        strokeWidth={s.type === 'highlight' ? 14 : sw}
-        strokeLinecap="round" strokeLinejoin="round"
-        opacity={opacity}
-        style={{ filter: selected ? 'drop-shadow(0 0 3px rgba(59,130,246,0.8))' : undefined }}
-      />
-    );
-  }
+ if (s.type === 'pen') {
+  const d = s.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  return (
+    <path d={d} fill="none" stroke={s.color}
+      strokeWidth={sw}
+      strokeLinecap="round" strokeLinejoin="round"
+      opacity={1}
+      style={{ filter: selected ? 'drop-shadow(0 0 3px rgba(59,130,246,0.8))' : undefined }}
+    />
+  );
+}
+
+if (s.type === 'highlight') {
+  // Render one semi-transparent rect per word
+  return (
+    <g style={{ mixBlendMode: 'multiply' }} opacity={0.4}>
+      {(s.words || []).map((w, i) => (
+        <rect
+          key={i}
+          x={w.x - 1}
+          y={w.y - 1}
+          width={w.w + 2}
+          height={w.h + 2}
+          fill={s.color}
+          rx={2}
+          style={{ filter: selected ? 'drop-shadow(0 0 3px rgba(59,130,246,0.8))' : undefined }}
+        />
+      ))}
+    </g>
+  );
+}
 
   if (s.type === 'arrow') {
     const { start, end } = s;
@@ -368,25 +418,45 @@ function distToSegment(p, a, b) {
   return Math.hypot(p.x - (a.x + t * (b.x - a.x)), p.y - (a.y + t * (b.y - a.y)));
 }
 
-function strokeBoundingBox(s) {
-  if (s.points) {
-    const xs = s.points.map(p => p.x);
-    const ys = s.points.map(p => p.y);
-    return {
-      x: Math.min(...xs), y: Math.min(...ys),
-      w: Math.max(...xs) - Math.min(...xs),
-      h: Math.max(...ys) - Math.min(...ys),
-    };
-  }
-  return { x: 0, y: 0, w: 0, h: 0 };
-}
-
-function rectIntersects(r, item) {
-  // item has x, y, w, h; r has x, y, w, h
-  return !(
-    r.x > item.x + item.w ||
-    r.x + r.w < item.x ||
-    r.y > item.y + item.h ||
-    r.y + r.h < item.y
+// Return text items whose bounding box contains the point
+function wordsAtPoint(pt, textItems) {
+  if (!textItems) return [];
+  return textItems.filter(it =>
+    pt.x >= it.x - 1 && pt.x <= it.x + it.w + 1 &&
+    pt.y >= it.y - 2 && pt.y <= it.y + it.h + 2
   );
 }
+
+// Return text items whose bounding box intersects the segment from a to b.
+// Uses a set of sample points along the segment (cheap and good enough).
+function wordsAlongSegment(a, b, textItems) {
+  if (!textItems) return [];
+  const dist = Math.hypot(b.x - a.x, b.y - a.y);
+  const steps = Math.max(1, Math.ceil(dist / 4));
+  const found = new Set();
+  const collected = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const p = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+    for (const it of textItems) {
+      if (found.has(it)) continue;
+      if (p.x >= it.x - 1 && p.x <= it.x + it.w + 1 &&
+          p.y >= it.y - 2 && p.y <= it.y + it.h + 2) {
+        found.add(it);
+        collected.push(it);
+      }
+    }
+  }
+  return collected;
+}
+
+// Deduplicate word list by (x, y, text) since we sample overlapping paths
+function mergeWords(list) {
+  const seen = new Map();
+  for (const w of list) {
+    const key = `${w.x.toFixed(1)}-${w.y.toFixed(1)}-${w.text}`;
+    if (!seen.has(key)) seen.set(key, w);
+  }
+  return Array.from(seen.values());
+}
+
