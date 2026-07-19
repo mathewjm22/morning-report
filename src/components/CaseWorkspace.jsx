@@ -137,31 +137,38 @@ export default function CaseWorkspace({ shared }) {
 />
 
         <div className="w-[380px] bg-white border-l border-slate-200 flex flex-col flex-shrink-0">
-          <div className="flex border-b border-slate-200">
-            <button
-              onClick={() => setRightTab('whiteboard')}
-              className={`flex-1 py-2.5 text-xs font-medium ${
-                rightTab === 'whiteboard' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              Whiteboard
-            </button>
-            <button
-              onClick={() => setRightTab('pinned')}
-              className={`flex-1 py-2.5 text-xs font-medium relative ${
-                rightTab === 'pinned' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              Pinned
-              {pinned.length > 0 && <span className="ml-1 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
-            </button>
-          </div>
-          {rightTab === 'whiteboard' ? (
-            <Whiteboard ddx={ddx} setDdx={setDdx} plan={plan} setPlan={setPlan} />
-          ) : (
-            <PinnedTray elements={pinned} onUnpin={unpin} onOpenLightbox={setLightbox} />
-          )}
-        </div>
+  <div className="flex border-b border-slate-200">
+    <button
+      onClick={() => setRightTab('whiteboard')}
+      className={`flex-1 py-2.5 text-xs font-medium ${
+        rightTab === 'whiteboard' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
+      }`}
+    >
+      Whiteboard
+    </button>
+    <button
+      onClick={() => setRightTab('highlights')}
+      className={`flex-1 py-2.5 text-xs font-medium relative ${
+        rightTab === 'highlights' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
+      }`}
+    >
+      Highlights
+      {highlightCount > 0 && <span className="ml-1 bg-yellow-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
+    </button>
+    <button
+      onClick={() => setRightTab('pinned')}
+      className={`flex-1 py-2.5 text-xs font-medium relative ${
+        rightTab === 'pinned' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
+      }`}
+    >
+      Pinned
+      {pinned.length > 0 && <span className="ml-1 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
+    </button>
+  </div>
+  {rightTab === 'whiteboard' && <Whiteboard ddx={ddx} setDdx={setDdx} plan={plan} setPlan={setPlan} />}
+  {rightTab === 'highlights' && <HighlightsTray annotations={annotations} setAnnotations={setAnnotations} />}
+  {rightTab === 'pinned' && <PinnedTray elements={pinned} onUnpin={unpin} onOpenLightbox={setLightbox} />}
+</div>
       </div>
 
       {lightbox && (
