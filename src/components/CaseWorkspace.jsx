@@ -130,14 +130,13 @@ export default function CaseWorkspace({ shared }) {
       {/* Main columns */}
       <div className="flex-1 flex overflow-hidden">
         <PdfViewer
-          caseEntry={caseEntry}
-          gate={gate}
-          annotations={annotations}
-          setAnnotations={setAnnotations}
-          onPinElement={pinElement}
-          onOpenLightbox={setLightbox}
-          attendingMode={attendingMode}
-        />
+  caseEntry={caseEntry}
+  annotations={annotations}
+  setAnnotations={setAnnotations}
+  onPinElement={pinElement}
+  onOpenLightbox={setLightbox}
+  attendingMode={attendingMode}
+/>
 
         <div className="w-[380px] bg-white border-l border-slate-200 flex flex-col flex-shrink-0">
           <div className="flex border-b border-slate-200">
