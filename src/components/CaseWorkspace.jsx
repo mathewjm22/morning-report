@@ -26,7 +26,8 @@ export default function CaseWorkspace({ shared }) {
   const [attendingMode, setAttendingMode] = useState(false);
   const [rightTab, setRightTab] = useState('whiteboard');
   const [shareState, setShareState] = useState({ loading: false, url: null, copied: false, error: null });
-
+  const highlightCount = Object.values(annotations).flat().filter(s => s.type === 'highlight').length;
+  
   // Load case
   useEffect(() => {
     let cancelled = false;
