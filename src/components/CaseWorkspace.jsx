@@ -17,7 +17,7 @@ export default function CaseWorkspace({ shared }) {
   const [caseEntry, setCaseEntry] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [ddx, setDdx] = useState([]);
-  const [plan, setPlan] = useState('');
+  const [plan, setPlan] = useState([]);
   const [annotations, setAnnotations] = useState({}); // { pageNum: [strokes] }
   const [pinned, setPinned] = useState([]);
   const [lightbox, setLightbox] = useState(null);
