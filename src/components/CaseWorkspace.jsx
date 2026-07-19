@@ -128,25 +128,7 @@ export default function CaseWorkspace({ shared }) {
           <button onClick={() => setShareState({ loading: false, url: null, copied: false, error: null })} className="text-slate-400 hover:text-slate-700">×</button>
         </div>
       )}
-
-      {/* Gate bar */}
-      <div className="bg-white border-b border-slate-200 px-3 py-2 flex items-center gap-1 overflow-x-auto z-10">
-        {caseEntry.gates.map((g, i) => (
-          <button
-            key={g.id}
-            onClick={() => setGateIdx(i)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs whitespace-nowrap transition ${
-              i === gateIdx ? 'bg-blue-600 text-white shadow-sm' :
-              'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span className="font-medium">{i + 1}.</span>
-            <span>{g.label}</span>
-            <span className="text-[10px] opacity-70">p.{g.pages.join(',')}</span>
-          </button>
-        ))}
-      </div>
-
+      
       {/* Main columns */}
       <div className="flex-1 flex overflow-hidden">
         <PdfViewer
