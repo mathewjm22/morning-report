@@ -16,7 +16,6 @@ export default function CaseWorkspace({ shared }) {
   const navigate = useNavigate();
   const [caseEntry, setCaseEntry] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [gateIdx, setGateIdx] = useState(0);
   const [ddx, setDdx] = useState([]);
   const [plan, setPlan] = useState('');
   const [annotations, setAnnotations] = useState({}); // { pageNum: [strokes] }
@@ -48,7 +47,6 @@ export default function CaseWorkspace({ shared }) {
         setDdx(p.ddx || []);
         setPlan(p.plan || '');
         setAnnotations(p.annotations || {});
-        setGateIdx(p.gateIdx || 0);
         setPinned(p.pinned || []);
       }
     });
@@ -57,8 +55,8 @@ export default function CaseWorkspace({ shared }) {
   // Save progress
   useEffect(() => {
     if (!caseEntry || shared) return;
-    saveProgress(caseEntry.id, { ddx, plan, annotations, gateIdx, pinned });
-  }, [caseEntry, shared, ddx, plan, annotations, gateIdx, pinned]);
+    saveProgress(caseEntry.id, { ddx, plan, annotations, pinned });
+  }, [caseEntry, shared, ddx, plan, annotations]);
 
   if (loadError) return <ErrorScreen message={loadError} />;
   if (!caseEntry) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">Loading...</div>;
