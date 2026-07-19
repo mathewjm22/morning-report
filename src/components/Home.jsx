@@ -1,50 +1,28 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Trash2, Clock, BookOpen } from 'lucide-react';
-import { listCases, saveCase, deleteCase, migrateOldLocalStorageCases } from '../lib/storage.js';
-import { clearSessionFigures } from '../lib/sessionImages.js';
-import { SAMPLE_CASE } from '../data/sampleCase.js';
-import PdfUploader from './PdfUploader.jsx';
-import { getSessionTables } from '../lib/sessionTables.js';
-
+import { listCases, deleteCase } from '../lib/storage.js';
 
 export default function Home() {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showUploader, setShowUploader] = useState(false);
   const navigate = useNavigate();
 
   const refresh = async () => {
     setLoading(true);
-    const all = await listCases();
-    setCases(all);
+    setCases(await listCases());
     setLoading(false);
   };
 
-  useEffect(() => {
-    (async () => {
-      await migrateOldLocalStorageCases();
-      await refresh();
-    })();
-  }, []);
+  useEffect(() => { refresh(); }, []);
 
-  const addSampleCase = async () => {
-    try {
-      await saveCase(SAMPLE_CASE);
-      await refresh();
-    } catch (e) {
-      alert('Failed to save sample case: ' + e.message);
-    }
+  const removeCase = async (id, e) => {
+    e.stopPropagation();
+    if (!confirm('Delete this case? This cannot be undone.')) return;
+    await deleteCase(id);
+    await refresh();
   };
-
-const removeCase = async (id, e) => {
-  e.stopPropagation();
-  if (!confirm('Delete this case from your library? This cannot be undone.')) return;
-  await deleteCase(id);
-  clearSessionFigures(id);
-  clearSessionTables(id);   // ← add this line
-  await refresh();
-};
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -57,34 +35,21 @@ const removeCase = async (id, e) => {
             <h1 className="text-3xl font-bold text-slate-900">Morning Report</h1>
           </div>
           <p className="text-slate-600">
-            Stepwise clinical reasoning practice from NEJM Case Records. Upload a case PDF and work through it like morning report.
+            Interactive clinical reasoning workspace built around the source PDF. Upload a case, define reading gates, and work through it as if it were morning report.
           </p>
         </header>
 
-        <div className="grid gap-4 mb-8 sm:grid-cols-2">
+        <div className="grid gap-4 mb-8">
           <button
-            onClick={() => setShowUploader(true)}
+            onClick={() => navigate('/author')}
             className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-left hover:border-blue-400 hover:shadow-md transition"
           >
             <div className="flex items-center gap-2 mb-2 text-slate-700">
               <Plus size={20} />
-              <span className="font-semibold">Upload PDF</span>
+              <span className="font-semibold">New Case — Upload PDF</span>
             </div>
             <p className="text-sm text-slate-500">
-              Drop an NEJM Case Records PDF to parse it into a walkthrough. Takes ~60 seconds.
-            </p>
-          </button>
-
-          <button
-            onClick={addSampleCase}
-            className="bg-white border-2 border-slate-200 rounded-lg p-6 text-left hover:border-blue-400 hover:shadow-md transition"
-          >
-            <div className="flex items-center gap-2 mb-2 text-slate-700">
-              <FileText size={20} />
-              <span className="font-semibold">Load Sample Case</span>
-            </div>
-            <p className="text-sm text-slate-500">
-              Add the alpha-gal syndrome case to your library to test the walkthrough.
+              Drop a PDF, define which pages are the case content, and set reading gates.
             </p>
           </button>
         </div>
@@ -92,12 +57,12 @@ const removeCase = async (id, e) => {
         <div>
           <h2 className="text-lg font-semibold text-slate-800 mb-3">Your Library</h2>
           {loading ? (
-            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-              <p className="text-slate-500 text-sm">Loading...</p>
+            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-500 text-sm">
+              Loading...
             </div>
           ) : cases.length === 0 ? (
-            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-              <p className="text-slate-500">No cases yet. Upload a PDF or load the sample case to get started.</p>
+            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-500">
+              No cases yet. Upload a PDF to get started.
             </div>
           ) : (
             <div className="space-y-2">
@@ -114,7 +79,9 @@ const removeCase = async (id, e) => {
                       <Clock size={12} />
                       <span>Added {new Date(c.addedAt).toLocaleDateString()}</span>
                       <span className="mx-1">•</span>
-                      <span>{c.caseData?.gates?.length || 0} gates</span>
+                      <span>{c.gates?.length || 0} gates</span>
+                      <span className="mx-1">•</span>
+                      <span>{c.totalPages || '?'} pages</span>
                     </div>
                   </div>
                   <button
@@ -130,8 +97,7 @@ const removeCase = async (id, e) => {
           )}
         </div>
       </div>
-
-      {showUploader && <PdfUploader onClose={() => setShowUploader(false)} onSuccess={refresh} />}
     </div>
   );
 }
+
