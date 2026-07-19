@@ -93,14 +93,23 @@ export default function AnnotationLayer({
     if (tool === 'pen') {
       setPreview({ type: 'pen', color, strokeWidth, points: [pt] });
     } else if (tool === 'highlight') {
-      const initialWords = wordsAtPoint(pt, textItems);
-      setPreview({
-        type: 'highlight',
-        color,
-        words: initialWords,
-        pageNum,
-      });
-    }
+  const startWord = wordAtPoint(pt, textItems);
+  if (startWord) {
+    // Single word to start; drag extends the range
+    setPreview({
+      type: 'highlight',
+      color,
+      words: [startWord],
+      startWord,  // anchor for range selection
+      pageNum,
+    });
+  } else {
+    // Clicked on empty area — cancel the creation
+    setIsCreating(false);
+    setStartPt(null);
+    return;
+  }
+}
     setSelectedIdx(null);
   };
 
@@ -142,14 +151,14 @@ export default function AnnotationLayer({
     if (tool === 'pen') {
       setPreview(p => p ? { ...p, points: [...p.points, pt] } : null);
     } else if (tool === 'highlight') {
-      setPreview(p => {
-        if (!p) return null;
-        const newWords = wordsAtPoint(pt, textItems);
-        const lineWords = wordsAlongSegment(startPt, pt, textItems);
-        const combined = mergeWords([...p.words, ...newWords, ...lineWords]);
-        return { ...p, words: combined };
-      });
-    } else if (['arrow', 'circle', 'ruler', 'caliper'].includes(tool)) {
+  setPreview(p => {
+    if (!p || !p.startWord) return p;
+    const endWord = wordAtPoint(pt, textItems);
+    if (!endWord) return p; // outside text; keep current range
+    const range = wordsInReadingRange(p.startWord, endWord, textItems);
+    return { ...p, words: range };
+  });
+} else if (['arrow', 'circle', 'ruler', 'caliper'].includes(tool)) {
       setPreview({ type: tool, color, strokeWidth, start: startPt, end: pt });
     }
   };
@@ -422,40 +431,41 @@ function distToSegment(p, a, b) {
   return Math.hypot(p.x - (a.x + t * (b.x - a.x)), p.y - (a.y + t * (b.y - a.y)));
 }
 
-function wordsAtPoint(pt, textItems) {
-  if (!textItems) return [];
-  return textItems.filter(it =>
-    pt.x >= it.x - 1 && pt.x <= it.x + it.w + 1 &&
-    pt.y >= it.y - 2 && pt.y <= it.y + it.h + 2
-  );
-}
-
-function wordsAlongSegment(a, b, textItems) {
-  if (!textItems) return [];
-  const dist = Math.hypot(b.x - a.x, b.y - a.y);
-  const steps = Math.max(1, Math.ceil(dist / 4));
-  const found = new Set();
-  const collected = [];
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const p = { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-    for (const it of textItems) {
-      if (found.has(it)) continue;
-      if (p.x >= it.x - 1 && p.x <= it.x + it.w + 1 &&
-          p.y >= it.y - 2 && p.y <= it.y + it.h + 2) {
-        found.add(it);
-        collected.push(it);
-      }
+// Return a single word whose bounding box contains the point, or null.
+// Uses tight bounds — no fudge — so clicking between lines returns null.
+function wordAtPoint(pt, textItems) {
+  if (!textItems) return null;
+  // Iterate in reverse so foreground/later items win ties (rare but possible)
+  for (let i = textItems.length - 1; i >= 0; i--) {
+    const it = textItems[i];
+    if (
+      pt.x >= it.x && pt.x <= it.x + it.w &&
+      pt.y >= it.y && pt.y <= it.y + it.h
+    ) {
+      return it;
     }
   }
-  return collected;
+  return null;
 }
 
-function mergeWords(list) {
-  const seen = new Map();
-  for (const w of list) {
-    const key = `${w.x.toFixed(1)}-${w.y.toFixed(1)}-${w.text}`;
-    if (!seen.has(key)) seen.set(key, w);
-  }
-  return Array.from(seen.values());
+// Return all words in reading order from `start` to `end` inclusive.
+// Reading order: top-to-bottom by line (grouped by y with a tolerance),
+// left-to-right within a line.
+function wordsInReadingRange(start, end, textItems) {
+  if (!textItems || !start || !end) return start ? [start] : [];
+
+  // Build a stable reading-order sort
+  const LINE_TOL = 6;
+  const sorted = [...textItems].sort((a, b) => {
+    if (Math.abs(a.y - b.y) < LINE_TOL) return a.x - b.x;
+    return a.y - b.y;
+  });
+
+  const startIdx = sorted.indexOf(start);
+  const endIdx = sorted.indexOf(end);
+  if (startIdx === -1 || endIdx === -1) return [start];
+
+  const lo = Math.min(startIdx, endIdx);
+  const hi = Math.max(startIdx, endIdx);
+  return sorted.slice(lo, hi + 1);
 }
