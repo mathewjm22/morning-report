@@ -49,29 +49,51 @@ export default function CaseAuthor() {
   };
 
   const save = async () => {
-    if (!title.trim()) { setSaveError('Title required'); return; }
-    setSaveError(null);
-    setLoading(true);
-    try {
-      const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
-      if (!id) throw new Error('Title must contain letters or numbers');
-      await saveCase({
-        id,
-        title: title.trim(),
-        source: source.trim(),
-        pdfBlob: pdfFile,
-        gates: [], // no gates in Option 1
-        contentPages: { start: contentStart, end: contentEnd },
-        totalPages,
-        addedAt: Date.now(),
-      });
-      navigate(`/case/${encodeURIComponent(id)}`);
-    } catch (e) {
-      console.error('Save failed:', e);
-      setSaveError(e.message || String(e));
-      setLoading(false);
-    }
-  };
+  if (!title.trim()) { setSaveError('Title required'); return; }
+  setSaveError(null);
+  setLoading(true);
+  console.log('=== SAVE STARTED ===');
+  try {
+    const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+    if (!id) throw new Error('Title must contain letters or numbers');
+    console.log('ID:', id);
+    console.log('pdfFile:', pdfFile);
+    console.log('pdfFile type:', pdfFile?.constructor?.name);
+    console.log('pdfFile size:', pdfFile?.size);
+
+    // Convert File to ArrayBuffer FIRST so we're not storing a live File handle.
+    // File objects can go stale, especially after re-renders.
+    console.log('Reading pdfFile into ArrayBuffer...');
+    const pdfBuffer = await pdfFile.arrayBuffer();
+    console.log('ArrayBuffer size:', pdfBuffer.byteLength);
+
+    const payload = {
+      id,
+      title: title.trim(),
+      source: source.trim(),
+      pdfBlob: pdfBuffer, // ArrayBuffer, not File
+      gates: [],
+      contentPages: { start: contentStart, end: contentEnd },
+      totalPages,
+      addedAt: Date.now(),
+    };
+    console.log('Calling saveCase with payload keys:', Object.keys(payload));
+
+    // Add a timeout so we know if it hangs
+    const savePromise = saveCase(payload);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('saveCase timed out after 10s — IndexedDB likely stuck')), 10000)
+    );
+    await Promise.race([savePromise, timeoutPromise]);
+
+    console.log('=== SAVE COMPLETE ===');
+    navigate(`/case/${encodeURIComponent(id)}`);
+  } catch (e) {
+    console.error('=== SAVE FAILED ===', e);
+    setSaveError(e.message || String(e));
+    setLoading(false);
+  }
+};
 
   if (stage === 'upload') {
     return (
