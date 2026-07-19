@@ -5,7 +5,7 @@ export const WORKER_URL = 'https://humandx-attempt-mathew.sweet-dream-0ed6.worke
 // Share a case: uploads the PDF (base64) + gate metadata to the worker.
 export async function saveCaseShare(caseData, pdfBlob) {
   // Convert Blob to base64
-  const buf = await pdfBlob.arrayBuffer();
+  const buf = pdfBlob instanceof ArrayBuffer ? pdfBlob : await pdfBlob.arrayBuffer();
   const b64 = arrayBufferToBase64(buf);
   const payload = {
     id: caseData.id,
