@@ -1,6 +1,10 @@
-import { Highlighter, X } from 'lucide-react';
+import { useState } from 'react';
+import { Highlighter, X, Search } from 'lucide-react';
+import SearchPopup from './SearchPopup.jsx';
 
 export default function HighlightsTray({ annotations, setAnnotations }) {
+  const [popup, setPopup] = useState(null);
+
   // Flatten highlights from all pages into a single sorted list
   const highlights = [];
   Object.entries(annotations).forEach(([pageNum, strokes]) => {
@@ -37,28 +41,48 @@ export default function HighlightsTray({ annotations, setAnnotations }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 space-y-2">
-      {highlights.map(h => (
-        <div key={h.key} className="bg-white border border-slate-200 rounded p-2 shadow-sm hover:border-slate-300 group">
-          <div className="flex items-start gap-2">
-            <div
-              className="w-1 flex-shrink-0 rounded-full self-stretch mt-0.5"
-              style={{ backgroundColor: h.color }}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-slate-800 leading-snug">{h.text || '(no text captured)'}</p>
-              <p className="text-[10px] text-slate-500 mt-1 font-mono">page {h.pageNum}</p>
+    <>
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {highlights.map(h => (
+          <div key={h.key} className="bg-white border border-slate-200 rounded p-2 shadow-sm hover:border-slate-300 group">
+            <div className="flex items-start gap-2">
+              <div
+                className="w-1 flex-shrink-0 rounded-full self-stretch mt-0.5"
+                style={{ backgroundColor: h.color }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-slate-800 leading-snug">{h.text || '(no text captured)'}</p>
+                <p className="text-[10px] text-slate-500 mt-1 font-mono">page {h.pageNum}</p>
+              </div>
+              <button
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setPopup({ text: h.text, x: rect.left, y: rect.top });
+                }}
+                className="text-slate-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition flex-shrink-0"
+                title="Look up in reference"
+              >
+                <Search size={12} />
+              </button>
+              <button
+                onClick={() => removeHighlight(h.pageNum, h.strokeIdx)}
+                className="text-slate-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition flex-shrink-0"
+                title="Remove highlight"
+              >
+                <X size={12} />
+              </button>
             </div>
-            <button
-              onClick={() => removeHighlight(h.pageNum, h.strokeIdx)}
-              className="text-slate-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition flex-shrink-0"
-              title="Remove highlight"
-            >
-              <X size={12} />
-            </button>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      {popup && (
+        <SearchPopup
+          text={popup.text}
+          x={popup.x}
+          y={popup.y}
+          onClose={() => setPopup(null)}
+        />
+      )}
+    </>
   );
 }
