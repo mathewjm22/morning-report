@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 
 const HANDLE_R = 5;
@@ -6,10 +5,10 @@ const HANDLE_R = 5;
 export default function AnnotationLayer({
   width, height, tool, color, strokeWidth,
   strokes, setStrokes,
-  textItems, pageNum,  // ← NEW
+  textItems, pageNum,
 }) {
   const svgRef = useRef(null);
-  const [dragging, setDragging] = useState(null); // { strokeIdx, handle: 'start'|'end'|'whole'|'note', origPt, origStroke }
+  const [dragging, setDragging] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [preview, setPreview] = useState(null);
   const [startPt, setStartPt] = useState(null);
@@ -25,14 +24,14 @@ export default function AnnotationLayer({
 
   const strokeHit = (s, pt, thresh = 10) => {
     if (s.type === 'pen') {
-  return s.points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < thresh);
-}
-if (s.type === 'highlight') {
-  return (s.words || []).some(w =>
-    pt.x >= w.x - 2 && pt.x <= w.x + w.w + 2 &&
-    pt.y >= w.y - 2 && pt.y <= w.y + w.h + 2
-  );
-}
+      return s.points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < thresh);
+    }
+    if (s.type === 'highlight') {
+      return (s.words || []).some(w =>
+        pt.x >= w.x - 2 && pt.x <= w.x + w.w + 2 &&
+        pt.y >= w.y - 2 && pt.y <= w.y + w.h + 2
+      );
+    }
     if (s.type === 'note') {
       return pt.x >= s.x && pt.x <= s.x + (s.w || 140) &&
              pt.y >= s.y && pt.y <= s.y + (s.h || 70);
@@ -52,7 +51,6 @@ if (s.type === 'highlight') {
   const handleMouseDown = (e) => {
     const pt = getPt(e);
 
-    // Eraser
     if (isEraser) {
       setStrokes(strokes.filter(s => !strokeHit(s, pt)));
       return;
@@ -61,7 +59,6 @@ if (s.type === 'highlight') {
     // Check for handle drag on an existing stroke
     for (let i = strokes.length - 1; i >= 0; i--) {
       const s = strokes[i];
-      // Endpoint handles for two-point tools
       if (s.start && s.end && ['arrow', 'ruler', 'caliper', 'circle'].includes(s.type)) {
         if (Math.hypot(s.start.x - pt.x, s.start.y - pt.y) < HANDLE_R + 4) {
           setDragging({ strokeIdx: i, handle: 'start', origPt: pt, origStroke: s });
@@ -74,7 +71,6 @@ if (s.type === 'highlight') {
           return;
         }
       }
-      // Whole-stroke drag if clicking on the stroke body
       if (strokeHit(s, pt)) {
         setDragging({ strokeIdx: i, handle: 'whole', origPt: pt, origStroke: s });
         setSelectedIdx(i);
@@ -82,7 +78,6 @@ if (s.type === 'highlight') {
       }
     }
 
-    // Otherwise create a new stroke (if a creation tool is active)
     if (!isCreationTool) { setSelectedIdx(null); return; }
 
     if (tool === 'note') {
@@ -92,27 +87,24 @@ if (s.type === 'highlight') {
     }
 
     setStartPt(pt);
-setIsCreating(true);
-if (tool === 'pen') {
-  setPreview({ type: 'pen', color, strokeWidth, points: [pt] });
-} else if (tool === 'highlight') {
-  // Start collecting words as the user drags.
-  // The highlight is a set of per-word rects, not a freehand path.
-  const initialWords = wordsAtPoint(pt, textItems);
-  setPreview({
-    type: 'highlight',
-    color,
-    words: initialWords, // [{ x, y, w, h, text }]
-    pageNum,
-  });
-}
+    setIsCreating(true);
+    if (tool === 'pen') {
+      setPreview({ type: 'pen', color, strokeWidth, points: [pt] });
+    } else if (tool === 'highlight') {
+      const initialWords = wordsAtPoint(pt, textItems);
+      setPreview({
+        type: 'highlight',
+        color,
+        words: initialWords,
+        pageNum,
+      });
+    }
     setSelectedIdx(null);
   };
 
   const handleMouseMove = (e) => {
     const pt = getPt(e);
 
-    // Drag existing stroke
     if (dragging) {
       const dx = pt.x - dragging.origPt.x;
       const dy = pt.y - dragging.origPt.y;
@@ -124,12 +116,11 @@ if (tool === 'pen') {
       } else if (dragging.handle === 'end') {
         updated = { ...orig, end: { x: orig.end.x + dx, y: orig.end.y + dy } };
       } else {
-        // Translate whole stroke
         if (orig.type === 'pen') {
-  updated = { ...orig, points: orig.points.map(p => ({ x: p.x + dx, y: p.y + dy })) };
-} else if (orig.type === 'highlight') {
-  updated = { ...orig, words: (orig.words || []).map(w => ({ ...w, x: w.x + dx, y: w.y + dy })) };
-} else if (orig.type === 'note') {
+          updated = { ...orig, points: orig.points.map(p => ({ x: p.x + dx, y: p.y + dy })) };
+        } else if (orig.type === 'highlight') {
+          updated = { ...orig, words: (orig.words || []).map(w => ({ ...w, x: w.x + dx, y: w.y + dy })) };
+        } else if (orig.type === 'note') {
           updated = { ...orig, x: orig.x + dx, y: orig.y + dy };
         } else {
           updated = {
@@ -144,54 +135,49 @@ if (tool === 'pen') {
       return;
     }
 
-    // Continue creating a new stroke
     if (!isCreating) return;
+
     if (tool === 'pen') {
-  setPreview(p => p ? { ...p, points: [...p.points, pt] } : null);
-} else if (tool === 'highlight') {
-  setPreview(p => {
-    if (!p) return null;
-    const newWords = wordsAtPoint(pt, textItems);
-    // Also add all words on the line between the previous cursor point and this one,
-    // so fast drags don't skip words.
-    const lineWords = wordsAlongSegment(startPt, pt, textItems);
-    const combined = mergeWords([...p.words, ...newWords, ...lineWords]);
-    return { ...p, words: combined };
-  });
-} else if (['arrow', 'circle', 'ruler', 'caliper'].includes(tool)) {
-  setPreview({ type: tool, color, strokeWidth, start: startPt, end: pt });
-}
+      setPreview(p => p ? { ...p, points: [...p.points, pt] } : null);
+    } else if (tool === 'highlight') {
+      setPreview(p => {
+        if (!p) return null;
+        const newWords = wordsAtPoint(pt, textItems);
+        const lineWords = wordsAlongSegment(startPt, pt, textItems);
+        const combined = mergeWords([...p.words, ...newWords, ...lineWords]);
+        return { ...p, words: combined };
+      });
+    } else if (['arrow', 'circle', 'ruler', 'caliper'].includes(tool)) {
+      setPreview({ type: tool, color, strokeWidth, start: startPt, end: pt });
+    }
   };
 
   const handleMouseUp = () => {
     if (dragging) { setDragging(null); return; }
     if (isCreating && preview) {
-  let final = preview;
-  let isDegenerate = false;
+      let final = preview;
+      let isDegenerate = false;
 
-  if (preview.type === 'pen') {
-    isDegenerate = preview.points.length < 2;
-  } else if (preview.type === 'highlight') {
-    isDegenerate = !preview.words || preview.words.length === 0;
-    if (!isDegenerate) {
-      // Sort words in reading order and join text
-      const sorted = [...preview.words].sort((a, b) => {
-        // Same line (within 6px vertical) → left-to-right
-        if (Math.abs(a.y - b.y) < 6) return a.x - b.x;
-        return a.y - b.y;
-      });
-      final = {
-        ...preview,
-        capturedText: sorted.map(w => w.text).join(' ').replace(/\s+/g, ' ').trim(),
-      };
+      if (preview.type === 'pen') {
+        isDegenerate = preview.points.length < 2;
+      } else if (preview.type === 'highlight') {
+        isDegenerate = !preview.words || preview.words.length === 0;
+        if (!isDegenerate) {
+          const sorted = [...preview.words].sort((a, b) => {
+            if (Math.abs(a.y - b.y) < 6) return a.x - b.x;
+            return a.y - b.y;
+          });
+          final = {
+            ...preview,
+            capturedText: sorted.map(w => w.text).join(' ').replace(/\s+/g, ' ').trim(),
+          };
+        }
+      } else if (preview.start && preview.end) {
+        isDegenerate = Math.hypot(preview.end.x - preview.start.x, preview.end.y - preview.start.y) < 4;
+      }
+
+      if (!isDegenerate) setStrokes([...strokes, final]);
     }
-  } else if (preview.start && preview.end) {
-    isDegenerate = Math.hypot(preview.end.x - preview.start.x, preview.end.y - preview.start.y) < 4;
-  }
-
-  if (!isDegenerate) setStrokes([...strokes, final]);
-}
-}
     setIsCreating(false);
     setStartPt(null);
     setPreview(null);
@@ -256,40 +242,37 @@ if (tool === 'pen') {
 }
 
 function StrokeRenderer({ stroke: s, selected, preview, onEditNote }) {
-  const opacity = s.type === 'highlight' ? 0.35 : 1;
   const sw = s.strokeWidth || 2.5;
 
- if (s.type === 'pen') {
-  const d = s.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  return (
-    <path d={d} fill="none" stroke={s.color}
-      strokeWidth={sw}
-      strokeLinecap="round" strokeLinejoin="round"
-      opacity={1}
-      style={{ filter: selected ? 'drop-shadow(0 0 3px rgba(59,130,246,0.8))' : undefined }}
-    />
-  );
-}
+  if (s.type === 'pen') {
+    const d = s.points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    return (
+      <path d={d} fill="none" stroke={s.color}
+        strokeWidth={sw}
+        strokeLinecap="round" strokeLinejoin="round"
+        style={{ filter: selected ? 'drop-shadow(0 0 3px rgba(59,130,246,0.8))' : undefined }}
+      />
+    );
+  }
 
-if (s.type === 'highlight') {
-  // Render one semi-transparent rect per word
-  return (
-    <g style={{ mixBlendMode: 'multiply' }} opacity={0.4}>
-      {(s.words || []).map((w, i) => (
-        <rect
-          key={i}
-          x={w.x - 1}
-          y={w.y - 1}
-          width={w.w + 2}
-          height={w.h + 2}
-          fill={s.color}
-          rx={2}
-          style={{ filter: selected ? 'drop-shadow(0 0 3px rgba(59,130,246,0.8))' : undefined }}
-        />
-      ))}
-    </g>
-  );
-}
+  if (s.type === 'highlight') {
+    return (
+      <g style={{ mixBlendMode: 'multiply' }} opacity={0.4}>
+        {(s.words || []).map((w, i) => (
+          <rect
+            key={i}
+            x={w.x - 1}
+            y={w.y - 1}
+            width={w.w + 2}
+            height={w.h + 2}
+            fill={s.color}
+            rx={2}
+            style={{ filter: selected ? 'drop-shadow(0 0 3px rgba(59,130,246,0.8))' : undefined }}
+          />
+        ))}
+      </g>
+    );
+  }
 
   if (s.type === 'arrow') {
     const { start, end } = s;
@@ -319,8 +302,6 @@ if (s.type === 'highlight') {
   if (s.type === 'ruler') {
     const { start, end } = s;
     const dPx = Math.hypot(end.x - start.x, end.y - start.y);
-    // Rough default: assume 3.78 px/mm at PDF zoom 1.4 (approx web-standard 96 dpi).
-    // The lightbox has its own calibration; here we just show pixels + inches-ish.
     const dCm = (dPx / 37.8).toFixed(1);
     const mx = (start.x + end.x) / 2, my = (start.y + end.y) / 2;
     const angle = Math.atan2(end.y - start.y, end.x - start.x);
@@ -346,7 +327,6 @@ if (s.type === 'highlight') {
   if (s.type === 'caliper') {
     const { start, end } = s;
     const topY = Math.min(start.y, end.y) - 12;
-    // EKG paper 25 mm/s, ~37.8 px/mm at 1.4x zoom
     const distPx = Math.abs(end.x - start.x);
     const distMm = distPx / 37.8;
     const timeMs = (distMm / 25) * 1000;
@@ -418,7 +398,6 @@ function distToSegment(p, a, b) {
   return Math.hypot(p.x - (a.x + t * (b.x - a.x)), p.y - (a.y + t * (b.y - a.y)));
 }
 
-// Return text items whose bounding box contains the point
 function wordsAtPoint(pt, textItems) {
   if (!textItems) return [];
   return textItems.filter(it =>
@@ -427,8 +406,6 @@ function wordsAtPoint(pt, textItems) {
   );
 }
 
-// Return text items whose bounding box intersects the segment from a to b.
-// Uses a set of sample points along the segment (cheap and good enough).
 function wordsAlongSegment(a, b, textItems) {
   if (!textItems) return [];
   const dist = Math.hypot(b.x - a.x, b.y - a.y);
@@ -450,7 +427,6 @@ function wordsAlongSegment(a, b, textItems) {
   return collected;
 }
 
-// Deduplicate word list by (x, y, text) since we sample overlapping paths
 function mergeWords(list) {
   const seen = new Map();
   for (const w of list) {
@@ -459,4 +435,3 @@ function mergeWords(list) {
   }
   return Array.from(seen.values());
 }
-
