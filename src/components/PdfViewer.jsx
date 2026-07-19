@@ -1,23 +1,21 @@
-
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
-import { loadPdf, renderPage, detectImageZones, detectTableZones } from '../lib/pdfLoader.js';
+import { ZoomIn, ZoomOut } from 'lucide-react';
+import { loadPdf } from '../lib/pdfLoader.js';
 import PdfPage from './PdfPage.jsx';
 import ToolPalette from './ToolPalette.jsx';
 import LeftRail from './LeftRail.jsx';
-import { TOOLS, COLORS } from '../lib/constants.js';
 
 export default function PdfViewer({
-  caseEntry, gate, annotations, setAnnotations,
-  onPinElement, onOpenLightbox, attendingMode,
+  caseEntry, annotations, setAnnotations,
+  onPinElement, onOpenLightbox,
 }) {
   const [pdf, setPdf] = useState(null);
-  const [zones, setZones] = useState({});  // { pageNum: [zones] }
+  const [zones, setZones] = useState({});
   const [zoom, setZoom] = useState(1.4);
   const [tool, setTool] = useState('select');
   const [color, setColor] = useState('#ef4444');
   const [strokeWidth, setStrokeWidth] = useState(2.5);
-  const [currentPage, setCurrentPage] = useState(gate.pages[0]);
+  const [currentPage, setCurrentPage] = useState(1);
   const scrollRef = useRef(null);
   const pageRefs = useRef({});
 
@@ -28,7 +26,10 @@ export default function PdfViewer({
     (_, i) => contentStart + i
   );
 
-  // Load PDF once
+  useEffect(() => {
+    setCurrentPage(contentStart);
+  }, [contentStart]);
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -41,16 +42,6 @@ export default function PdfViewer({
     return () => { cancelled = true; };
   }, [caseEntry.pdfBlob]);
 
-  // Scroll current gate's first page into view when gate changes
-  useEffect(() => {
-    setCurrentPage(gate.pages[0]);
-    const el = pageRefs.current[gate.pages[0]];
-    if (el && scrollRef.current) {
-      setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-    }
-  }, [gate.id]); // eslint-disable-line
-
-  // Track which page is most visible in the viewport
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
@@ -81,7 +72,7 @@ export default function PdfViewer({
         caseEntry={caseEntry}
         visiblePages={visiblePages}
         currentPage={currentPage}
-        gatePages={gate.pages}
+        gatePages={visiblePages} // all pages equally accessible
         onJumpToPage={jumpToPage}
         pdf={pdf}
       />
@@ -93,18 +84,8 @@ export default function PdfViewer({
       />
 
       <div className="flex-1 flex flex-col bg-slate-800 overflow-hidden">
-        {/* Toolbar */}
         <div className="bg-slate-900 border-b border-slate-700 px-3 py-1.5 flex items-center justify-between text-slate-300 text-xs">
-          <div className="flex items-center gap-2">
-            <span>Page {currentPage} of {caseEntry.totalPages}</span>
-            <span className="mx-2 text-slate-500">|</span>
-            <span>Gate: <span className="text-white font-medium">{gate.label}</span></span>
-            {!gate.pages.includes(currentPage) && (
-              <span className="ml-2 px-2 py-0.5 bg-amber-900/40 border border-amber-700 rounded text-amber-200 text-[10px]">
-                Outside current gate
-              </span>
-            )}
-          </div>
+          <span>Page {currentPage} of {caseEntry.totalPages}</span>
           <div className="flex items-center gap-2">
             <button onClick={() => setZoom(z => Math.max(0.6, z - 0.15))} className="p-1 hover:bg-slate-700 rounded"><ZoomOut size={14} /></button>
             <span className="w-12 text-center">{Math.round(zoom * 100)}%</span>
@@ -112,14 +93,7 @@ export default function PdfViewer({
           </div>
         </div>
 
-        {/* PDF pages */}
         <div ref={scrollRef} className="flex-1 overflow-auto p-6 flex flex-col items-center gap-6">
-          {gate.prompt && (
-            <div className="max-w-2xl w-full bg-blue-900/60 border border-blue-700 rounded p-3 text-blue-100 text-sm">
-              💭 <span className="font-medium">Focus for this gate:</span> {gate.prompt}
-              <p className="text-xs text-blue-300 mt-1">Recommended pages: {gate.pages.join(', ')} — you can still scroll to any page.</p>
-            </div>
-          )}
           {pdf && visiblePages.map(pn => (
             <div
               key={pn}
@@ -131,7 +105,7 @@ export default function PdfViewer({
                 pdf={pdf}
                 pageNum={pn}
                 zoom={zoom}
-                isFocus={gate.pages.includes(pn)}
+                isFocus={true} // all pages equally in-focus
                 tool={tool}
                 color={color}
                 strokeWidth={strokeWidth}
