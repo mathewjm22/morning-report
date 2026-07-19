@@ -1,9 +1,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Maximize2, Plus } from 'lucide-react';
-import { renderPage, detectImageZones, detectTableZones } from '../lib/pdfLoader.js';
-import AnnotationLayer from './AnnotationLayer.jsx';
 import { getPageTextItems, renderPage, detectImageZones, detectTableZones } from '../lib/pdfLoader.js';
+import AnnotationLayer from './AnnotationLayer.jsx';
 
 export default function PdfPage({
   pdf, pageNum, zoom, isFocus,
