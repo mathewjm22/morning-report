@@ -1,44 +1,58 @@
 import { useState, useRef } from 'react';
-import { Plus, X, GripVertical, Stethoscope, ListChecks } from 'lucide-react';
+import { Plus, X, GripVertical, Stethoscope, ListChecks, Lock, Unlock, Award } from 'lucide-react';
 
-export default function Whiteboard({ ddx, setDdx, plan, setPlan }) {
+export default function Whiteboard({
+  ddx, setDdx, plan, setPlan,
+  committedDdx, onCommitDdx, onUncommitDdx, onOpenReveal,
+}) {
   return (
     <div className="flex-1 overflow-y-auto divide-y-4 divide-slate-200">
-      <DdxSection ddx={ddx} setDdx={setDdx} />
+      <DdxSection
+        ddx={ddx} setDdx={setDdx}
+        committedDdx={committedDdx}
+        onCommitDdx={onCommitDdx}
+        onUncommitDdx={onUncommitDdx}
+        onOpenReveal={onOpenReveal}
+      />
       <PlanSection plan={plan} setPlan={setPlan} />
     </div>
   );
 }
 
-// ============================================================
-// DDx section — enter-to-submit, drag-to-reorder, alternating colors
-// ============================================================
-function DdxSection({ ddx, setDdx }) {
+function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onOpenReveal }) {
   const [draftName, setDraftName] = useState('');
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
   const draftRef = useRef(null);
+  const locked = !!committedDdx;
 
   const addDdx = (name = '') => {
+    if (locked) return;
     const trimmed = name.trim();
     if (!trimmed) return;
     setDdx([...ddx, { id: Date.now() + Math.random(), name: trimmed, notes: '' }]);
     setDraftName('');
-    // Return focus to draft input so user can keep typing
     setTimeout(() => draftRef.current?.focus(), 0);
   };
 
-  const updateDdx = (id, field, val) => setDdx(ddx.map(d => d.id === id ? { ...d, [field]: val } : d));
-  const removeDdx = (id) => setDdx(ddx.filter(d => d.id !== id));
+  const updateDdx = (id, field, val) => {
+    if (locked) return;
+    setDdx(ddx.map(d => d.id === id ? { ...d, [field]: val } : d));
+  };
+  const removeDdx = (id) => {
+    if (locked) return;
+    setDdx(ddx.filter(d => d.id !== id));
+  };
 
-  // Drag handlers
-  const handleDragStart = (i) => setDragIdx(i);
+  const handleDragStart = (i) => { if (!locked) setDragIdx(i); };
   const handleDragOver = (e, i) => {
+    if (locked) return;
     e.preventDefault();
     if (dragIdx !== null && dragIdx !== i) setDragOverIdx(i);
   };
   const handleDragLeave = () => setDragOverIdx(null);
   const handleDrop = (e, i) => {
+    if (locked) return;
     e.preventDefault();
     if (dragIdx === null || dragIdx === i) { setDragIdx(null); setDragOverIdx(null); return; }
     const copy = [...ddx];
@@ -50,25 +64,44 @@ function DdxSection({ ddx, setDdx }) {
   };
   const handleDragEnd = () => { setDragIdx(null); setDragOverIdx(null); };
 
+  const displayList = locked ? committedDdx : ddx;
+
   return (
     <div className="bg-blue-50/40">
       <div className="px-3 py-2.5 flex items-center justify-between sticky top-0 bg-blue-100/95 backdrop-blur border-b-2 border-blue-300 z-10">
         <div className="flex items-center gap-1.5">
           <Stethoscope size={13} className="text-blue-800" />
           <span className="text-xs font-bold text-blue-900 uppercase tracking-wide">Differential Diagnosis</span>
+          {locked && <Lock size={11} className="text-blue-700" />}
         </div>
-        <span className="text-[10px] text-blue-700">{ddx.length} {ddx.length === 1 ? 'item' : 'items'}</span>
+        <span className="text-[10px] text-blue-700">{displayList.length} {displayList.length === 1 ? 'item' : 'items'}</span>
       </div>
 
+      {locked && (
+        <div className="bg-blue-600 text-white px-3 py-2 text-xs flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Lock size={12} className="flex-shrink-0" />
+            <span className="truncate">Committed. Keep reading, then reveal.</span>
+          </div>
+          <button
+            onClick={onUncommitDdx}
+            className="text-blue-200 hover:text-white text-[10px] underline flex-shrink-0"
+            title="Un-commit if you need to keep editing"
+          >
+            Un-commit
+          </button>
+        </div>
+      )}
+
       <div className="px-3 py-3 space-y-1.5">
-        {ddx.map((d, i) => {
+        {displayList.map((d, i) => {
           const bg = i % 2 === 0 ? 'bg-sky-100 border-sky-200' : 'bg-slate-100 border-slate-200';
           const isDragging = dragIdx === i;
           const isDragOver = dragOverIdx === i;
           return (
             <div
               key={d.id}
-              draggable="true"
+              draggable={!locked}
               onDragStart={() => handleDragStart(i)}
               onDragOver={(e) => handleDragOver(e, i)}
               onDragLeave={handleDragLeave}
@@ -76,68 +109,98 @@ function DdxSection({ ddx, setDdx }) {
               onDragEnd={handleDragEnd}
               className={`relative border-2 rounded p-2 shadow-sm transition ${bg} ${
                 isDragging ? 'opacity-30' : ''
-              } ${isDragOver ? 'ring-2 ring-blue-500 -translate-y-0.5' : ''}`}
+              } ${isDragOver ? 'ring-2 ring-blue-500 -translate-y-0.5' : ''} ${locked ? 'opacity-95' : ''}`}
             >
               <div className="flex items-center gap-1">
-                <GripVertical size={14} className="text-slate-400 cursor-move flex-shrink-0" />
+                {!locked && <GripVertical size={14} className="text-slate-400 cursor-move flex-shrink-0" />}
                 <span className="text-xs font-bold text-blue-700 w-6 flex-shrink-0">#{i + 1}</span>
                 <input
                   value={d.name}
                   onChange={e => updateDdx(d.id, 'name', e.target.value)}
                   placeholder="Diagnosis"
-                  className="flex-1 text-sm px-1 py-0.5 bg-transparent border-b border-slate-400 focus:outline-none focus:border-blue-500 font-medium min-w-0"
+                  readOnly={locked}
+                  className={`flex-1 text-sm px-1 py-0.5 bg-transparent border-b border-slate-400 focus:outline-none focus:border-blue-500 font-medium min-w-0 ${locked ? 'cursor-default' : ''}`}
                 />
-                <button
-                  onClick={() => removeDdx(d.id)}
-                  className="text-slate-400 hover:text-red-600 flex-shrink-0"
-                  title="Remove"
-                >
-                  <X size={13} />
-                </button>
+                {!locked && (
+                  <button
+                    onClick={() => removeDdx(d.id)}
+                    className="text-slate-400 hover:text-red-600 flex-shrink-0"
+                    title="Remove"
+                  >
+                    <X size={13} />
+                  </button>
+                )}
               </div>
-              <textarea
-                value={d.notes}
-                onChange={e => updateDdx(d.id, 'notes', e.target.value)}
-                placeholder="For / against..."
-                className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400"
-                rows={2}
-              />
+              {d.notes && (
+                <textarea
+                  value={d.notes}
+                  onChange={e => updateDdx(d.id, 'notes', e.target.value)}
+                  placeholder="For / against..."
+                  readOnly={locked}
+                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  rows={2}
+                />
+              )}
+              {!locked && !d.notes && (
+                <textarea
+                  onChange={e => updateDdx(d.id, 'notes', e.target.value)}
+                  placeholder="For / against..."
+                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  rows={2}
+                  defaultValue=""
+                />
+              )}
             </div>
           );
         })}
 
-        {/* New-item input — Enter to add */}
-        <div className="border-2 border-dashed border-blue-300 rounded p-2 bg-white">
-          <div className="flex items-center gap-1">
-            <Plus size={14} className="text-blue-500 flex-shrink-0" />
-            <input
-              ref={draftRef}
-              value={draftName}
-              onChange={e => setDraftName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') { e.preventDefault(); addDdx(draftName); }
-              }}
-              placeholder="Add diagnosis, press Enter..."
-              className="flex-1 text-sm px-1 py-0.5 bg-transparent focus:outline-none placeholder-slate-400 min-w-0"
-            />
+        {!locked && (
+          <div className="border-2 border-dashed border-blue-300 rounded p-2 bg-white">
+            <div className="flex items-center gap-1">
+              <Plus size={14} className="text-blue-500 flex-shrink-0" />
+              <input
+                ref={draftRef}
+                value={draftName}
+                onChange={e => setDraftName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { e.preventDefault(); addDdx(draftName); }
+                }}
+                placeholder="Add diagnosis, press Enter..."
+                className="flex-1 text-sm px-1 py-0.5 bg-transparent focus:outline-none placeholder-slate-400 min-w-0"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
-        {ddx.length === 0 && (
+        {displayList.length === 0 && (
           <p className="text-xs text-slate-500 italic mt-2 text-center">
             Ranked top → bottom. Drag ⋮ to reorder.
           </p>
+        )}
+
+        {/* Commit / Reveal buttons */}
+        {!locked && ddx.length > 0 && (
+          <button
+            onClick={onCommitDdx}
+            className="w-full mt-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-sm flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Lock size={14} /> Commit DDx ({ddx.length})
+          </button>
+        )}
+        {locked && (
+          <button
+            onClick={onOpenReveal}
+            className="w-full mt-3 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded font-medium text-sm flex items-center justify-center gap-2 shadow-sm"
+          >
+            <Award size={14} /> Reveal & judge
+          </button>
         )}
       </div>
     </div>
   );
 }
 
-// ============================================================
-// Plan section — enter-to-add, list of items, no reorder
-// ============================================================
 function PlanSection({ plan, setPlan }) {
-  // Backwards-compat: if plan is a string (from old saves), convert to array.
   const items = Array.isArray(plan)
     ? plan
     : (typeof plan === 'string' && plan.trim())
