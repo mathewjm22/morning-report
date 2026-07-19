@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import SearchPopup from './SearchPopup.jsx';
 
 const HANDLE_R = 5;
 
@@ -13,7 +14,8 @@ export default function AnnotationLayer({
   const [preview, setPreview] = useState(null);
   const [startPt, setStartPt] = useState(null);
   const [selectedIdx, setSelectedIdx] = useState(null);
-
+  const [searchPopup, setSearchPopup] = useState(null); // { text, x, y }
+  
   const isCreationTool = ['pen', 'highlight', 'arrow', 'circle', 'ruler', 'caliper', 'note'].includes(tool);
   const isEraser = tool === 'eraser';
 
@@ -176,7 +178,20 @@ export default function AnnotationLayer({
         isDegenerate = Math.hypot(preview.end.x - preview.start.x, preview.end.y - preview.start.y) < 4;
       }
 
-      if (!isDegenerate) setStrokes([...strokes, final]);
+      if (!isDegenerate) {
+  setStrokes([...strokes, final]);
+  // If this was a highlight with captured text, offer the search popup
+  if (final.type === 'highlight' && final.capturedText && final.words?.length) {
+    // Anchor at the middle of the last word (which is where the mouse released)
+    const lastWord = final.words[final.words.length - 1];
+    const svgRect = svgRef.current.getBoundingClientRect();
+    setSearchPopup({
+      text: final.capturedText,
+      x: svgRect.left + lastWord.x + lastWord.w / 2,
+      y: svgRect.top + lastWord.y + lastWord.h,
+    });
+  }
+}
     }
     setIsCreating(false);
     setStartPt(null);
@@ -214,6 +229,7 @@ export default function AnnotationLayer({
   const pointerEvents = (isCreationTool || isEraser || strokes.length > 0) ? 'auto' : 'none';
 
   return (
+  <>
     <svg
       ref={svgRef}
       width={width}
@@ -238,8 +254,16 @@ export default function AnnotationLayer({
         <SelectionHandles stroke={strokes[selectedIdx]} onDelete={() => deleteStroke(selectedIdx)} />
       )}
     </svg>
-  );
-}
+    {searchPopup && (
+      <SearchPopup
+        text={searchPopup.text}
+        x={searchPopup.x}
+        y={searchPopup.y}
+        onClose={() => setSearchPopup(null)}
+      />
+    )}
+  </>
+);
 
 function StrokeRenderer({ stroke: s, selected, preview, onEditNote }) {
   const sw = s.strokeWidth || 2.5;
