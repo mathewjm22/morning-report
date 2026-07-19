@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Maximize2, Plus } from 'lucide-react';
 import { renderPage, detectImageZones, detectTableZones } from '../lib/pdfLoader.js';
 import AnnotationLayer from './AnnotationLayer.jsx';
+import { getPageTextItems, renderPage, detectImageZones, detectTableZones } from '../lib/pdfLoader.js';
 
 export default function PdfPage({
   pdf, pageNum, zoom, isFocus,
@@ -15,6 +16,7 @@ export default function PdfPage({
   const [viewport, setViewport] = useState(null);
   const [hoveredZoneIdx, setHoveredZoneIdx] = useState(null);
   const [rendering, setRendering] = useState(true);
+  const [textItems, setTextItems] = useState(null);
 
   // Render page whenever zoom changes
   useEffect(() => {
@@ -33,6 +35,11 @@ export default function PdfPage({
         const tabZones = await detectTableZones(pdf, pageNum, vp);
         if (!cancelled) setZones([...imgZones, ...tabZones]);
       }
+
+      if (!textItems) {
+  const items = await getPageTextItems(pdf, pageNum, vp);
+  if (!cancelled) setTextItems(items);
+}
     })();
     return () => { cancelled = true; };
   }, [pdf, pageNum, zoom]); // eslint-disable-line
@@ -150,14 +157,16 @@ export default function PdfPage({
 
       {/* Annotation layer */}
       <AnnotationLayer
-        width={width}
-        height={height}
-        tool={tool}
-        color={color}
-        strokeWidth={strokeWidth}
-        strokes={annotations}
-        setStrokes={setAnnotations}
-      />
+  width={width}
+  height={height}
+  tool={tool}
+  color={color}
+  strokeWidth={strokeWidth}
+  strokes={annotations}
+  setStrokes={setAnnotations}
+  textItems={textItems}        // ← NEW
+  pageNum={pageNum}            // ← NEW
+/>
 
       {rendering && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/60 pointer-events-none">
