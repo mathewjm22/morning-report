@@ -47,11 +47,13 @@ const transform = `
 
 
   return (
-    <div className="fixed inset-0 bg-black/95 z-50 flex flex-col" onClick={onClose}>
-      <div
-        className="bg-stone-900 border-b border-stone-700 px-6 py-3 flex items-center justify-between text-white"
-        onClick={e => e.stopPropagation()}
-      >
+  <div className="fixed inset-0 bg-black/95 z-50 flex flex-col" onClick={onClose}>
+    <div
+      className="flex flex-col flex-1 overflow-hidden"
+      onClick={e => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="bg-stone-900 border-b border-stone-700 px-6 py-3 flex items-center justify-between text-white">
         <div>
           <p className="font-semibold">{element.label}</p>
           <p className="text-xs text-stone-400">From page {element.pageNum}</p>
@@ -59,7 +61,8 @@ const transform = `
         <button onClick={onClose} className="p-2 hover:bg-stone-700 rounded"><X size={20} /></button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden" onClick={e => e.stopPropagation()}>
+      {/* Body */}
+      <div className="flex-1 flex overflow-hidden">
         {/* Tool rail */}
         <div className="w-14 bg-stone-800 border-r border-stone-700 flex flex-col items-center py-2 gap-1">
           {TOOLS.filter(t => t.id !== 'select').map(t => {
@@ -98,40 +101,39 @@ const transform = `
         </div>
 
         {/* Canvas */}
-<div className="flex-1 flex items-center justify-center bg-stone-950 overflow-auto p-8">
-  <div
-    className="relative bg-white shadow-2xl"
-    style={{ width: displayW * zoom, height: displayH * zoom }}
-  >
-    {/* Inner wrapper — rotated/flipped in place, keeping annotations aligned */}
-    <div
-      className="absolute top-1/2 left-1/2"
-      style={{
-        width: w * zoom,
-        height: h * zoom,
-        transform: `translate(-50%, -50%) ${transform}`,
-        transformOrigin: 'center center',
-      }}
-    >
-      <img
-        src={element.imageUrl}
-        alt=""
-        draggable={false}
-        className="absolute inset-0 w-full h-full select-none"
-        style={{ imageRendering: 'auto' }}
-      />
-      <AnnotationLayer
-        width={w * zoom}
-        height={h * zoom}
-        tool={tool}
-        color={color}
-        strokeWidth={strokeWidth}
-        strokes={strokes}
-        setStrokes={setStrokes}
-      />
-    </div>
-  </div>
-</div>
+        <div className="flex-1 flex items-center justify-center bg-stone-950 overflow-auto p-8">
+          <div
+            className="relative bg-white shadow-2xl"
+            style={{ width: displayW * zoom, height: displayH * zoom }}
+          >
+            <div
+              className="absolute top-1/2 left-1/2"
+              style={{
+                width: w * zoom,
+                height: h * zoom,
+                transform: `translate(-50%, -50%) ${transform}`,
+                transformOrigin: 'center center',
+              }}
+            >
+              <img
+                src={element.imageUrl}
+                alt=""
+                draggable={false}
+                className="absolute inset-0 w-full h-full select-none"
+                style={{ imageRendering: 'auto' }}
+              />
+              <AnnotationLayer
+                width={w * zoom}
+                height={h * zoom}
+                tool={tool}
+                color={color}
+                strokeWidth={strokeWidth}
+                strokes={strokes}
+                setStrokes={setStrokes}
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Info sidebar */}
         <div className="w-60 bg-stone-800 border-l border-stone-700 p-4 text-white text-sm overflow-y-auto">
@@ -147,7 +149,7 @@ const transform = `
           </div>
           <div className="mt-6 p-3 bg-sage-900/30 border border-sage-800 rounded">
             <p className="text-xs font-semibold text-sage-200 mb-1">EKG reference</p>
-            <p className="text-xs text-blue-300 leading-relaxed">
+            <p className="text-xs text-sage-300 leading-relaxed">
               25 mm/s, 10 mm/mV<br/>
               1 small box = 40 ms<br/>
               1 large box = 200 ms<br/>
@@ -160,59 +162,59 @@ const transform = `
         </div>
       </div>
 
-<div className="bg-stone-900 border-t border-stone-700 px-6 py-2 flex items-center justify-center gap-2 text-white text-xs">
-  {/* Zoom */}
-  <button onClick={() => setZoom(z => Math.max(0.5, z - 0.2))} className="p-1.5 hover:bg-stone-700 rounded" title="Zoom out"><ZoomOut size={14} /></button>
-  <span className="w-14 text-center font-mono">{Math.round(zoom * 100)}%</span>
-  <button onClick={() => setZoom(z => Math.min(4, z + 0.2))} className="p-1.5 hover:bg-stone-700 rounded" title="Zoom in"><ZoomIn size={14} /></button>
+      {/* Bottom bar with zoom + rotation controls */}
+      <div className="bg-stone-900 border-t border-stone-700 px-6 py-2 flex items-center justify-center gap-2 text-white text-xs">
+        {/* Zoom */}
+        <button onClick={() => setZoom(z => Math.max(0.5, z - 0.2))} className="p-1.5 hover:bg-stone-700 rounded" title="Zoom out"><ZoomOut size={14} /></button>
+        <span className="w-14 text-center font-mono">{Math.round(zoom * 100)}%</span>
+        <button onClick={() => setZoom(z => Math.min(4, z + 0.2))} className="p-1.5 hover:bg-stone-700 rounded" title="Zoom in"><ZoomIn size={14} /></button>
 
-  <span className="mx-2 text-stone-600">|</span>
+        <span className="mx-2 text-stone-600">|</span>
 
-  {/* Rotation */}
-  <button
-    onClick={() => setRotation(r => (r + 270) % 360)}
-    className="p-1.5 hover:bg-stone-700 rounded"
-    title="Rotate 90° counter-clockwise"
-  >
-    <RotateCcw size={14} />
-  </button>
-  <button
-    onClick={() => setRotation(r => (r + 90) % 360)}
-    className="p-1.5 hover:bg-stone-700 rounded"
-    title="Rotate 90° clockwise"
-  >
-    <RotateCw size={14} />
-  </button>
-  <button
-    onClick={() => setFlipH(f => !f)}
-    className={`p-1.5 rounded ${flipH ? 'bg-sage-600 hover:bg-sage-700' : 'hover:bg-stone-700'}`}
-    title="Flip horizontally"
-  >
-    <FlipHorizontal2 size={14} />
-  </button>
-  <button
-    onClick={() => setFlipV(f => !f)}
-    className={`p-1.5 rounded ${flipV ? 'bg-sage-600 hover:bg-sage-700' : 'hover:bg-stone-700'}`}
-    title="Flip vertically"
-  >
-    <FlipVertical2 size={14} />
-  </button>
+        {/* Rotation */}
+        <button
+          onClick={() => setRotation(r => (r + 270) % 360)}
+          className="p-1.5 hover:bg-stone-700 rounded"
+          title="Rotate 90° counter-clockwise"
+        >
+          <RotateCcw size={14} />
+        </button>
+        <button
+          onClick={() => setRotation(r => (r + 90) % 360)}
+          className="p-1.5 hover:bg-stone-700 rounded"
+          title="Rotate 90° clockwise"
+        >
+          <RotateCw size={14} />
+        </button>
+        <button
+          onClick={() => setFlipH(f => !f)}
+          className={`p-1.5 rounded ${flipH ? 'bg-sage-600 hover:bg-sage-700' : 'hover:bg-stone-700'}`}
+          title="Flip horizontally"
+        >
+          <FlipHorizontal2 size={14} />
+        </button>
+        <button
+          onClick={() => setFlipV(f => !f)}
+          className={`p-1.5 rounded ${flipV ? 'bg-sage-600 hover:bg-sage-700' : 'hover:bg-stone-700'}`}
+          title="Flip vertically"
+        >
+          <FlipVertical2 size={14} />
+        </button>
 
-  {/* Reset (only shown when any transform is active) */}
-  {(rotation !== 0 || flipH || flipV) && (
-    <button
-      onClick={() => { setRotation(0); setFlipH(false); setFlipV(false); }}
-      className="ml-1 px-2 py-1 hover:bg-stone-700 rounded text-stone-300 text-xs"
-      title="Reset orientation"
-    >
-      Reset
-    </button>
-  )}
+        {(rotation !== 0 || flipH || flipV) && (
+          <button
+            onClick={() => { setRotation(0); setFlipH(false); setFlipV(false); }}
+            className="ml-1 px-2 py-1 hover:bg-stone-700 rounded text-stone-300 text-xs"
+            title="Reset orientation"
+          >
+            Reset
+          </button>
+        )}
 
-  <span className="mx-2 text-stone-600">|</span>
-  <span className="text-stone-400">Press <kbd className="px-1.5 py-0.5 bg-stone-700 rounded">Esc</kbd> to close</span>
-</div>
+        <span className="mx-2 text-stone-600">|</span>
+        <span className="text-stone-400">Press <kbd className="px-1.5 py-0.5 bg-stone-700 rounded">Esc</kbd> to close</span>
+      </div>
     </div>
-  );
-}
+  </div>
+);
 
