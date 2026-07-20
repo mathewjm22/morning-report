@@ -214,7 +214,8 @@ const transform = `
         <span className="mx-2 text-stone-600">|</span>
         <span className="text-stone-400">Press <kbd className="px-1.5 py-0.5 bg-stone-700 rounded">Esc</kbd> to close</span>
       </div>
+</div>
     </div>
-  </div>
-);
+  );
+}
 
