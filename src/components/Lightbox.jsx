@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { X, ZoomIn, ZoomOut, Undo2, Trash2 } from 'lucide-react';
 import { TOOLS, COLORS } from '../lib/constants.js';
 import AnnotationLayer from './AnnotationLayer.jsx';
+import { X, ZoomIn, ZoomOut, Undo2, Trash2, RotateCw, RotateCcw, FlipHorizontal2, FlipVertical2 } from 'lucide-react';
+
 
 export default function Lightbox({ element, caseEntry, onClose }) {
   const [tool, setTool] = useState('ruler');
@@ -11,6 +13,10 @@ export default function Lightbox({ element, caseEntry, onClose }) {
   const [strokeWidth, setStrokeWidth] = useState(2.5);
   const [strokes, setStrokes] = useState([]);
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0); // degrees: 0, 90, 180, 270
+  const [flipH, setFlipH] = useState(false);
+  const [flipV, setFlipV] = useState(false);
+
 
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
@@ -18,8 +24,28 @@ export default function Lightbox({ element, caseEntry, onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const w = element.naturalWidth || 800;
-  const h = element.naturalHeight || 600;
+
+  useEffect(() => {
+  setRotation(0);
+  setFlipH(false);
+  setFlipV(false);
+  setStrokes([]);
+}, [element.id]);
+
+
+const w = element.naturalWidth || 800;
+const h = element.naturalHeight || 600;
+// When rotated 90° or 270°, the displayed bounding box swaps width and height
+const rotated = rotation % 180 !== 0;
+const displayW = rotated ? h : w;
+const displayH = rotated ? w : h;
+
+const transform = `
+  rotate(${rotation}deg)
+  scaleX(${flipH ? -1 : 1})
+  scaleY(${flipV ? -1 : 1})
+`;
+
 
   return (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col" onClick={onClose}>
@@ -73,26 +99,40 @@ export default function Lightbox({ element, caseEntry, onClose }) {
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 flex items-center justify-center bg-stone-950 overflow-auto p-8">
-          <div className="relative bg-white shadow-2xl" style={{ width: w * zoom, height: h * zoom }}>
-            <img
-              src={element.imageUrl}
-              alt=""
-              draggable={false}
-              className="absolute inset-0 w-full h-full select-none"
-              style={{ imageRendering: 'auto' }}
-            />
-            <AnnotationLayer
-              width={w * zoom}
-              height={h * zoom}
-              tool={tool}
-              color={color}
-              strokeWidth={strokeWidth}
-              strokes={strokes}
-              setStrokes={setStrokes}
-            />
-          </div>
-        </div>
+<div className="flex-1 flex items-center justify-center bg-stone-950 overflow-auto p-8">
+  <div
+    className="relative bg-white shadow-2xl"
+    style={{ width: displayW * zoom, height: displayH * zoom }}
+  >
+    {/* Inner wrapper — rotated/flipped in place, keeping annotations aligned */}
+    <div
+      className="absolute top-1/2 left-1/2"
+      style={{
+        width: w * zoom,
+        height: h * zoom,
+        transform: `translate(-50%, -50%) ${transform}`,
+        transformOrigin: 'center center',
+      }}
+    >
+      <img
+        src={element.imageUrl}
+        alt=""
+        draggable={false}
+        className="absolute inset-0 w-full h-full select-none"
+        style={{ imageRendering: 'auto' }}
+      />
+      <AnnotationLayer
+        width={w * zoom}
+        height={h * zoom}
+        tool={tool}
+        color={color}
+        strokeWidth={strokeWidth}
+        strokes={strokes}
+        setStrokes={setStrokes}
+      />
+    </div>
+  </div>
+</div>
 
         {/* Info sidebar */}
         <div className="w-60 bg-stone-800 border-l border-stone-700 p-4 text-white text-sm overflow-y-auto">
@@ -121,13 +161,58 @@ export default function Lightbox({ element, caseEntry, onClose }) {
         </div>
       </div>
 
-      <div className="bg-stone-900 border-t border-stone-700 px-6 py-2 flex items-center justify-center gap-3 text-white text-xs">
-        <button onClick={() => setZoom(z => Math.max(0.5, z - 0.2))} className="p-1 hover:bg-stone-700 rounded"><ZoomOut size={14} /></button>
-        <span className="w-16 text-center font-mono">{Math.round(zoom * 100)}%</span>
-        <button onClick={() => setZoom(z => Math.min(4, z + 0.2))} className="p-1 hover:bg-stone-700 rounded"><ZoomIn size={14} /></button>
-        <span className="mx-4 text-stone-500">|</span>
-        <span className="text-stone-400">Press <kbd className="px-1.5 py-0.5 bg-stone-700 rounded">Esc</kbd> to close</span>
-      </div>
+<div className="bg-stone-900 border-t border-stone-700 px-6 py-2 flex items-center justify-center gap-2 text-white text-xs">
+  {/* Zoom */}
+  <button onClick={() => setZoom(z => Math.max(0.5, z - 0.2))} className="p-1.5 hover:bg-stone-700 rounded" title="Zoom out"><ZoomOut size={14} /></button>
+  <span className="w-14 text-center font-mono">{Math.round(zoom * 100)}%</span>
+  <button onClick={() => setZoom(z => Math.min(4, z + 0.2))} className="p-1.5 hover:bg-stone-700 rounded" title="Zoom in"><ZoomIn size={14} /></button>
+
+  <span className="mx-2 text-stone-600">|</span>
+
+  {/* Rotation */}
+  <button
+    onClick={() => setRotation(r => (r + 270) % 360)}
+    className="p-1.5 hover:bg-stone-700 rounded"
+    title="Rotate 90° counter-clockwise"
+  >
+    <RotateCcw size={14} />
+  </button>
+  <button
+    onClick={() => setRotation(r => (r + 90) % 360)}
+    className="p-1.5 hover:bg-stone-700 rounded"
+    title="Rotate 90° clockwise"
+  >
+    <RotateCw size={14} />
+  </button>
+  <button
+    onClick={() => setFlipH(f => !f)}
+    className={`p-1.5 rounded ${flipH ? 'bg-sage-600 hover:bg-sage-700' : 'hover:bg-stone-700'}`}
+    title="Flip horizontally"
+  >
+    <FlipHorizontal2 size={14} />
+  </button>
+  <button
+    onClick={() => setFlipV(f => !f)}
+    className={`p-1.5 rounded ${flipV ? 'bg-sage-600 hover:bg-sage-700' : 'hover:bg-stone-700'}`}
+    title="Flip vertically"
+  >
+    <FlipVertical2 size={14} />
+  </button>
+
+  {/* Reset (only shown when any transform is active) */}
+  {(rotation !== 0 || flipH || flipV) && (
+    <button
+      onClick={() => { setRotation(0); setFlipH(false); setFlipV(false); }}
+      className="ml-1 px-2 py-1 hover:bg-stone-700 rounded text-stone-300 text-xs"
+      title="Reset orientation"
+    >
+      Reset
+    </button>
+  )}
+
+  <span className="mx-2 text-stone-600">|</span>
+  <span className="text-stone-400">Press <kbd className="px-1.5 py-0.5 bg-stone-700 rounded">Esc</kbd> to close</span>
+</div>
     </div>
   );
 }
