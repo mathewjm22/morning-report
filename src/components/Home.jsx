@@ -32,7 +32,7 @@ export default function Home() {
             <div className="bg-sage-600 text-white p-2 rounded-lg">
               <BookOpen size={24} />
             </div>
-            <h1 className="text-3xl font-bold text-stone-900">Morning Report</h1>
+            <h1 className="text-2xl font-bold text-stone-900">Morning Report</h1>
           </div>
           <p className="text-stone-600">
             Interactive clinical reasoning workspace built around the source PDF. Upload a case, define reading gates, and work through it as if it were morning report.

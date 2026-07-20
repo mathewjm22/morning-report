@@ -132,7 +132,7 @@ useEffect(() => {
         {pageNum}
       </div>
       {!isFocus && (
-        <div className="absolute -left-10 top-10 bg-stone-700 text-stone-300 text-[10px] px-1.5 py-0.5 rounded z-10">
+        <div className="absolute -left-10 top-10 bg-stone-700 text-stone-300 text-xs px-1.5 py-0.5 rounded z-10">
           outside gate
         </div>
       )}

@@ -349,7 +349,7 @@ const gatesWithFigures = gates.map(g => {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
               <div className="bg-sage-100 text-sage-700 p-2 rounded"><IconEl name={gate.icon} size={18} /></div>
-              <h2 className="text-xl font-semibold text-stone-900">{gate.title}</h2>
+              <h2 className="text-base font-semibold text-stone-900">{gate.title}</h2>
             </div>
 
             <p className="text-xs text-stone-500 mb-3 flex items-center gap-1">

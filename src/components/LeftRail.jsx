@@ -43,7 +43,7 @@ export default function LeftRail({ caseEntry, visiblePages, currentPage, gatePag
             ) : (
               <div className="bg-stone-100 w-full h-full flex items-center justify-center text-stone-400 text-xs">…</div>
             )}
-            <div className="absolute top-0.5 left-1 bg-black/60 text-white text-[9px] px-1 rounded">
+            <div className="absolute top-0.5 left-1 bg-black/60 text-white text-xs px-1 rounded">
               p.{pn}
             </div>
           </button>

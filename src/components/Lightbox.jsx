@@ -108,14 +108,14 @@ export default function Lightbox({ element, caseEntry, onClose }) {
           </div>
           <div className="mt-6 p-3 bg-sage-900/30 border border-sage-800 rounded">
             <p className="text-xs font-semibold text-sage-200 mb-1">EKG reference</p>
-            <p className="text-[10px] text-blue-300 leading-relaxed">
+            <p className="text-xs text-blue-300 leading-relaxed">
               25 mm/s, 10 mm/mV<br/>
               1 small box = 40 ms<br/>
               1 large box = 200 ms<br/>
               5 large = 1 second
             </p>
           </div>
-          <div className="mt-3 p-3 bg-stone-700/40 rounded text-[10px] text-stone-300">
+          <div className="mt-3 p-3 bg-stone-700/40 rounded text-xs text-stone-300">
             Click and drag any annotation to move it. For arrows/rulers/calipers, drag either endpoint to fine-tune. Select an annotation and press Delete to remove.
           </div>
         </div>

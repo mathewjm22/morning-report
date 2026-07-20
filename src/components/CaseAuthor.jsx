@@ -102,7 +102,7 @@ export default function CaseAuthor() {
           <button onClick={() => navigate('/')} className="mb-4 text-sm text-stone-600 hover:text-stone-900 flex items-center gap-1">
             <ChevronLeft size={14} /> Back to library
           </button>
-          <h1 className="text-2xl font-bold mb-4">New Case</h1>
+          <h1 className="text-base font-bold mb-4">New Case</h1>
           <div
             onClick={() => !loading && fileInputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
@@ -134,7 +134,7 @@ export default function CaseAuthor() {
         <button onClick={() => navigate('/')} className="mb-4 text-sm text-stone-600 hover:text-stone-900 flex items-center gap-1">
           <ChevronLeft size={14} /> Back to library
         </button>
-        <h1 className="text-xl font-bold mb-3">Configure case</h1>
+        <h1 className="text-base font-bold mb-3">Configure case</h1>
 
         <div className="bg-white border border-stone-200 rounded-lg p-4 mb-4">
           <label className="block text-xs font-semibold text-stone-700 mb-1">Title</label>
@@ -184,7 +184,7 @@ export default function CaseAuthor() {
                   inContent ? 'border-stone-300' : 'border-stone-200 opacity-40'
                 }`}>
                   <img src={src} alt={`p${pageNum}`} className="w-full block" />
-                  <div className="absolute top-0.5 left-1 bg-black/60 text-white text-[10px] px-1 rounded">p.{pageNum}</div>
+                  <div className="absolute top-0.5 left-1 bg-black/60 text-white text-xs px-1 rounded">p.{pageNum}</div>
                 </div>
               );
             })}

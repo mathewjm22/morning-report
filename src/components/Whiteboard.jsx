@@ -74,7 +74,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
           <span className="text-xs font-bold text-sage-900 uppercase tracking-wide">Differential Diagnosis</span>
           {locked && <Lock size={11} className="text-sage-700" />}
         </div>
-        <span className="text-[10px] text-sage-700">{displayList.length} {displayList.length === 1 ? 'item' : 'items'}</span>
+        <span className="text-xs text-sage-700">{displayList.length} {displayList.length === 1 ? 'item' : 'items'}</span>
       </div>
 
       {locked && (
@@ -85,7 +85,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
           </div>
           <button
             onClick={onUncommitDdx}
-            className="text-sage-200 hover:text-white text-[10px] underline flex-shrink-0"
+            className="text-sage-200 hover:text-white text-xs underline flex-shrink-0"
             title="Un-commit if you need to keep editing"
           >
             Un-commit
@@ -230,7 +230,7 @@ function PlanSection({ plan, setPlan }) {
           <ListChecks size={13} className="text-amber-800" />
           <span className="text-xs font-bold text-amber-900 uppercase tracking-wide">Plan</span>
         </div>
-        <span className="text-[10px] text-amber-700">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
+        <span className="text-xs text-amber-700">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
       </div>
 
       <div className="px-3 py-3 space-y-1.5">
@@ -239,7 +239,7 @@ function PlanSection({ plan, setPlan }) {
             key={it.id}
             className="bg-white border border-amber-200 rounded p-1.5 flex items-center gap-2 shadow-sm"
           >
-            <span className="text-[10px] font-bold text-amber-600 w-5 flex-shrink-0 text-center">{i + 1}.</span>
+            <span className="text-xs font-bold text-amber-600 w-5 flex-shrink-0 text-center">{i + 1}.</span>
             <input
               value={it.text}
               onChange={e => updateItem(it.id, e.target.value)}

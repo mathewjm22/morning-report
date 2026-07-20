@@ -100,7 +100,7 @@ export default function FrameworksDrawer({ open, onClose }) {
             <div key={f.id} className="border border-stone-200 rounded-lg overflow-hidden bg-white shadow-sm">
               <div className="px-3 py-2 bg-stone-50 border-b border-stone-200">
                 <h3 className="text-sm font-semibold text-stone-900">{f.title}</h3>
-                {f.subtitle && <p className="text-[11px] text-stone-600 mt-0.5">{f.subtitle}</p>}
+                {f.subtitle && <p className="text-xs text-stone-600 mt-0.5">{f.subtitle}</p>}
               </div>
               <div className="divide-y divide-stone-100">
                 {(f.body || []).map((row, i) => (
@@ -112,7 +112,7 @@ export default function FrameworksDrawer({ open, onClose }) {
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-semibold text-stone-800">{row.label}</div>
-                      {row.notes && <div className="text-[11px] text-stone-600 mt-0.5">{row.notes}</div>}
+                      {row.notes && <div className="text-xs text-stone-600 mt-0.5">{row.notes}</div>}
                     </div>
                   </div>
                 ))}
@@ -121,7 +121,7 @@ export default function FrameworksDrawer({ open, onClose }) {
           ))}
         </div>
 
-        <div className="px-4 py-2 border-t border-stone-200 text-[10px] text-stone-500 bg-stone-50">
+        <div className="px-4 py-2 border-t border-stone-200 text-xs text-stone-500 bg-stone-50">
           Content adapted from clinical reasoning teaching materials. Press <kbd className="px-1 py-0.5 bg-white border border-stone-300 rounded">Esc</kbd> to close.
         </div>
       </div>

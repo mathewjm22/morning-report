@@ -18,7 +18,7 @@ export default function ToolPalette({ tool, setTool, color, setColor, strokeWidt
             <Icon size={16} />
             <span className="absolute left-full ml-2 px-2 py-1 bg-stone-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none z-30 shadow-lg">
               {t.label}
-              <span className="block text-[10px] text-stone-400">{t.hint}</span>
+              <span className="block text-xs text-stone-400">{t.hint}</span>
             </span>
           </button>
         );
@@ -37,7 +37,7 @@ export default function ToolPalette({ tool, setTool, color, setColor, strokeWidt
         ))}
       </div>
       <div className="border-t border-stone-200 my-2" />
-      <div className="px-1 text-[10px] text-stone-500 text-center mb-1">Width</div>
+      <div className="px-1 text-xs text-stone-500 text-center mb-1">Width</div>
       {[1.5, 2.5, 4, 6].map(w => (
         <button
           key={w}

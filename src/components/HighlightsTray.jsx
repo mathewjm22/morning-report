@@ -52,7 +52,7 @@ export default function HighlightsTray({ annotations, setAnnotations }) {
               />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-stone-800 leading-snug">{h.text || '(no text captured)'}</p>
-                <p className="text-[10px] text-stone-500 mt-1 font-mono">page {h.pageNum}</p>
+                <p className="text-xs text-stone-500 mt-1 font-mono">page {h.pageNum}</p>
               </div>
               <button
                 onClick={(e) => {

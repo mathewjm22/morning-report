@@ -195,7 +195,7 @@ export default function CaseWorkspace({ shared }) {
       }`}
     >
       Highlights
-      {highlightCount > 0 && <span className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
+      {highlightCount > 0 && <span className="ml-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
     </button>
     <button
       onClick={() => setRightTab('pinned')}
@@ -204,7 +204,7 @@ export default function CaseWorkspace({ shared }) {
       }`}
     >
       Pinned
-      {pinned.length > 0 && <span className="ml-1 bg-sage-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
+      {pinned.length > 0 && <span className="ml-1 bg-sage-600 text-white text-xs px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
     </button>
   </div>
   {rightTab === 'whiteboard' && (

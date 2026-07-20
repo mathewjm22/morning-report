@@ -20,7 +20,7 @@ export default function PinnedTray({ elements, onUnpin, onOpenLightbox }) {
           <div className="px-2 py-1.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-xs font-semibold text-stone-700 truncate">{el.label}</p>
-              <p className="text-[10px] text-stone-500">p.{el.pageNum}</p>
+              <p className="text-xs text-stone-500">p.{el.pageNum}</p>
             </div>
             <div className="flex items-center gap-1">
               <button onClick={() => onOpenLightbox(el)} className="p-1 text-stone-500 hover:text-sage-600" title="Open"><Maximize2 size={12} /></button>

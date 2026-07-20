@@ -388,7 +388,7 @@ function StrokeRenderer({ stroke: s, selected, preview, onEditNote }) {
           <div
             xmlns="http://www.w3.org/1999/xhtml"
             onDoubleClick={onEditNote}
-            className="text-[11px] text-amber-950 leading-tight cursor-text"
+            className="text-xs text-amber-950 leading-tight cursor-text"
             style={{ overflow: 'hidden', wordBreak: 'break-word' }}
           >
             {s.text || '(empty)'}
