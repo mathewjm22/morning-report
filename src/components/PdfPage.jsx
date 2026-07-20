@@ -117,42 +117,54 @@ export default function PdfPage({
 
       {/* Zone overlay — only interactive when Select tool is active */}
       {viewport && zones && zones.map((zone, i) => {
-        const hovered = hoveredZoneIdx === i;
-        return (
+  const hovered = hoveredZoneIdx === i;
+  return (
+    <div
+      key={i}
+      onMouseEnter={() => isSelect && setHoveredZoneIdx(i)}
+      onMouseLeave={() => setHoveredZoneIdx(null)}
+      className={`absolute pointer-events-${isSelect ? 'auto' : 'none'} transition ${
+        isSelect && hovered ? 'ring-4 ring-blue-500 bg-blue-500/10' : ''
+      }`}
+      style={{
+        left: zone.bbox.x,
+        top: zone.bbox.y,
+        width: zone.bbox.w,
+        height: zone.bbox.h,
+        cursor: isSelect ? 'pointer' : 'default',
+      }}
+    >
+      {isSelect && hovered && (
+        <>
+          {/* Invisible bridge — extends hover area upward to the buttons
+              so moving between zone and buttons doesn't lose the hover */}
           <div
-            key={i}
-            onMouseEnter={() => isSelect && setHoveredZoneIdx(i)}
-            onMouseLeave={() => setHoveredZoneIdx(null)}
-            className={`absolute pointer-events-${isSelect ? 'auto' : 'none'} transition ${
-              isSelect && hovered ? 'ring-4 ring-blue-500 bg-blue-500/10' : ''
-            }`}
-            style={{
-              left: zone.bbox.x,
-              top: zone.bbox.y,
-              width: zone.bbox.w,
-              height: zone.bbox.h,
-              cursor: isSelect ? 'pointer' : 'default',
-            }}
+            className="absolute left-0 right-0"
+            style={{ top: -40, height: 40 }}
+          />
+          {/* Button popup — sits flush against the top edge of the zone */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-lg border border-slate-200 px-1.5 py-1 flex items-center gap-1 whitespace-nowrap"
+            style={{ top: -36 }}
           >
-            {isSelect && hovered && (
-              <div className="absolute -top-11 left-1/2 -translate-x-1/2 bg-white rounded shadow-lg px-2 py-1.5 flex items-center gap-1 whitespace-nowrap">
-                <button
-                  onClick={() => handleOpenZone(zone)}
-                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded flex items-center gap-1"
-                >
-                  <Maximize2 size={11} /> Open
-                </button>
-                <button
-                  onClick={() => handlePinZone(zone)}
-                  className="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-2.5 py-1 rounded flex items-center gap-1"
-                >
-                  <Plus size={11} /> Pin
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => handleOpenZone(zone)}
+              className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded flex items-center gap-1"
+            >
+              <Maximize2 size={11} /> Open
+            </button>
+            <button
+              onClick={() => handlePinZone(zone)}
+              className="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-2.5 py-1 rounded flex items-center gap-1"
+            >
+              <Plus size={11} /> Pin
+            </button>
           </div>
-        );
-      })}
+        </>
+      )}
+    </div>
+  );
+})}
 
       {/* Annotation layer */}
       <AnnotationLayer
