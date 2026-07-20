@@ -119,41 +119,42 @@ export default function CaseWorkspace({ shared }) {
   return (
     <div className="flex flex-col h-screen bg-stone-100 overflow-hidden">
       {/* Top bar */}
-      <div className="bg-white border-b border-stone-200 px-4 py-2.5 flex items-center justify-between shadow-sm z-20">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link to="/" className="text-stone-500 hover:text-stone-800"><Home size={18} /></Link>
-          <div className="min-w-0">
-            <h1 className="text-base font-semibold truncate">{caseEntry.title}</h1>
-            <p className="text-xs text-stone-500 truncate">{caseEntry.source}{shared && ' • Shared'}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {!shared && (
-            <button
-              onClick={generateShare}
-              disabled={shareState.loading}
-              className="text-xs px-3 py-1.5 bg-stone-100 hover:bg-stone-200 rounded flex items-center gap-1 disabled:opacity-50"
-            >
-              <Share2 size={14} /> Share
-            </button>
-          )}
-          <button
-  onClick={() => setFrameworksOpen(true)}
-  className="text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition bg-stone-100 text-stone-700 hover:bg-stone-200"
-  title="Clinical reasoning frameworks"
->
-  <Brain size={14} /> Frameworks
-</button>
-          <button
-            onClick={() => setAttendingMode(!attendingMode)}
-            className={`text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition ${
-              attendingMode ? 'bg-sage-600 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-            }`}
-          >
-            <GraduationCap size={14} /> Attending
-          </button>
-        </div>
-      </div>
+<div className="bg-white border-b border-stone-200 px-4 py-3 flex items-center justify-between shadow-sm z-20">
+  <div className="flex items-center gap-3 min-w-0">
+    <Link
+      to="/"
+      className="text-stone-500 hover:text-stone-900 p-1.5 hover:bg-stone-100 rounded transition"
+      title="Back to library"
+    >
+      <Home size={18} />
+    </Link>
+    <div className="min-w-0">
+      <h1 className="text-base font-semibold text-stone-900 truncate leading-tight">{caseEntry.title}</h1>
+      <p className="text-xs text-stone-500 truncate">{caseEntry.source}{shared && ' • Shared'}</p>
+    </div>
+  </div>
+  <div className="flex items-center gap-1">
+    {!shared && (
+      <IconButton
+        icon={Share2}
+        onClick={generateShare}
+        disabled={shareState.loading}
+        label="Share this case"
+      />
+    )}
+    <IconButton
+      icon={Brain}
+      onClick={() => setFrameworksOpen(true)}
+      label="Clinical reasoning frameworks"
+    />
+    <IconButton
+      icon={GraduationCap}
+      onClick={() => setAttendingMode(!attendingMode)}
+      active={attendingMode}
+      label={attendingMode ? 'Turn off attending mode' : 'Attending mode'}
+    />
+  </div>
+</div>
 
       {shareState.url && (
         <div className="px-4 py-2 border-b bg-sage-50 border-sage-200 flex items-center gap-2 text-sm">
@@ -251,5 +252,26 @@ function ErrorScreen({ message }) {
         <Link to="/" className="text-sage-600 hover:underline text-sm">← Back to library</Link>
       </div>
     </div>
+  );
+}
+function IconButton({ icon: Icon, onClick, disabled, active, label }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={label}
+      aria-label={label}
+      className={`p-2 rounded-md transition relative group ${
+        active
+          ? 'bg-sage-600 text-white hover:bg-sage-700'
+          : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+      } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+    >
+      <Icon size={17} />
+      {/* Custom tooltip (nicer than the browser default) */}
+      <span className="absolute top-full right-0 mt-1.5 px-2 py-1 bg-stone-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition z-30 shadow-lg">
+        {label}
+      </span>
+    </button>
   );
 }
