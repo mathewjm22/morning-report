@@ -82,43 +82,87 @@ const buf = caseEntry.pdfBlob instanceof ArrayBuffer
   const setPageZones = (pn, list) => setZones(z => ({ ...z, [pn]: list }));
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      <div className="flex flex-shrink-0" style={{ height: '100%' }}>
-  <LeftRail
-    caseEntry={caseEntry}
-    visiblePages={visiblePages}
-    currentPage={currentPage}
-    gatePages={visiblePages}
-    onJumpToPage={jumpToPage}
-    pdf={pdf}
-    width={leftRailWidth}
-  />
-  <ResizeHandle
-    onResize={(delta) => setLeftRailWidth(w => clamp(w + delta, 60, 400))}
-    onDoubleClick={() => setLeftRailWidth(80)}
-  />
-</div>
-
-      <ToolPalette
-        tool={tool} setTool={setTool}
-        color={color} setColor={setColor}
-        strokeWidth={strokeWidth} setStrokeWidth={setStrokeWidth}
+  <div className="flex-1 flex overflow-hidden">
+    <div
+      className="flex flex-shrink-0"
+      style={{ height: '100%' }}
+    >
+      <LeftRail
+        caseEntry={caseEntry}
+        visiblePages={visiblePages}
+        currentPage={currentPage}
+        gatePages={visiblePages}
+        onJumpToPage={jumpToPage}
+        pdf={pdf}
+        width={leftRailWidth}
       />
 
-<div className="bg-white border-b border-stone-200 px-3 py-2 flex items-center justify-between text-stone-600 text-xs">
-  <span>Page {currentPage} of {caseEntry.totalPages}</span>
-  <div className="flex items-center gap-2">
-    <button onClick={() => setZoom(z => Math.max(0.6, z - 0.15))} className="p-1 hover:bg-stone-100 rounded text-stone-600"><ZoomOut size={14} /></button>
-    <span className="w-12 text-center">{Math.round(zoom * 100)}%</span>
-    <button onClick={() => setZoom(z => Math.min(3, z + 0.15))} className="p-1 hover:bg-stone-100 rounded text-stone-600"><ZoomIn size={14} /></button>
-  </div>
-</div>
-   <div>
-        <div ref={scrollRef} className="flex-1 overflow-auto p-6 flex flex-col items-center gap-6">
-          {pdf && visiblePages.map(pn => (
+      <ResizeHandle
+        onResize={(delta) =>
+          setLeftRailWidth(width =>
+            clamp(width + delta, 60, 400)
+          )
+        }
+        onDoubleClick={() => setLeftRailWidth(80)}
+      />
+    </div>
+
+    <ToolPalette
+      tool={tool}
+      setTool={setTool}
+      color={color}
+      setColor={setColor}
+      strokeWidth={strokeWidth}
+      setStrokeWidth={setStrokeWidth}
+    />
+
+    {/* Main PDF column */}
+    <div className="min-w-0 min-h-0 flex-1 flex flex-col">
+      <div className="bg-white border-b border-stone-200 px-3 py-2 flex items-center justify-between text-stone-600 text-xs">
+        <span>
+          Page {currentPage} of {caseEntry.totalPages}
+        </span>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Zoom out"
+            onClick={() =>
+              setZoom(value => Math.max(0.6, value - 0.15))
+            }
+            className="p-1 hover:bg-stone-100 rounded text-stone-600"
+          >
+            <ZoomOut size={14} />
+          </button>
+
+          <span className="w-12 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+
+          <button
+            type="button"
+            aria-label="Zoom in"
+            onClick={() =>
+              setZoom(value => Math.min(3, value + 0.15))
+            }
+            className="p-1 hover:bg-stone-100 rounded text-stone-600"
+          >
+            <ZoomIn size={14} />
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-auto p-6 flex flex-col items-center gap-6"
+      >
+        {pdf &&
+          visiblePages.map(pn => (
             <div
               key={pn}
-              ref={el => (pageRefs.current[pn] = el)}
+              ref={element => {
+                pageRefs.current[pn] = element;
+              }}
               data-page-num={pn}
               className="flex flex-col items-center"
             >
@@ -126,23 +170,28 @@ const buf = caseEntry.pdfBlob instanceof ArrayBuffer
                 pdf={pdf}
                 pageNum={pn}
                 zoom={zoom}
-                isFocus={true} // all pages equally in-focus
+                isFocus={true}
                 tool={tool}
                 color={color}
                 strokeWidth={strokeWidth}
-                annotations={annotations[pn] || []}
-                setAnnotations={(list) => setAnnotations(a => ({ ...a, [pn]: list }))}
-                zones={zones[pn] || null}
-                setZones={(list) => setPageZones(pn, list)}
+                annotations={annotations?.[pn] ?? []}
+                setAnnotations={list =>
+                  setAnnotations(current => ({
+                    ...current,
+                    [pn]: list,
+                  }))
+                }
+                zones={zones[pn] ?? null}
+                setZones={list => setPageZones(pn, list)}
                 onPinElement={onPinElement}
                 onOpenLightbox={onOpenLightbox}
               />
             </div>
           ))}
-        </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
