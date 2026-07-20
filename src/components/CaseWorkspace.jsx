@@ -15,7 +15,7 @@ import DdxCompareModal from './DdxCompareModal.jsx';
 import { Brain } from 'lucide-react';
 import FrameworksDrawer from './FrameworksDrawer.jsx';
 import ResearchTray from './ResearchTray.jsx';
-
+import CompareView from './CompareView.jsx';
 
 export default function CaseWorkspace({ shared }) {
   const { caseId, shareId } = useParams();
@@ -36,6 +36,7 @@ export default function CaseWorkspace({ shared }) {
   const [showRevealModal, setShowRevealModal] = useState(false);
   const [frameworksOpen, setFrameworksOpen] = useState(false);
   const [researchQuery, setResearchQuery] = useState('');
+  const [compareElements, setCompareElements] = useState(null); // array of pinned items or null
 
   const sendToResearch = (text) => {
   setResearchQuery(text);
@@ -245,7 +246,14 @@ export default function CaseWorkspace({ shared }) {
     onQueryConsumed={() => setResearchQuery('')}
   />
 )}
-{rightTab === 'pinned' && <PinnedTray elements={pinned} onUnpin={unpin} onOpenLightbox={setLightbox} />}
+{rightTab === 'pinned' && (
+  <PinnedTray
+    elements={pinned}
+    onUnpin={unpin}
+    onOpenLightbox={setLightbox}
+    onOpenCompare={setCompareElements}
+  />
+)}
 </div>
       </div>
 
@@ -265,7 +273,12 @@ export default function CaseWorkspace({ shared }) {
   />
 )}
             <FrameworksDrawer open={frameworksOpen} onClose={() => setFrameworksOpen(false)} />
-
+{compareElements && (
+  <CompareView
+    elements={compareElements}
+    onClose={() => setCompareElements(null)}
+  />
+)}
     </div>
   );
 }

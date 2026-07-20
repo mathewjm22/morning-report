@@ -79,26 +79,45 @@ useEffect(() => {
   const height = viewport?.height || 1000;
 
   const handlePinZone = async (zone) => {
-    // Render the zone's region to a smaller data URL for the pinned tray thumbnail
-    const cnv = document.createElement('canvas');
-    cnv.width = zone.bbox.w;
-    cnv.height = zone.bbox.h;
-    const ctx = cnv.getContext('2d');
-    ctx.drawImage(
-      canvasRef.current,
-      zone.bbox.x, zone.bbox.y, zone.bbox.w, zone.bbox.h,
-      0, 0, zone.bbox.w, zone.bbox.h,
-    );
-    const thumbUrl = cnv.toDataURL('image/jpeg', 0.7);
-    onPinElement({
-      id: `${pageNum}-${zone.bbox.x | 0}-${zone.bbox.y | 0}-${Date.now()}`,
-      pageNum,
-      kind: zone.kind,
-      label: zone.label || `Page ${pageNum} — ${zone.kind}`,
-      bbox: zone.bbox,
-      thumbUrl,
-    });
-  };
+  // Low-res thumbnail for the pinned tray display
+  const thumbCnv = document.createElement('canvas');
+  thumbCnv.width = zone.bbox.w;
+  thumbCnv.height = zone.bbox.h;
+  const thumbCtx = thumbCnv.getContext('2d');
+  thumbCtx.drawImage(
+    canvasRef.current,
+    zone.bbox.x, zone.bbox.y, zone.bbox.w, zone.bbox.h,
+    0, 0, zone.bbox.w, zone.bbox.h,
+  );
+  const thumbUrl = thumbCnv.toDataURL('image/jpeg', 0.7);
+
+  // High-res version for lightbox/compare (same treatment as handleOpenZone)
+  const fullCnv = document.createElement('canvas');
+  const upScale = 2;
+  fullCnv.width = zone.bbox.w * upScale;
+  fullCnv.height = zone.bbox.h * upScale;
+  const fullCtx = fullCnv.getContext('2d');
+  fullCtx.imageSmoothingEnabled = true;
+  fullCtx.imageSmoothingQuality = 'high';
+  fullCtx.drawImage(
+    canvasRef.current,
+    zone.bbox.x, zone.bbox.y, zone.bbox.w, zone.bbox.h,
+    0, 0, fullCnv.width, fullCnv.height,
+  );
+  const imageUrl = fullCnv.toDataURL('image/png');
+
+  onPinElement({
+    id: `${pageNum}-${zone.bbox.x | 0}-${zone.bbox.y | 0}-${Date.now()}`,
+    pageNum,
+    kind: zone.kind,
+    label: zone.label || `Page ${pageNum} — ${zone.kind}`,
+    bbox: zone.bbox,
+    thumbUrl,
+    imageUrl,
+    naturalWidth: fullCnv.width,
+    naturalHeight: fullCnv.height,
+  });
+};
 
   const handleOpenZone = (zone) => {
     // Grab the region as a data URL for the lightbox
