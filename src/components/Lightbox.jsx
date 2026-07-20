@@ -1,10 +1,9 @@
 
 
 import { useState, useEffect } from 'react';
-import { X, ZoomIn, ZoomOut, Undo2, Trash2 } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, Undo2, Trash2, RotateCw, RotateCcw, FlipHorizontal2, FlipVertical2 } from 'lucide-react';
 import { TOOLS, COLORS } from '../lib/constants.js';
 import AnnotationLayer from './AnnotationLayer.jsx';
-import { X, ZoomIn, ZoomOut, Undo2, Trash2, RotateCw, RotateCcw, FlipHorizontal2, FlipVertical2 } from 'lucide-react';
 
 
 export default function Lightbox({ element, caseEntry, onClose }) {
