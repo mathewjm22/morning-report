@@ -137,7 +137,7 @@ if (tables && tables.length > 0) {
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => { e.preventDefault(); }}
                 onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
-                className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-400 hover:bg-slate-50 transition cursor-pointer"
+                className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-sage-400 hover:bg-slate-50 transition cursor-pointer"
               >
                 <Upload className="mx-auto text-slate-400 mb-3" size={40} />
                 <p className="text-sm font-semibold text-slate-700 mb-1">
@@ -171,7 +171,7 @@ if (tables && tables.length > 0) {
                 <div
                   onPaste={handlePaste}
                   tabIndex={0}
-                  className="min-h-[80px] border border-slate-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="min-h-[80px] border border-slate-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-sage-400"
                 >
                   {manualFigures.length === 0 ? (
                     <p className="text-xs text-slate-400 italic text-center py-4">
@@ -201,7 +201,7 @@ if (tables && tables.length > 0) {
             </div>
           ) : (
             <div className="text-center py-8">
-              <Loader2 className="mx-auto text-blue-600 animate-spin mb-4" size={40} />
+              <Loader2 className="mx-auto text-sage-600 animate-spin mb-4" size={40} />
               <p className="text-sm font-semibold text-slate-800 mb-1">
                 {status === 'extracting' ? 'Extracting from PDF' : 'Parsing case with AI'}
               </p>

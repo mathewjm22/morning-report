@@ -23,7 +23,7 @@ export default function PinnedTray({ elements, onUnpin, onOpenLightbox }) {
               <p className="text-[10px] text-slate-500">p.{el.pageNum}</p>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => onOpenLightbox(el)} className="p-1 text-slate-500 hover:text-blue-600" title="Open"><Maximize2 size={12} /></button>
+              <button onClick={() => onOpenLightbox(el)} className="p-1 text-slate-500 hover:text-sage-600" title="Open"><Maximize2 size={12} /></button>
               <button onClick={() => onUnpin(el.id)} className="p-1 text-slate-500 hover:text-red-600" title="Unpin"><PinOff size={12} /></button>
             </div>
           </div>

@@ -112,7 +112,7 @@ export default function CaseWalkthrough({ shared }) {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-lg border border-slate-200 p-6 max-w-md text-center">
           <p className="text-slate-700 mb-4">{loadError}</p>
-          <Link to="/" className="text-blue-600 hover:underline text-sm">← Back to library</Link>
+          <Link to="/" className="text-sage-600 hover:underline text-sm">← Back to library</Link>
         </div>
       </div>
     );
@@ -208,7 +208,7 @@ const gatesWithFigures = gates.map(g => {
 
   const renderSegments = (segments, keyPrefix) =>
     segments.map((seg, j) => seg.hl
-      ? <mark key={`${keyPrefix}-${j}`} className={seg.hl === 'positive' ? 'bg-yellow-200 px-0.5 rounded' : 'bg-blue-200 px-0.5 rounded'}>{seg.text}</mark>
+      ? <mark key={`${keyPrefix}-${j}`} className={seg.hl === 'positive' ? 'bg-yellow-200 px-0.5 rounded' : 'bg-sage-200 px-0.5 rounded'}>{seg.text}</mark>
       : <span key={`${keyPrefix}-${j}`}>{seg.text}</span>);
 
   const renderContent = (text) => {
@@ -278,7 +278,7 @@ const gatesWithFigures = gates.map(g => {
           <button
             onClick={() => setAttendingMode(!attendingMode)}
             className={`text-xs px-3 py-1.5 rounded flex items-center gap-1 transition ${
-              attendingMode ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              attendingMode ? 'bg-sage-600 text-white hover:bg-sage-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
             <GraduationCap size={14} /> Attending
@@ -317,8 +317,8 @@ const gatesWithFigures = gates.map(g => {
             key={g.id}
             onClick={() => setGateIndex(i)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs whitespace-nowrap transition ${
-              i === gateIndex ? 'bg-blue-600 text-white' :
-              revealed[i] ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' :
+              i === gateIndex ? 'bg-sage-600 text-white' :
+              revealed[i] ? 'bg-sage-50 text-sage-700 hover:bg-sage-100' :
               'bg-slate-100 text-slate-500 hover:bg-slate-200'
             }`}
           >
@@ -337,7 +337,7 @@ const gatesWithFigures = gates.map(g => {
           <button onClick={() => addHighlight('positive')} className="px-3 py-2 hover:bg-yellow-600 text-white flex items-center gap-1">
             <Highlighter size={12} /> Pertinent +
           </button>
-          <button onClick={() => addHighlight('negative')} className="px-3 py-2 hover:bg-blue-600 text-white flex items-center gap-1 border-l border-slate-700">
+          <button onClick={() => addHighlight('negative')} className="px-3 py-2 hover:bg-sage-600 text-white flex items-center gap-1 border-l border-slate-700">
             <Highlighter size={12} /> Pertinent −
           </button>
         </div>
@@ -348,7 +348,7 @@ const gatesWithFigures = gates.map(g => {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
-              <div className="bg-blue-100 text-blue-700 p-2 rounded"><IconEl name={gate.icon} size={18} /></div>
+              <div className="bg-sage-100 text-sage-700 p-2 rounded"><IconEl name={gate.icon} size={18} /></div>
               <h2 className="text-xl font-semibold text-slate-900">{gate.title}</h2>
             </div>
 
@@ -399,15 +399,15 @@ const gatesWithFigures = gates.map(g => {
                       value={imageReads[gate.id] || ''}
                       onChange={e => setImageReads({ ...imageReads, [gate.id]: e.target.value })}
                       placeholder="Describe what you see. Be systematic — findings, then impression..."
-                      className="w-full h-24 text-sm p-3 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="w-full h-24 text-sm p-3 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-sage-400"
                     />
                   </div>
                   {isRevealed ? (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-4">
+                    <div className="bg-sage-50 border border-sage-200 rounded p-4">
                       {renderContent(gate.officialRead || gate.content)}
                     </div>
                   ) : (
-                    <button onClick={revealImage} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded flex items-center gap-2">
+                    <button onClick={revealImage} className="px-4 py-2 bg-sage-600 hover:bg-sage-700 text-white text-sm rounded flex items-center gap-2">
                       <Eye size={14} /> Reveal Official Read
                     </button>
                   )}
@@ -418,20 +418,20 @@ const gatesWithFigures = gates.map(g => {
             </div>
 
             {gate.prompt && isRevealed && (
-              <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-3">
-                <p className="text-sm text-blue-900"><strong>Discussion prompt:</strong> {gate.prompt}</p>
+              <div className="mt-4 bg-sage-50 border border-sage-200 rounded p-3">
+                <p className="text-sm text-sage-900"><strong>Discussion prompt:</strong> {gate.prompt}</p>
               </div>
             )}
 
             {attendingMode && gate.teachingNotes && gate.teachingNotes.length > 0 && (
-              <div className="mt-4 bg-indigo-50 border border-indigo-200 rounded p-4">
+              <div className="mt-4 bg-sage-50 border border-sage-200 rounded p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <GraduationCap size={16} className="text-indigo-700" />
-                  <p className="text-sm font-semibold text-indigo-900">Teaching notes</p>
+                  <GraduationCap size={16} className="text-sage-700" />
+                  <p className="text-sm font-semibold text-sage-900">Teaching notes</p>
                 </div>
                 <ul className="space-y-1.5">
                   {gate.teachingNotes.map((note, i) => (
-                    <li key={i} className="text-sm text-indigo-900 flex gap-2">
+                    <li key={i} className="text-sm text-sage-900 flex gap-2">
                       <span className="text-indigo-400">•</span>
                       <span>{note}</span>
                     </li>
@@ -444,7 +444,7 @@ const gatesWithFigures = gates.map(g => {
               <button onClick={goPrev} disabled={gateIndex === 0} className="flex items-center gap-1 px-4 py-2 text-sm bg-white border border-slate-300 rounded disabled:opacity-40 hover:bg-slate-50">
                 <ChevronLeft size={16} /> Previous
               </button>
-              <button onClick={goNext} disabled={gateIndex === gatesWithFigures.length - 1} className="flex items-center gap-1 px-4 py-2 text-sm bg-blue-600 text-white rounded disabled:opacity-40 hover:bg-blue-700">
+              <button onClick={goNext} disabled={gateIndex === gatesWithFigures.length - 1} className="flex items-center gap-1 px-4 py-2 text-sm bg-sage-600 text-white rounded disabled:opacity-40 hover:bg-sage-700">
                 Next <ChevronRight size={16} />
               </button>
             </div>

@@ -44,7 +44,7 @@ export default function Lightbox({ element, caseEntry, onClose }) {
                 key={t.id}
                 onClick={() => setTool(t.id)}
                 className={`p-2.5 rounded transition ${
-                  tool === t.id ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                  tool === t.id ? 'bg-sage-600 text-white' : 'text-slate-400 hover:bg-slate-700 hover:text-white'
                 }`}
                 title={t.label}
               >
@@ -106,8 +106,8 @@ export default function Lightbox({ element, caseEntry, onClose }) {
             ))}
             {strokes.length === 0 && <p className="text-xs text-slate-500 italic">Draw on the image.</p>}
           </div>
-          <div className="mt-6 p-3 bg-blue-900/30 border border-blue-800 rounded">
-            <p className="text-xs font-semibold text-blue-200 mb-1">EKG reference</p>
+          <div className="mt-6 p-3 bg-sage-900/30 border border-sage-800 rounded">
+            <p className="text-xs font-semibold text-sage-200 mb-1">EKG reference</p>
             <p className="text-[10px] text-blue-300 leading-relaxed">
               25 mm/s, 10 mm/mV<br/>
               1 small box = 40 ms<br/>

@@ -124,7 +124,7 @@ useEffect(() => {
   return (
     <div
       className={`relative bg-white shadow-2xl transition ${
-        isFocus ? 'ring-2 ring-blue-500' : 'ring-1 ring-slate-700 opacity-70 hover:opacity-100'
+        isFocus ? 'ring-2 ring-sage-500' : 'ring-1 ring-slate-700 opacity-70 hover:opacity-100'
       }`}
       style={{ width, height }}
     >
@@ -148,7 +148,7 @@ useEffect(() => {
 onMouseEnter={() => isSelect && showZoneMenu(i)}
 onMouseLeave={() => hideZoneMenu()}
       className={`absolute pointer-events-${isSelect ? 'auto' : 'none'} transition ${
-        isSelect && hovered ? 'ring-4 ring-blue-500 bg-blue-500/10' : ''
+        isSelect && hovered ? 'ring-4 ring-sage-500 bg-sage-500/10' : ''
       }`}
       style={{
         left: zone.bbox.x,
@@ -173,7 +173,7 @@ onMouseLeave={() => hideZoneMenu()}
           >
             <button
               onClick={() => handleOpenZone(zone)}
-              className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded flex items-center gap-1"
+              className="text-xs bg-sage-600 hover:bg-sage-700 text-white px-2.5 py-1 rounded flex items-center gap-1"
             >
               <Maximize2 size={11} /> Open
             </button>

@@ -67,25 +67,25 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
   const displayList = locked ? committedDdx : ddx;
 
   return (
-    <div className="bg-blue-50/40">
-      <div className="px-3 py-2.5 flex items-center justify-between sticky top-0 bg-blue-100/95 backdrop-blur border-b-2 border-blue-300 z-10">
+    <div className="bg-sage-50/40">
+      <div className="px-3 py-2.5 flex items-center justify-between sticky top-0 bg-sage-100/95 backdrop-blur border-b-2 border-blue-300 z-10">
         <div className="flex items-center gap-1.5">
-          <Stethoscope size={13} className="text-blue-800" />
-          <span className="text-xs font-bold text-blue-900 uppercase tracking-wide">Differential Diagnosis</span>
-          {locked && <Lock size={11} className="text-blue-700" />}
+          <Stethoscope size={13} className="text-sage-800" />
+          <span className="text-xs font-bold text-sage-900 uppercase tracking-wide">Differential Diagnosis</span>
+          {locked && <Lock size={11} className="text-sage-700" />}
         </div>
-        <span className="text-[10px] text-blue-700">{displayList.length} {displayList.length === 1 ? 'item' : 'items'}</span>
+        <span className="text-[10px] text-sage-700">{displayList.length} {displayList.length === 1 ? 'item' : 'items'}</span>
       </div>
 
       {locked && (
-        <div className="bg-blue-600 text-white px-3 py-2 text-xs flex items-center justify-between gap-2">
+        <div className="bg-sage-600 text-white px-3 py-2 text-xs flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <Lock size={12} className="flex-shrink-0" />
             <span className="truncate">Committed. Keep reading, then reveal.</span>
           </div>
           <button
             onClick={onUncommitDdx}
-            className="text-blue-200 hover:text-white text-[10px] underline flex-shrink-0"
+            className="text-sage-200 hover:text-white text-[10px] underline flex-shrink-0"
             title="Un-commit if you need to keep editing"
           >
             Un-commit
@@ -95,7 +95,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
 
       <div className="px-3 py-3 space-y-1.5">
         {displayList.map((d, i) => {
-          const bg = i % 2 === 0 ? 'bg-sky-100 border-sky-200' : 'bg-slate-100 border-slate-200';
+          const bg = i % 2 === 0 ? 'bg-sage-100 border-sage-200' : 'bg-slate-100 border-slate-200';
           const isDragging = dragIdx === i;
           const isDragOver = dragOverIdx === i;
           return (
@@ -109,17 +109,17 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
               onDragEnd={handleDragEnd}
               className={`relative border-2 rounded p-2 shadow-sm transition ${bg} ${
                 isDragging ? 'opacity-30' : ''
-              } ${isDragOver ? 'ring-2 ring-blue-500 -translate-y-0.5' : ''} ${locked ? 'opacity-95' : ''}`}
+              } ${isDragOver ? 'ring-2 ring-sage-500 -translate-y-0.5' : ''} ${locked ? 'opacity-95' : ''}`}
             >
               <div className="flex items-center gap-1">
                 {!locked && <GripVertical size={14} className="text-slate-400 cursor-move flex-shrink-0" />}
-                <span className="text-xs font-bold text-blue-700 w-6 flex-shrink-0">#{i + 1}</span>
+                <span className="text-xs font-bold text-sage-700 w-6 flex-shrink-0">#{i + 1}</span>
                 <input
                   value={d.name}
                   onChange={e => updateDdx(d.id, 'name', e.target.value)}
                   placeholder="Diagnosis"
                   readOnly={locked}
-                  className={`flex-1 text-sm px-1 py-0.5 bg-transparent border-b border-slate-400 focus:outline-none focus:border-blue-500 font-medium min-w-0 ${locked ? 'cursor-default' : ''}`}
+                  className={`flex-1 text-sm px-1 py-0.5 bg-transparent border-b border-slate-400 focus:outline-none focus:border-sage-500 font-medium min-w-0 ${locked ? 'cursor-default' : ''}`}
                 />
                 {!locked && (
                   <button
@@ -137,7 +137,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
                   onChange={e => updateDdx(d.id, 'notes', e.target.value)}
                   placeholder="For / against..."
                   readOnly={locked}
-                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-sage-400"
                   rows={2}
                 />
               )}
@@ -145,7 +145,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
                 <textarea
                   onChange={e => updateDdx(d.id, 'notes', e.target.value)}
                   placeholder="For / against..."
-                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-sage-400"
                   rows={2}
                   defaultValue=""
                 />
@@ -157,7 +157,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
         {!locked && (
           <div className="border-2 border-dashed border-blue-300 rounded p-2 bg-white">
             <div className="flex items-center gap-1">
-              <Plus size={14} className="text-blue-500 flex-shrink-0" />
+              <Plus size={14} className="text-sage-500 flex-shrink-0" />
               <input
                 ref={draftRef}
                 value={draftName}
@@ -182,7 +182,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
         {!locked && ddx.length > 0 && (
           <button
             onClick={onCommitDdx}
-            className="w-full mt-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-sm flex items-center justify-center gap-2 shadow-sm"
+            className="w-full mt-3 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded font-medium text-sm flex items-center justify-center gap-2 shadow-sm"
           >
             <Lock size={14} /> Commit DDx ({ddx.length})
           </button>

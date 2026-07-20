@@ -32,9 +32,9 @@ export default function LeftRail({ caseEntry, visiblePages, currentPage, gatePag
             onClick={() => onJumpToPage(pn)}
             className={`relative w-full aspect-[3/4] rounded border-2 transition overflow-hidden ${
               active
-                ? 'border-blue-600 ring-2 ring-blue-300'
+                ? 'border-sage-600 ring-2 ring-blue-300'
                 : inGate
-                ? 'border-blue-300 hover:border-blue-500'
+                ? 'border-blue-300 hover:border-sage-500'
                 : 'border-slate-200 opacity-50 hover:opacity-80'
             }`}
           >

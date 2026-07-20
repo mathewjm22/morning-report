@@ -46,7 +46,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
           {/* Committed DDx column */}
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Target size={14} className="text-blue-700" />
+              <Target size={14} className="text-sage-700" />
               <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Your committed DDx</h3>
             </div>
             <div className="border border-slate-200 rounded overflow-hidden">
@@ -56,10 +56,10 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
                   <div
                     key={d.id}
                     className={`px-3 py-2 flex items-center gap-3 border-b border-slate-100 last:border-b-0 ${
-                      isMatch ? 'bg-green-100' : (i % 2 === 0 ? 'bg-sky-50' : 'bg-slate-50')
+                      isMatch ? 'bg-green-100' : (i % 2 === 0 ? 'bg-sage-50' : 'bg-slate-50')
                     }`}
                   >
-                    <span className="text-xs font-bold text-blue-700 w-6 flex-shrink-0">#{i + 1}</span>
+                    <span className="text-xs font-bold text-sage-700 w-6 flex-shrink-0">#{i + 1}</span>
                     <span className="text-sm text-slate-800 flex-1">{d.name || '(unnamed)'}</span>
                     {isMatch && (
                       <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0">
@@ -99,7 +99,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
           {submitted && matchInfo && (
             <div className={`rounded-lg p-4 border-2 ${
               matchInfo.matchedRank === 1 ? 'bg-green-50 border-green-400' :
-              matchInfo.matchedRank ? 'bg-blue-50 border-blue-400' :
+              matchInfo.matchedRank ? 'bg-sage-50 border-sage-400' :
               'bg-orange-50 border-orange-400'
             }`}>
               <div className="flex items-start gap-3">
@@ -160,7 +160,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded font-medium"
+                className="px-4 py-1.5 bg-sage-600 hover:bg-sage-700 text-white text-sm rounded font-medium"
               >
                 Save outcome
               </button>

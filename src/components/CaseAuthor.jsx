@@ -108,7 +108,7 @@ export default function CaseAuthor() {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); if (!loading) handleFile(e.dataTransfer.files[0]); }}
             className={`border-2 border-dashed border-slate-300 rounded-lg p-12 text-center transition ${
-              loading ? 'opacity-50' : 'hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer'
+              loading ? 'opacity-50' : 'hover:border-sage-400 hover:bg-sage-50/50 cursor-pointer'
             }`}
           >
             <Upload className="mx-auto text-slate-400 mb-3" size={48} />
@@ -200,7 +200,7 @@ export default function CaseAuthor() {
         <button
           onClick={save}
           disabled={loading || !title.trim()}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-sage-600 hover:bg-sage-700 text-white rounded font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Save size={14} /> {loading ? 'Saving...' : 'Save & open workspace'}
         </button>

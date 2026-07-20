@@ -147,7 +147,7 @@ export default function CaseWorkspace({ shared }) {
           <button
             onClick={() => setAttendingMode(!attendingMode)}
             className={`text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition ${
-              attendingMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              attendingMode ? 'bg-sage-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
             <GraduationCap size={14} /> Attending
@@ -183,7 +183,7 @@ export default function CaseWorkspace({ shared }) {
     <button
       onClick={() => setRightTab('whiteboard')}
       className={`flex-1 py-2.5 text-xs font-medium ${
-        rightTab === 'whiteboard' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
+        rightTab === 'whiteboard' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-slate-600 hover:bg-slate-50'
       }`}
     >
       Whiteboard
@@ -191,7 +191,7 @@ export default function CaseWorkspace({ shared }) {
     <button
       onClick={() => setRightTab('highlights')}
       className={`flex-1 py-2.5 text-xs font-medium relative ${
-        rightTab === 'highlights' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
+        rightTab === 'highlights' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-slate-600 hover:bg-slate-50'
       }`}
     >
       Highlights
@@ -200,11 +200,11 @@ export default function CaseWorkspace({ shared }) {
     <button
       onClick={() => setRightTab('pinned')}
       className={`flex-1 py-2.5 text-xs font-medium relative ${
-        rightTab === 'pinned' ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50'
+        rightTab === 'pinned' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-slate-600 hover:bg-slate-50'
       }`}
     >
       Pinned
-      {pinned.length > 0 && <span className="ml-1 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
+      {pinned.length > 0 && <span className="ml-1 bg-sage-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
     </button>
   </div>
   {rightTab === 'whiteboard' && (
@@ -248,7 +248,7 @@ function ErrorScreen({ message }) {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="bg-white rounded-lg border border-slate-200 p-6 max-w-md text-center">
         <p className="text-slate-700 mb-4">{message}</p>
-        <Link to="/" className="text-blue-600 hover:underline text-sm">← Back to library</Link>
+        <Link to="/" className="text-sage-600 hover:underline text-sm">← Back to library</Link>
       </div>
     </div>
   );

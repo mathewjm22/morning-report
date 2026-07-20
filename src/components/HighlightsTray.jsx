@@ -59,7 +59,7 @@ export default function HighlightsTray({ annotations, setAnnotations }) {
                   const rect = e.currentTarget.getBoundingClientRect();
                   setPopup({ text: h.text, x: rect.left, y: rect.top });
                 }}
-                className="text-slate-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition flex-shrink-0"
+                className="text-slate-400 hover:text-sage-600 opacity-0 group-hover:opacity-100 transition flex-shrink-0"
                 title="Look up in reference"
               >
                 <Search size={12} />

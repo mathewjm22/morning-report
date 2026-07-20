@@ -29,7 +29,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto p-6">
         <header className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-blue-600 text-white p-2 rounded-lg">
+            <div className="bg-sage-600 text-white p-2 rounded-lg">
               <BookOpen size={24} />
             </div>
             <h1 className="text-3xl font-bold text-slate-900">Morning Report</h1>
@@ -42,7 +42,7 @@ export default function Home() {
         <div className="grid gap-4 mb-8">
           <button
             onClick={() => navigate('/author')}
-            className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-left hover:border-blue-400 hover:shadow-md transition"
+            className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-left hover:border-sage-400 hover:shadow-md transition"
           >
             <div className="flex items-center gap-2 mb-2 text-slate-700">
               <Plus size={20} />
@@ -70,7 +70,7 @@ export default function Home() {
                 <div
                   key={c.id}
                   onClick={() => navigate(`/case/${encodeURIComponent(c.id)}`)}
-                  className="bg-white rounded-lg border border-slate-200 p-4 hover:border-blue-400 hover:shadow-md transition cursor-pointer flex items-start justify-between gap-3"
+                  className="bg-white rounded-lg border border-slate-200 p-4 hover:border-sage-400 hover:shadow-md transition cursor-pointer flex items-start justify-between gap-3"
                 >
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-slate-900 truncate">{c.title}</h3>

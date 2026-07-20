@@ -11,7 +11,7 @@ export default function ToolPalette({ tool, setTool, color, setColor, strokeWidt
             key={t.id}
             onClick={() => setTool(t.id)}
             className={`p-2 rounded flex items-center justify-center transition group relative ${
-              tool === t.id ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'
+              tool === t.id ? 'bg-sage-600 text-white' : 'text-slate-700 hover:bg-slate-100'
             }`}
             title={`${t.label} — ${t.hint}`}
           >
@@ -43,7 +43,7 @@ export default function ToolPalette({ tool, setTool, color, setColor, strokeWidt
           key={w}
           onClick={() => setStrokeWidth(w)}
           className={`h-6 rounded flex items-center justify-center ${
-            strokeWidth === w ? 'bg-blue-100' : 'hover:bg-slate-100'
+            strokeWidth === w ? 'bg-sage-100' : 'hover:bg-slate-100'
           }`}
         >
           <div className="rounded-full bg-slate-800" style={{ width: w * 2, height: w * 2 }} />
