@@ -454,15 +454,29 @@ function wordAtPoint(pt, textItems) {
 // Return all words in reading order from `start` to `end` inclusive.
 // Reading order: top-to-bottom by line (grouped by y with a tolerance),
 // left-to-right within a line.
+// Return all words in reading order from `start` to `end` inclusive.
+// Column-aware: detects the page's column layout by clustering x-positions,
+// then reads top-to-bottom within each column, left-to-right within a line.
 function wordsInReadingRange(start, end, textItems) {
   if (!textItems || !start || !end) return start ? [start] : [];
 
-  // Build a stable reading-order sort
+  // Detect columns by clustering item x-positions.
+  // We build a histogram of item starts and find dense bands separated by gaps.
+  const columns = detectColumns(textItems);
+
+  // Assign each item to a column
+  const withCol = textItems.map(it => ({
+    item: it,
+    col: assignColumn(it, columns),
+  }));
+
+  // Sort: by column index first, then by y (line), then by x (position in line)
   const LINE_TOL = 6;
-  const sorted = [...textItems].sort((a, b) => {
-    if (Math.abs(a.y - b.y) < LINE_TOL) return a.x - b.x;
-    return a.y - b.y;
-  });
+  const sorted = [...withCol].sort((a, b) => {
+    if (a.col !== b.col) return a.col - b.col;
+    if (Math.abs(a.item.y - b.item.y) < LINE_TOL) return a.item.x - b.item.x;
+    return a.item.y - b.item.y;
+  }).map(w => w.item);
 
   const startIdx = sorted.indexOf(start);
   const endIdx = sorted.indexOf(end);
@@ -471,4 +485,69 @@ function wordsInReadingRange(start, end, textItems) {
   const lo = Math.min(startIdx, endIdx);
   const hi = Math.max(startIdx, endIdx);
   return sorted.slice(lo, hi + 1);
+}
+
+// Detect column x-boundaries by histogramming item starts.
+// Returns array of { start, end } x-ranges, one per column.
+function detectColumns(textItems) {
+  if (textItems.length < 20) return [{ start: -Infinity, end: Infinity }];
+
+  // Bucket by 30px x-position
+  const bucketSize = 30;
+  const buckets = {};
+  let maxX = 0;
+  for (const it of textItems) {
+    const b = Math.floor(it.x / bucketSize);
+    buckets[b] = (buckets[b] || 0) + 1;
+    if (it.x + it.w > maxX) maxX = it.x + it.w;
+  }
+  const numBuckets = Math.ceil(maxX / bucketSize) + 1;
+  const counts = Array.from({ length: numBuckets }, (_, i) => buckets[i] || 0);
+
+  // A "dense" bucket has more items than the noise threshold
+  const threshold = Math.max(3, textItems.length / (numBuckets * 2));
+  const dense = counts.map(c => c > threshold);
+
+  // Find contiguous dense regions = columns
+  const cols = [];
+  let start = null;
+  for (let i = 0; i < dense.length; i++) {
+    if (dense[i] && start === null) start = i;
+    else if (!dense[i] && start !== null) {
+      cols.push({ startBucket: start, endBucket: i });
+      start = null;
+    }
+  }
+  if (start !== null) cols.push({ startBucket: start, endBucket: dense.length });
+
+  // Merge columns whose gap is < ~2 buckets (glued regions from noise)
+  const merged = [];
+  for (const c of cols) {
+    const last = merged[merged.length - 1];
+    if (last && c.startBucket - last.endBucket < 3) {
+      last.endBucket = c.endBucket;
+    } else {
+      merged.push({ ...c });
+    }
+  }
+
+  if (merged.length <= 1) return [{ start: -Infinity, end: Infinity }];
+
+  // Convert to x-ranges. The boundary between columns is midway in the gap.
+  const ranges = [];
+  for (let i = 0; i < merged.length; i++) {
+    const s = i === 0 ? -Infinity : ((merged[i - 1].endBucket + merged[i].startBucket) / 2) * bucketSize;
+    const e = i === merged.length - 1 ? Infinity : ((merged[i].endBucket + merged[i + 1].startBucket) / 2) * bucketSize;
+    ranges.push({ start: s, end: e });
+  }
+  return ranges;
+}
+
+// Which column does an item belong to? Uses the item's horizontal midpoint.
+function assignColumn(item, columns) {
+  const mid = item.x + item.w / 2;
+  for (let i = 0; i < columns.length; i++) {
+    if (mid >= columns[i].start && mid < columns[i].end) return i;
+  }
+  return columns.length - 1;
 }
