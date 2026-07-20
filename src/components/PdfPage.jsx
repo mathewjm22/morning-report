@@ -14,9 +14,33 @@ export default function PdfPage({
   const canvasRef = useRef(null);
   const [viewport, setViewport] = useState(null);
   const [hoveredZoneIdx, setHoveredZoneIdx] = useState(null);
+  const hoverTimeoutRef = useRef(null);
   const [rendering, setRendering] = useState(true);
   const [textItems, setTextItems] = useState(null);
 
+const showZoneMenu = (i) => {
+  if (hoverTimeoutRef.current) {
+    clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = null;
+  }
+  setHoveredZoneIdx(i);
+};
+
+const hideZoneMenu = () => {
+  if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+  hoverTimeoutRef.current = setTimeout(() => {
+    setHoveredZoneIdx(null);
+    hoverTimeoutRef.current = null;
+  }, 200);
+};
+  // Cleanup on unmount so a pending timeout doesn't fire after the component is gone
+useEffect(() => {
+  return () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+  };
+}, []);
+
+  
   // Render page whenever zoom changes
   useEffect(() => {
     if (!pdf || !canvasRef.current) return;
@@ -121,8 +145,8 @@ export default function PdfPage({
   return (
     <div
       key={i}
-      onMouseEnter={() => isSelect && setHoveredZoneIdx(i)}
-      onMouseLeave={() => setHoveredZoneIdx(null)}
+onMouseEnter={() => isSelect && showZoneMenu(i)}
+onMouseLeave={() => hideZoneMenu()}
       className={`absolute pointer-events-${isSelect ? 'auto' : 'none'} transition ${
         isSelect && hovered ? 'ring-4 ring-blue-500 bg-blue-500/10' : ''
       }`}
