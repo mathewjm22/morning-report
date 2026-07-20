@@ -123,7 +123,7 @@ export default function CaseWorkspace({ shared }) {
         <div className="flex items-center gap-3 min-w-0">
           <Link to="/" className="text-stone-500 hover:text-stone-800"><Home size={18} /></Link>
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold truncate">{caseEntry.title}</h1>
+            <h1 className="text-base font-semibold truncate">{caseEntry.title}</h1>
             <p className="text-xs text-stone-500 truncate">{caseEntry.source}{shared && ' • Shared'}</p>
           </div>
         </div>
