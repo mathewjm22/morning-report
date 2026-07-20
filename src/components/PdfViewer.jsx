@@ -113,7 +113,7 @@ const buf = caseEntry.pdfBlob instanceof ArrayBuffer
     <button onClick={() => setZoom(z => Math.min(3, z + 0.15))} className="p-1 hover:bg-stone-100 rounded text-stone-600"><ZoomIn size={14} /></button>
   </div>
 </div>
-
+   <div>
         <div ref={scrollRef} className="flex-1 overflow-auto p-6 flex flex-col items-center gap-6">
           {pdf && visiblePages.map(pn => (
             <div
