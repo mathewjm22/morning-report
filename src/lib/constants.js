@@ -1,11 +1,12 @@
 
 import {
   MousePointer2, Highlighter, Pencil, ArrowUpRight, Circle, Ruler,
-  Activity, StickyNote, Eraser,
+  Activity, StickyNote, Eraser, Square,
 } from 'lucide-react';
 
 export const TOOLS = [
-  { id: 'select',    icon: MousePointer2, label: 'Select',    hint: 'Click regions to extract' },
+  { id: 'select',    icon: MousePointer2, label: 'Select',    hint: 'Click detected regions' },
+  { id: 'region',    icon: Square,        label: 'Extract',   hint: 'Drag to select any region' },
   { id: 'highlight', icon: Highlighter,   label: 'Highlight', hint: 'Semi-transparent overlay' },
   { id: 'pen',       icon: Pencil,        label: 'Pen',       hint: 'Freehand draw' },
   { id: 'arrow',     icon: ArrowUpRight,  label: 'Arrow',     hint: 'Point at findings' },
@@ -15,6 +16,8 @@ export const TOOLS = [
   { id: 'note',      icon: StickyNote,    label: 'Note',      hint: 'Sticky note' },
   { id: 'eraser',    icon: Eraser,        label: 'Erase',     hint: 'Remove annotation' },
 ];
+
+// ...rest unchanged (COLORS, etc.)
 
 export const COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#000000', '#ffffff'];
 

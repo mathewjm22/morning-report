@@ -17,6 +17,14 @@ export default function PdfPage({
   const hoverTimeoutRef = useRef(null);
   const [rendering, setRendering] = useState(true);
   const [textItems, setTextItems] = useState(null);
+const [regionDraft, setRegionDraft] = useState(null); // { start: {x,y}, current: {x,y} } while dragging
+const [pendingRegion, setPendingRegion] = useState(null); // { bbox } after release, awaiting Pin/Open choice
+
+
+
+const isSelect = tool === 'select';
+const isRegion = tool === 'region';
+
 
 const showZoneMenu = (i) => {
   if (hoverTimeoutRef.current) {
@@ -119,7 +127,6 @@ useEffect(() => {
     });
   };
 
-  const isSelect = tool === 'select';
 
   return (
     <div
@@ -182,7 +189,34 @@ onMouseLeave={() => hideZoneMenu()}
     </div>
   );
 })}
-
+{/* Manual region-selection overlay */}
+{isRegion && (
+  <RegionSelector
+    width={width}
+    height={height}
+    regionDraft={regionDraft}
+    setRegionDraft={setRegionDraft}
+    pendingRegion={pendingRegion}
+    setPendingRegion={setPendingRegion}
+    onOpen={(bbox) => {
+      handleOpenZone({
+        bbox,
+        kind: 'region',
+        label: `Page ${pageNum} — Selected region`,
+      });
+      setPendingRegion(null);
+    }}
+    onPin={(bbox) => {
+      handlePinZone({
+        bbox,
+        kind: 'region',
+        label: `Page ${pageNum} — Selected region`,
+      });
+      setPendingRegion(null);
+    }}
+    onCancel={() => setPendingRegion(null)}
+  />
+)}
       {/* Annotation layer */}
       <AnnotationLayer
   width={width}
@@ -201,6 +235,126 @@ onMouseLeave={() => hideZoneMenu()}
     <span className="text-xs text-stone-500">Rendering page {pageNum}...</span>
   </div>
 )}
+    </div>
+  );
+}
+function RegionSelector({
+  width, height,
+  regionDraft, setRegionDraft,
+  pendingRegion, setPendingRegion,
+  onOpen, onPin, onCancel,
+}) {
+  const getPt = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+
+  const handleMouseDown = (e) => {
+    // If a region is pending confirmation, don't start a new one — user should
+    // pick Pin/Open/Cancel from the existing popup first.
+    if (pendingRegion) return;
+    const pt = getPt(e);
+    setRegionDraft({ start: pt, current: pt });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!regionDraft) return;
+    setRegionDraft({ ...regionDraft, current: getPt(e) });
+  };
+
+  const handleMouseUp = () => {
+    if (!regionDraft) return;
+    const { start, current } = regionDraft;
+    const bbox = {
+      x: Math.min(start.x, current.x),
+      y: Math.min(start.y, current.y),
+      w: Math.abs(current.x - start.x),
+      h: Math.abs(current.y - start.y),
+    };
+    setRegionDraft(null);
+    // Ignore tiny rectangles — probably an accidental click
+    if (bbox.w < 15 || bbox.h < 15) return;
+    setPendingRegion({ bbox });
+  };
+
+  // The live-preview rectangle while dragging
+  const draftBbox = regionDraft ? {
+    x: Math.min(regionDraft.start.x, regionDraft.current.x),
+    y: Math.min(regionDraft.start.y, regionDraft.current.y),
+    w: Math.abs(regionDraft.current.x - regionDraft.start.x),
+    h: Math.abs(regionDraft.current.y - regionDraft.start.y),
+  } : null;
+
+  return (
+    <div
+      className="absolute inset-0"
+      style={{ cursor: 'crosshair', pointerEvents: 'auto' }}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      {/* Live preview while dragging */}
+      {draftBbox && (
+        <div
+          className="absolute border-2 border-sage-500 bg-sage-500/10 pointer-events-none"
+          style={{
+            left: draftBbox.x,
+            top: draftBbox.y,
+            width: draftBbox.w,
+            height: draftBbox.h,
+          }}
+        >
+          <div className="absolute -top-6 left-0 bg-sage-600 text-white text-xs px-1.5 py-0.5 rounded font-mono">
+            {Math.round(draftBbox.w)} × {Math.round(draftBbox.h)}
+          </div>
+        </div>
+      )}
+
+      {/* Pending region — user picks Open / Pin / Cancel */}
+      {pendingRegion && (
+        <>
+          {/* The captured rectangle, highlighted */}
+          <div
+            className="absolute border-2 border-sage-600 bg-sage-500/10"
+            style={{
+              left: pendingRegion.bbox.x,
+              top: pendingRegion.bbox.y,
+              width: pendingRegion.bbox.w,
+              height: pendingRegion.bbox.h,
+            }}
+          />
+          {/* Action popup, positioned above the rectangle */}
+          <div
+            className="absolute bg-white rounded-lg shadow-lg border border-stone-200 px-1.5 py-1 flex items-center gap-1"
+            style={{
+              left: pendingRegion.bbox.x + pendingRegion.bbox.w / 2,
+              top: pendingRegion.bbox.y - 42,
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <button
+              onClick={() => onOpen(pendingRegion.bbox)}
+              className="text-xs bg-sage-600 hover:bg-sage-700 text-white px-2.5 py-1 rounded"
+            >
+              Open
+            </button>
+            <button
+              onClick={() => onPin(pendingRegion.bbox)}
+              className="text-xs bg-white border border-stone-300 hover:bg-stone-50 text-stone-700 px-2.5 py-1 rounded"
+            >
+              Pin
+            </button>
+            <button
+              onClick={onCancel}
+              className="text-xs text-stone-500 hover:text-stone-800 px-1.5 py-1"
+              title="Cancel"
+            >
+              ✕
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

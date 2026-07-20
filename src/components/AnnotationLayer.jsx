@@ -15,6 +15,7 @@ export default function AnnotationLayer({
   const [selectedIdx, setSelectedIdx] = useState(null);
   
   const isCreationTool = ['pen', 'highlight', 'arrow', 'circle', 'ruler', 'caliper', 'note'].includes(tool);
+  const isRegion = tool === 'region';
   const isEraser = tool === 'eraser';
 
   const getPt = (e) => {
@@ -222,7 +223,7 @@ export default function AnnotationLayer({
   }, [selectedIdx, strokes]); // eslint-disable-line
 
   const cursor = isEraser ? 'cell' : (isCreationTool && !dragging) ? 'crosshair' : 'default';
-  const pointerEvents = (isCreationTool || isEraser || strokes.length > 0) ? 'auto' : 'none';
+  const pointerEvents = (isCreationTool || isEraser || strokes.length > 0) && !isRegion ? 'auto' : 'none';
 
   return (
   <>
