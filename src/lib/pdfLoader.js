@@ -19,21 +19,53 @@ export async function loadPdf(source) {
 export async function getPageTextItems(pdf, pageNum, viewport) {
   const page = await pdf.getPage(pageNum);
   const content = await page.getTextContent();
-  return content.items
-    .filter(i => i.str && i.str.trim())
-    .map(i => {
-      // Transform item position to viewport coordinates
-      const tx = pdfjsLib.Util.transform(viewport.transform, i.transform);
-      const x = tx[4];
-      const y = tx[5] - i.height * viewport.scale;
-      return {
-        text: i.str,
-        x,
-        y,
-        w: i.width * viewport.scale,
-        h: i.height * viewport.scale,
-      };
-    });
+  const items = [];
+
+  for (const i of content.items) {
+    if (!i.str || !i.str.trim()) continue;
+
+    // Transform item position to viewport coordinates
+    const tx = pdfjsLib.Util.transform(viewport.transform, i.transform);
+    const runX = tx[4];
+    const runY = tx[5] - i.height * viewport.scale;
+    const runW = i.width * viewport.scale;
+    const runH = i.height * viewport.scale;
+
+    // Split multi-word runs into per-word items with proportional widths.
+    // pdf.js gives us the whole text-run as one item; we synthesize per-word
+    // bboxes so word-by-word highlighting works.
+    const words = i.str.match(/\S+\s*/g) || [i.str];
+
+    if (words.length === 1 && !/\s/.test(i.str)) {
+      // Single word, no splitting needed
+      items.push({ text: i.str, x: runX, y: runY, w: runW, h: runH });
+      continue;
+    }
+
+    // Proportionally distribute width across words, weighted by character count
+    // (imperfect but close enough — real per-character widths would require
+    // measuring each glyph, which pdf.js doesn't expose without extra work).
+    const totalChars = words.reduce((sum, w) => sum + w.length, 0);
+    let cursorX = runX;
+    for (const w of words) {
+      const wWidth = (w.length / totalChars) * runW;
+      const trimmed = w.replace(/\s+$/, '');
+      if (trimmed) {
+        // The visible word occupies the non-trailing-whitespace portion
+        const trimmedWidth = (trimmed.length / totalChars) * runW;
+        items.push({
+          text: trimmed,
+          x: cursorX,
+          y: runY,
+          w: trimmedWidth,
+          h: runH,
+        });
+      }
+      cursorX += wWidth;
+    }
+  }
+
+  return items;
 }
 
 // Render one page to a supplied canvas at the given scale.
