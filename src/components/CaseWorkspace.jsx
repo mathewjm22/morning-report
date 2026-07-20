@@ -195,7 +195,7 @@ export default function CaseWorkspace({ shared }) {
       }`}
     >
       Highlights
-      {highlightCount > 0 && <span className="ml-1 bg-yellow-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
+      {highlightCount > 0 && <span className="ml-1 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
     </button>
     <button
       onClick={() => setRightTab('pinned')}

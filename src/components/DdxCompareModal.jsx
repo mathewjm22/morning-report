@@ -32,7 +32,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-3 border-b border-stone-200 flex items-center justify-between bg-gradient-to-r from-amber-100 to-orange-100">
+        <div className="px-5 py-3 border-b border-stone-200 flex items-center justify-between bg-gradient-to-r from-amber-100 to-amber-100">
           <div className="flex items-center gap-2">
             <Award size={18} className="text-amber-700" />
             <h2 className="text-base font-semibold text-stone-900">DDx vs. Reveal</h2>
@@ -100,13 +100,13 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
             <div className={`rounded-lg p-4 border-2 ${
               matchInfo.matchedRank === 1 ? 'bg-sage-50 border-sage-400' :
               matchInfo.matchedRank ? 'bg-sage-50 border-sage-400' :
-              'bg-orange-50 border-orange-400'
+              'bg-amber-50 border-amber-400'
             }`}>
               <div className="flex items-start gap-3">
                 {matchInfo.matchedRank ? (
                   <CheckCircle2 size={22} className="text-sage-600 flex-shrink-0 mt-0.5" />
                 ) : (
-                  <XCircle size={22} className="text-orange-600 flex-shrink-0 mt-0.5" />
+                  <XCircle size={22} className="text-amber-600 flex-shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-stone-900">
