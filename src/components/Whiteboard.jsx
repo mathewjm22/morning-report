@@ -6,7 +6,7 @@ export default function Whiteboard({
   committedDdx, onCommitDdx, onUncommitDdx, onOpenReveal,
 }) {
   return (
-    <div className="flex-1 overflow-y-auto divide-y-4 divide-slate-200">
+    <div className="flex-1 overflow-y-auto divide-y-4 divide-stone-200">
       <DdxSection
         ddx={ddx} setDdx={setDdx}
         committedDdx={committedDdx}
@@ -95,7 +95,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
 
       <div className="px-3 py-3 space-y-1.5">
         {displayList.map((d, i) => {
-          const bg = i % 2 === 0 ? 'bg-sage-100 border-sage-200' : 'bg-slate-100 border-slate-200';
+          const bg = i % 2 === 0 ? 'bg-sage-100 border-sage-200' : 'bg-stone-100 border-stone-200';
           const isDragging = dragIdx === i;
           const isDragOver = dragOverIdx === i;
           return (
@@ -112,19 +112,19 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
               } ${isDragOver ? 'ring-2 ring-sage-500 -translate-y-0.5' : ''} ${locked ? 'opacity-95' : ''}`}
             >
               <div className="flex items-center gap-1">
-                {!locked && <GripVertical size={14} className="text-slate-400 cursor-move flex-shrink-0" />}
+                {!locked && <GripVertical size={14} className="text-stone-400 cursor-move flex-shrink-0" />}
                 <span className="text-xs font-bold text-sage-700 w-6 flex-shrink-0">#{i + 1}</span>
                 <input
                   value={d.name}
                   onChange={e => updateDdx(d.id, 'name', e.target.value)}
                   placeholder="Diagnosis"
                   readOnly={locked}
-                  className={`flex-1 text-sm px-1 py-0.5 bg-transparent border-b border-slate-400 focus:outline-none focus:border-sage-500 font-medium min-w-0 ${locked ? 'cursor-default' : ''}`}
+                  className={`flex-1 text-sm px-1 py-0.5 bg-transparent border-b border-stone-400 focus:outline-none focus:border-sage-500 font-medium min-w-0 ${locked ? 'cursor-default' : ''}`}
                 />
                 {!locked && (
                   <button
                     onClick={() => removeDdx(d.id)}
-                    className="text-slate-400 hover:text-red-600 flex-shrink-0"
+                    className="text-stone-400 hover:text-red-600 flex-shrink-0"
                     title="Remove"
                   >
                     <X size={13} />
@@ -137,7 +137,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
                   onChange={e => updateDdx(d.id, 'notes', e.target.value)}
                   placeholder="For / against..."
                   readOnly={locked}
-                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-sage-400"
+                  className="w-full text-xs mt-1.5 p-1.5 border border-stone-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-sage-400"
                   rows={2}
                 />
               )}
@@ -145,7 +145,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
                 <textarea
                   onChange={e => updateDdx(d.id, 'notes', e.target.value)}
                   placeholder="For / against..."
-                  className="w-full text-xs mt-1.5 p-1.5 border border-slate-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-sage-400"
+                  className="w-full text-xs mt-1.5 p-1.5 border border-stone-300 rounded resize-none bg-white/70 focus:outline-none focus:ring-1 focus:ring-sage-400"
                   rows={2}
                   defaultValue=""
                 />
@@ -166,14 +166,14 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
                   if (e.key === 'Enter') { e.preventDefault(); addDdx(draftName); }
                 }}
                 placeholder="Add diagnosis, press Enter..."
-                className="flex-1 text-sm px-1 py-0.5 bg-transparent focus:outline-none placeholder-slate-400 min-w-0"
+                className="flex-1 text-sm px-1 py-0.5 bg-transparent focus:outline-none placeholder-stone-400 min-w-0"
               />
             </div>
           </div>
         )}
 
         {displayList.length === 0 && (
-          <p className="text-xs text-slate-500 italic mt-2 text-center">
+          <p className="text-xs text-stone-500 italic mt-2 text-center">
             Ranked top → bottom. Drag ⋮ to reorder.
           </p>
         )}
@@ -247,7 +247,7 @@ function PlanSection({ plan, setPlan }) {
             />
             <button
               onClick={() => removeItem(it.id)}
-              className="text-slate-400 hover:text-red-600 flex-shrink-0"
+              className="text-stone-400 hover:text-red-600 flex-shrink-0"
               title="Remove"
             >
               <X size={13} />
@@ -266,13 +266,13 @@ function PlanSection({ plan, setPlan }) {
                 if (e.key === 'Enter') { e.preventDefault(); addItem(); }
               }}
               placeholder="e.g. Order CBC — press Enter..."
-              className="flex-1 text-sm px-1 py-0.5 bg-transparent focus:outline-none placeholder-slate-400 min-w-0"
+              className="flex-1 text-sm px-1 py-0.5 bg-transparent focus:outline-none placeholder-stone-400 min-w-0"
             />
           </div>
         </div>
 
         {items.length === 0 && (
-          <p className="text-xs text-slate-500 italic mt-2 text-center">
+          <p className="text-xs text-stone-500 italic mt-2 text-center">
             Add plan items one at a time.
           </p>
         )}

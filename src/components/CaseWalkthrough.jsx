@@ -109,9 +109,9 @@ export default function CaseWalkthrough({ shared }) {
 
   if (loadError) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-lg border border-slate-200 p-6 max-w-md text-center">
-          <p className="text-slate-700 mb-4">{loadError}</p>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-lg border border-stone-200 p-6 max-w-md text-center">
+          <p className="text-stone-700 mb-4">{loadError}</p>
           <Link to="/" className="text-sage-600 hover:underline text-sm">← Back to library</Link>
         </div>
       </div>
@@ -120,8 +120,8 @@ export default function CaseWalkthrough({ shared }) {
 
   if (!caseData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-slate-500 text-sm">Loading case...</div>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-stone-500 text-sm">Loading case...</div>
       </div>
     );
   }
@@ -223,9 +223,9 @@ const gatesWithFigures = gates.map(g => {
       const segs = renderTextWithHighlights(content);
       const rendered = renderSegments(segs, i);
 
-      if (isListItem) return <li key={i} className="ml-6 list-disc text-slate-700 text-sm">{rendered}</li>;
-      if (isNumbered) return <li key={i} className="ml-6 list-decimal text-slate-700 text-sm mb-2">{rendered}</li>;
-      return <p key={i} className="text-slate-700 text-sm leading-relaxed">{rendered}</p>;
+      if (isListItem) return <li key={i} className="ml-6 list-disc text-stone-700 text-sm">{rendered}</li>;
+      if (isNumbered) return <li key={i} className="ml-6 list-decimal text-stone-700 text-sm mb-2">{rendered}</li>;
+      return <p key={i} className="text-stone-700 text-sm leading-relaxed">{rendered}</p>;
     });
   };
 
@@ -254,23 +254,23 @@ const gatesWithFigures = gates.map(g => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans">
+    <div className="flex flex-col h-screen bg-stone-50 font-sans">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+      <div className="bg-white border-b border-stone-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <Link to="/" className="text-slate-500 hover:text-slate-800 flex-shrink-0" title="Back to library">
+          <Link to="/" className="text-stone-500 hover:text-stone-800 flex-shrink-0" title="Back to library">
             <HomeIcon size={18} />
           </Link>
           <div className="min-w-0">
-            <h1 className="text-base font-semibold text-slate-900 truncate">{caseData.title}</h1>
-            <p className="text-xs text-slate-500 truncate">{caseData.source}{shared && ' • Shared (read-only progress)'}</p>
+            <h1 className="text-base font-semibold text-stone-900 truncate">{caseData.title}</h1>
+            <p className="text-xs text-stone-500 truncate">{caseData.source}{shared && ' • Shared (read-only progress)'}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={generateShare}
             disabled={shareState.loading}
-            className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded flex items-center gap-1 text-slate-700 disabled:opacity-50"
+            className="text-xs px-3 py-1.5 bg-stone-100 hover:bg-stone-200 rounded flex items-center gap-1 text-stone-700 disabled:opacity-50"
             title="Generate a shareable link"
           >
             <Share2 size={14} /> Share
@@ -278,14 +278,14 @@ const gatesWithFigures = gates.map(g => {
           <button
             onClick={() => setAttendingMode(!attendingMode)}
             className={`text-xs px-3 py-1.5 rounded flex items-center gap-1 transition ${
-              attendingMode ? 'bg-sage-600 text-white hover:bg-sage-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              attendingMode ? 'bg-sage-600 text-white hover:bg-sage-700' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
             <GraduationCap size={14} /> Attending
           </button>
           <button
             onClick={() => setShowSnapshots(!showSnapshots)}
-            className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded flex items-center gap-1 text-slate-700"
+            className="text-xs px-3 py-1.5 bg-stone-100 hover:bg-stone-200 rounded flex items-center gap-1 text-stone-700"
           >
             {showSnapshots ? <EyeOff size={14} /> : <Eye size={14} />} History
           </button>
@@ -300,18 +300,18 @@ const gatesWithFigures = gates.map(g => {
           ) : (
             <>
               <span className="font-medium">Share link:</span>
-              <input readOnly value={shareState.url} className="flex-1 px-2 py-1 border border-green-300 rounded text-xs bg-white text-slate-700" onFocus={e => e.target.select()} />
+              <input readOnly value={shareState.url} className="flex-1 px-2 py-1 border border-green-300 rounded text-xs bg-white text-stone-700" onFocus={e => e.target.select()} />
               <button onClick={copyShare} className="text-xs px-2 py-1 bg-white border border-green-300 rounded hover:bg-green-100 flex items-center gap-1">
                 {shareState.copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
               </button>
             </>
           )}
-          <button onClick={() => setShareState({ loading: false, url: null, copied: false, error: null })} className="ml-2 text-slate-400 hover:text-slate-700">×</button>
+          <button onClick={() => setShareState({ loading: false, url: null, copied: false, error: null })} className="ml-2 text-stone-400 hover:text-stone-700">×</button>
         </div>
       )}
 
       {/* Progress bar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-1 overflow-x-auto">
+      <div className="bg-white border-b border-stone-200 px-4 py-2 flex items-center gap-1 overflow-x-auto">
         {gatesWithFigures.map((g, i) => (
           <button
             key={g.id}
@@ -319,7 +319,7 @@ const gatesWithFigures = gates.map(g => {
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs whitespace-nowrap transition ${
               i === gateIndex ? 'bg-sage-600 text-white' :
               revealed[i] ? 'bg-sage-50 text-sage-700 hover:bg-sage-100' :
-              'bg-slate-100 text-slate-500 hover:bg-slate-200'
+              'bg-stone-100 text-stone-500 hover:bg-stone-200'
             }`}
           >
             <IconEl name={g.icon} size={12} />
@@ -331,13 +331,13 @@ const gatesWithFigures = gates.map(g => {
       {/* Selection popup */}
       {selectionMenu && (
         <div
-          className="fixed z-50 bg-slate-900 rounded shadow-lg flex overflow-hidden text-xs"
+          className="fixed z-50 bg-stone-900 rounded shadow-lg flex overflow-hidden text-xs"
           style={{ left: selectionMenu.x, top: selectionMenu.y, transform: 'translate(-50%, -100%)' }}
         >
           <button onClick={() => addHighlight('positive')} className="px-3 py-2 hover:bg-yellow-600 text-white flex items-center gap-1">
             <Highlighter size={12} /> Pertinent +
           </button>
-          <button onClick={() => addHighlight('negative')} className="px-3 py-2 hover:bg-sage-600 text-white flex items-center gap-1 border-l border-slate-700">
+          <button onClick={() => addHighlight('negative')} className="px-3 py-2 hover:bg-sage-600 text-white flex items-center gap-1 border-l border-stone-700">
             <Highlighter size={12} /> Pertinent −
           </button>
         </div>
@@ -349,31 +349,31 @@ const gatesWithFigures = gates.map(g => {
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4">
               <div className="bg-sage-100 text-sage-700 p-2 rounded"><IconEl name={gate.icon} size={18} /></div>
-              <h2 className="text-xl font-semibold text-slate-900">{gate.title}</h2>
+              <h2 className="text-xl font-semibold text-stone-900">{gate.title}</h2>
             </div>
 
-            <p className="text-xs text-slate-500 mb-3 flex items-center gap-1">
+            <p className="text-xs text-stone-500 mb-3 flex items-center gap-1">
               <Highlighter size={12} /> Select text to highlight globally as pertinent + (yellow) or − (blue).
             </p>
 
 
-<div ref={contentRef} className="bg-white rounded-lg border border-slate-200 p-5" style={{ userSelect: 'text' }}>
+<div ref={contentRef} className="bg-white rounded-lg border border-stone-200 p-5" style={{ userSelect: 'text' }}>
               {gate.isTableGate ? (
                 <div>
-                  <p className="text-sm text-slate-600 mb-4">{gate.content}</p>
+                  <p className="text-sm text-stone-600 mb-4">{gate.content}</p>
                   <TableViewer tables={gate.tables || []} />
                 </div>
               ) : gate.isImageGate ? (
                 <div>
                   {(gate.figures || []).map((fig, figIdx) => (
                     <div key={figIdx} className="mb-5">
-                      <p className="text-xs font-semibold text-slate-700 mb-2">{fig.caption}</p>
+                      <p className="text-xs font-semibold text-stone-700 mb-2">{fig.caption}</p>
                       <div className={`grid gap-3 ${(fig.images || []).length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                         {(fig.images || []).map((img, imgIdx) => {
                           const key = `${gate.id}-fig${figIdx}-img${imgIdx}`;
                           return (
                             <div key={imgIdx} className="relative group">
-                              {img.label && <p className="text-xs text-slate-600 mb-1 font-medium">{img.label}</p>}
+                              {img.label && <p className="text-xs text-stone-600 mb-1 font-medium">{img.label}</p>}
                               <AnnotationCanvas
                                 imageKey={key}
                                 imageUrl={img.url}
@@ -382,10 +382,10 @@ const gatesWithFigures = gates.map(g => {
                               />
                               <button
                                 onClick={() => setLightbox({ key, url: img.url, label: img.label || `Figure ${figIdx + 1}`, caption: fig.caption })}
-                                className="absolute top-8 right-1 bg-white/90 hover:bg-white border border-slate-300 rounded p-1.5 shadow opacity-0 group-hover:opacity-100 transition"
+                                className="absolute top-8 right-1 bg-white/90 hover:bg-white border border-stone-300 rounded p-1.5 shadow opacity-0 group-hover:opacity-100 transition"
                                 title="Open full size"
                               >
-                                <Maximize2 size={14} className="text-slate-700" />
+                                <Maximize2 size={14} className="text-stone-700" />
                               </button>
                             </div>
                           );
@@ -394,12 +394,12 @@ const gatesWithFigures = gates.map(g => {
                     </div>
                   ))}
                   <div className="mb-3 mt-4">
-                    <label className="text-sm font-semibold text-slate-700 block mb-2">Your interpretation:</label>
+                    <label className="text-sm font-semibold text-stone-700 block mb-2">Your interpretation:</label>
                     <textarea
                       value={imageReads[gate.id] || ''}
                       onChange={e => setImageReads({ ...imageReads, [gate.id]: e.target.value })}
                       placeholder="Describe what you see. Be systematic — findings, then impression..."
-                      className="w-full h-24 text-sm p-3 border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-sage-400"
+                      className="w-full h-24 text-sm p-3 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-sage-400"
                     />
                   </div>
                   {isRevealed ? (
@@ -441,7 +441,7 @@ const gatesWithFigures = gates.map(g => {
             )}
 
             <div className="flex justify-between mt-6">
-              <button onClick={goPrev} disabled={gateIndex === 0} className="flex items-center gap-1 px-4 py-2 text-sm bg-white border border-slate-300 rounded disabled:opacity-40 hover:bg-slate-50">
+              <button onClick={goPrev} disabled={gateIndex === 0} className="flex items-center gap-1 px-4 py-2 text-sm bg-white border border-stone-300 rounded disabled:opacity-40 hover:bg-stone-50">
                 <ChevronLeft size={16} /> Previous
               </button>
               <button onClick={goNext} disabled={gateIndex === gatesWithFigures.length - 1} className="flex items-center gap-1 px-4 py-2 text-sm bg-sage-600 text-white rounded disabled:opacity-40 hover:bg-sage-700">

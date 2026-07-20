@@ -74,7 +74,7 @@ export default function CaseWorkspace({ shared }) {
 }, [caseEntry, shared, ddx, plan, annotations, pinned, committedDdx, finalOutcome]);
 
   if (loadError) return <ErrorScreen message={loadError} />;
-  if (!caseEntry) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500">Loading...</div>;
+  if (!caseEntry) return <div className="min-h-screen bg-stone-50 flex items-center justify-center text-stone-500">Loading...</div>;
 
   const generateShare = async () => {
     setShareState({ loading: true, url: null, copied: false, error: null });
@@ -117,14 +117,14 @@ export default function CaseWorkspace({ shared }) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
+    <div className="flex flex-col h-screen bg-stone-100 overflow-hidden">
       {/* Top bar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between shadow-sm z-20">
+      <div className="bg-white border-b border-stone-200 px-4 py-2.5 flex items-center justify-between shadow-sm z-20">
         <div className="flex items-center gap-3 min-w-0">
-          <Link to="/" className="text-slate-500 hover:text-slate-800"><Home size={18} /></Link>
+          <Link to="/" className="text-stone-500 hover:text-stone-800"><Home size={18} /></Link>
           <div className="min-w-0">
             <h1 className="text-sm font-semibold truncate">{caseEntry.title}</h1>
-            <p className="text-xs text-slate-500 truncate">{caseEntry.source}{shared && ' • Shared'}</p>
+            <p className="text-xs text-stone-500 truncate">{caseEntry.source}{shared && ' • Shared'}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -132,14 +132,14 @@ export default function CaseWorkspace({ shared }) {
             <button
               onClick={generateShare}
               disabled={shareState.loading}
-              className="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded flex items-center gap-1 disabled:opacity-50"
+              className="text-xs px-3 py-1.5 bg-stone-100 hover:bg-stone-200 rounded flex items-center gap-1 disabled:opacity-50"
             >
               <Share2 size={14} /> Share
             </button>
           )}
           <button
   onClick={() => setFrameworksOpen(true)}
-  className="text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition bg-slate-100 text-slate-700 hover:bg-slate-200"
+  className="text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition bg-stone-100 text-stone-700 hover:bg-stone-200"
   title="Clinical reasoning frameworks"
 >
   <Brain size={14} /> Frameworks
@@ -147,7 +147,7 @@ export default function CaseWorkspace({ shared }) {
           <button
             onClick={() => setAttendingMode(!attendingMode)}
             className={`text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition ${
-              attendingMode ? 'bg-sage-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              attendingMode ? 'bg-sage-600 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
             }`}
           >
             <GraduationCap size={14} /> Attending
@@ -163,7 +163,7 @@ export default function CaseWorkspace({ shared }) {
           <button onClick={copyShare} className="text-xs px-2 py-1 bg-white border border-green-300 rounded flex items-center gap-1">
             {shareState.copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
           </button>
-          <button onClick={() => setShareState({ loading: false, url: null, copied: false, error: null })} className="text-slate-400 hover:text-slate-700">×</button>
+          <button onClick={() => setShareState({ loading: false, url: null, copied: false, error: null })} className="text-stone-400 hover:text-stone-700">×</button>
         </div>
       )}
       
@@ -178,12 +178,12 @@ export default function CaseWorkspace({ shared }) {
   attendingMode={attendingMode}
 />
 
-        <div className="w-[380px] bg-white border-l border-slate-200 flex flex-col flex-shrink-0">
-  <div className="flex border-b border-slate-200">
+        <div className="w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0">
+  <div className="flex border-b border-stone-200">
     <button
       onClick={() => setRightTab('whiteboard')}
       className={`flex-1 py-2.5 text-xs font-medium ${
-        rightTab === 'whiteboard' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-slate-600 hover:bg-slate-50'
+        rightTab === 'whiteboard' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
       }`}
     >
       Whiteboard
@@ -191,7 +191,7 @@ export default function CaseWorkspace({ shared }) {
     <button
       onClick={() => setRightTab('highlights')}
       className={`flex-1 py-2.5 text-xs font-medium relative ${
-        rightTab === 'highlights' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-slate-600 hover:bg-slate-50'
+        rightTab === 'highlights' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
       }`}
     >
       Highlights
@@ -200,7 +200,7 @@ export default function CaseWorkspace({ shared }) {
     <button
       onClick={() => setRightTab('pinned')}
       className={`flex-1 py-2.5 text-xs font-medium relative ${
-        rightTab === 'pinned' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-slate-600 hover:bg-slate-50'
+        rightTab === 'pinned' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
       }`}
     >
       Pinned
@@ -245,9 +245,9 @@ export default function CaseWorkspace({ shared }) {
 
 function ErrorScreen({ message }) {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="bg-white rounded-lg border border-slate-200 p-6 max-w-md text-center">
-        <p className="text-slate-700 mb-4">{message}</p>
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg border border-stone-200 p-6 max-w-md text-center">
+        <p className="text-stone-700 mb-4">{message}</p>
         <Link to="/" className="text-sage-600 hover:underline text-sm">← Back to library</Link>
       </div>
     </div>

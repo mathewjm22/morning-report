@@ -8,8 +8,8 @@ export default function TableViewer({ tables }) {
 
   if (!tables || tables.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-slate-200 p-8 text-center">
-        <p className="text-slate-500 text-sm">No tables extracted from this case.</p>
+      <div className="bg-white rounded-lg border border-stone-200 p-8 text-center">
+        <p className="text-stone-500 text-sm">No tables extracted from this case.</p>
       </div>
     );
   }
@@ -18,19 +18,19 @@ export default function TableViewer({ tables }) {
     <>
       <div className="space-y-4">
         {tables.map((table, idx) => (
-          <div key={idx} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-            <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-700">{table.caption}</p>
+          <div key={idx} className="bg-white rounded-lg border border-stone-200 overflow-hidden">
+            <div className="px-4 py-2 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
+              <p className="text-sm font-semibold text-stone-700">{table.caption}</p>
               <button
                 onClick={() => setZoomed(table)}
-                className="text-xs px-2 py-1 bg-white border border-slate-300 rounded hover:bg-slate-100 flex items-center gap-1 text-slate-700"
+                className="text-xs px-2 py-1 bg-white border border-stone-300 rounded hover:bg-stone-100 flex items-center gap-1 text-stone-700"
                 title="View full size"
               >
                 <Maximize2 size={12} /> Zoom
               </button>
             </div>
             <div
-              className="p-3 cursor-zoom-in bg-slate-50 flex justify-center"
+              className="p-3 cursor-zoom-in bg-stone-50 flex justify-center"
               onClick={() => setZoomed(table)}
             >
               <img
@@ -89,28 +89,28 @@ function TableLightbox({ table, onClose }) {
         className="bg-white rounded-lg shadow-2xl w-full h-full max-w-6xl max-h-[95vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 gap-3">
-          <p className="text-sm font-semibold text-slate-900 truncate">{table.caption}</p>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 gap-3">
+          <p className="text-sm font-semibold text-stone-900 truncate">{table.caption}</p>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => setScale(s => Math.min(5, s + 0.25))}
-              className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700"
+              className="text-xs px-2 py-1 bg-stone-100 hover:bg-stone-200 rounded text-stone-700"
               title="Zoom in"
             >+</button>
-            <span className="text-xs text-slate-500 w-12 text-center">{Math.round(scale * 100)}%</span>
+            <span className="text-xs text-stone-500 w-12 text-center">{Math.round(scale * 100)}%</span>
             <button
               onClick={() => setScale(s => Math.max(0.5, s - 0.25))}
-              className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700"
+              className="text-xs px-2 py-1 bg-stone-100 hover:bg-stone-200 rounded text-stone-700"
               title="Zoom out"
             >−</button>
             <button
               onClick={reset}
-              className="text-xs px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-700"
+              className="text-xs px-2 py-1 bg-stone-100 hover:bg-stone-200 rounded text-stone-700"
               title="Reset"
             >Reset</button>
             <button
               onClick={onClose}
-              className="text-slate-500 hover:text-slate-800 p-1 hover:bg-slate-100 rounded"
+              className="text-stone-500 hover:text-stone-800 p-1 hover:bg-stone-100 rounded"
               title="Close (Esc)"
             >
               <X size={20} />
@@ -119,7 +119,7 @@ function TableLightbox({ table, onClose }) {
         </div>
 
         <div
-          className="flex-1 overflow-hidden bg-slate-100 relative"
+          className="flex-1 overflow-hidden bg-stone-100 relative"
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -141,9 +141,9 @@ function TableLightbox({ table, onClose }) {
           />
         </div>
 
-        <div className="px-4 py-2 border-t border-slate-200 text-xs text-slate-500 flex justify-between">
+        <div className="px-4 py-2 border-t border-stone-200 text-xs text-stone-500 flex justify-between">
           <span>Scroll to zoom · Drag to pan</span>
-          <span>Press <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-700">Esc</kbd> to close</span>
+          <span>Press <kbd className="px-1 py-0.5 bg-stone-100 border border-stone-300 rounded text-stone-700">Esc</kbd> to close</span>
         </div>
       </div>
     </div>

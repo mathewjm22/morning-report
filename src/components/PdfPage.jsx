@@ -124,15 +124,15 @@ useEffect(() => {
   return (
     <div
       className={`relative bg-white shadow-2xl transition ${
-        isFocus ? 'ring-2 ring-sage-500' : 'ring-1 ring-slate-700 opacity-70 hover:opacity-100'
+        isFocus ? 'ring-2 ring-sage-500' : 'ring-1 ring-stone-700 opacity-70 hover:opacity-100'
       }`}
       style={{ width, height }}
     >
-      <div className="absolute -left-10 top-2 bg-slate-900 text-white text-xs px-2 py-1 rounded font-mono z-10">
+      <div className="absolute -left-10 top-2 bg-stone-900 text-white text-xs px-2 py-1 rounded font-mono z-10">
         {pageNum}
       </div>
       {!isFocus && (
-        <div className="absolute -left-10 top-10 bg-slate-700 text-slate-300 text-[10px] px-1.5 py-0.5 rounded z-10">
+        <div className="absolute -left-10 top-10 bg-stone-700 text-stone-300 text-[10px] px-1.5 py-0.5 rounded z-10">
           outside gate
         </div>
       )}
@@ -168,7 +168,7 @@ onMouseLeave={() => hideZoneMenu()}
           />
           {/* Button popup — sits flush against the top edge of the zone */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-lg border border-slate-200 px-1.5 py-1 flex items-center gap-1 whitespace-nowrap"
+            className="absolute left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-lg border border-stone-200 px-1.5 py-1 flex items-center gap-1 whitespace-nowrap"
             style={{ top: -36 }}
           >
             <button
@@ -179,7 +179,7 @@ onMouseLeave={() => hideZoneMenu()}
             </button>
             <button
               onClick={() => handlePinZone(zone)}
-              className="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-2.5 py-1 rounded flex items-center gap-1"
+              className="text-xs bg-white border border-stone-300 hover:bg-stone-50 text-stone-700 px-2.5 py-1 rounded flex items-center gap-1"
             >
               <Plus size={11} /> Pin
             </button>
@@ -205,7 +205,7 @@ onMouseLeave={() => hideZoneMenu()}
 
       {rendering && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/60 pointer-events-none">
-          <span className="text-xs text-slate-500">Rendering page {pageNum}...</span>
+          <span className="text-xs text-stone-500">Rendering page {pageNum}...</span>
         </div>
       )}
     </div>

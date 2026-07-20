@@ -25,16 +25,16 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-stone-50">
       <div className="max-w-4xl mx-auto p-6">
         <header className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="bg-sage-600 text-white p-2 rounded-lg">
               <BookOpen size={24} />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900">Morning Report</h1>
+            <h1 className="text-3xl font-bold text-stone-900">Morning Report</h1>
           </div>
-          <p className="text-slate-600">
+          <p className="text-stone-600">
             Interactive clinical reasoning workspace built around the source PDF. Upload a case, define reading gates, and work through it as if it were morning report.
           </p>
         </header>
@@ -42,26 +42,26 @@ export default function Home() {
         <div className="grid gap-4 mb-8">
           <button
             onClick={() => navigate('/author')}
-            className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-6 text-left hover:border-sage-400 hover:shadow-md transition"
+            className="bg-white border-2 border-dashed border-stone-300 rounded-lg p-6 text-left hover:border-sage-400 hover:shadow-md transition"
           >
-            <div className="flex items-center gap-2 mb-2 text-slate-700">
+            <div className="flex items-center gap-2 mb-2 text-stone-700">
               <Plus size={20} />
               <span className="font-semibold">New Case — Upload PDF</span>
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-stone-500">
               Drop a PDF, define which pages are the case content, and set reading gates.
             </p>
           </button>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-slate-800 mb-3">Your Library</h2>
+          <h2 className="text-lg font-semibold text-stone-800 mb-3">Your Library</h2>
           {loading ? (
-            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-500 text-sm">
+            <div className="bg-white rounded-lg border border-stone-200 p-8 text-center text-stone-500 text-sm">
               Loading...
             </div>
           ) : cases.length === 0 ? (
-            <div className="bg-white rounded-lg border border-slate-200 p-8 text-center text-slate-500">
+            <div className="bg-white rounded-lg border border-stone-200 p-8 text-center text-stone-500">
               No cases yet. Upload a PDF to get started.
             </div>
           ) : (
@@ -70,12 +70,12 @@ export default function Home() {
                 <div
                   key={c.id}
                   onClick={() => navigate(`/case/${encodeURIComponent(c.id)}`)}
-                  className="bg-white rounded-lg border border-slate-200 p-4 hover:border-sage-400 hover:shadow-md transition cursor-pointer flex items-start justify-between gap-3"
+                  className="bg-white rounded-lg border border-stone-200 p-4 hover:border-sage-400 hover:shadow-md transition cursor-pointer flex items-start justify-between gap-3"
                 >
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-slate-900 truncate">{c.title}</h3>
-                    <p className="text-sm text-slate-500 truncate">{c.source}</p>
-                    <div className="flex items-center gap-1 mt-2 text-xs text-slate-400">
+                    <h3 className="font-semibold text-stone-900 truncate">{c.title}</h3>
+                    <p className="text-sm text-stone-500 truncate">{c.source}</p>
+                    <div className="flex items-center gap-1 mt-2 text-xs text-stone-400">
                       <Clock size={12} />
                       <span>Added {new Date(c.addedAt).toLocaleDateString()}</span>
                       <span className="mx-1">•</span>
@@ -86,7 +86,7 @@ export default function Home() {
                   </div>
                   <button
                     onClick={(e) => removeCase(c.id, e)}
-                    className="text-slate-400 hover:text-red-600 p-1 rounded transition"
+                    className="text-stone-400 hover:text-red-600 p-1 rounded transition"
                     title="Delete"
                   >
                     <Trash2 size={16} />

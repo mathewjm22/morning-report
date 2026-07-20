@@ -6,9 +6,9 @@ export default function PinnedTray({ elements, onUnpin, onOpenLightbox }) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 text-center">
         <div>
-          <ImageIcon size={40} className="mx-auto text-slate-300 mb-2" />
-          <p className="text-sm text-slate-500 mb-1">No pinned elements</p>
-          <p className="text-xs text-slate-400">Click any figure or table in the PDF with the Select tool active, then choose "Pin" to keep it visible here.</p>
+          <ImageIcon size={40} className="mx-auto text-stone-300 mb-2" />
+          <p className="text-sm text-stone-500 mb-1">No pinned elements</p>
+          <p className="text-xs text-stone-400">Click any figure or table in the PDF with the Select tool active, then choose "Pin" to keep it visible here.</p>
         </div>
       </div>
     );
@@ -16,22 +16,22 @@ export default function PinnedTray({ elements, onUnpin, onOpenLightbox }) {
   return (
     <div className="flex-1 overflow-y-auto p-3 space-y-3">
       {elements.map(el => (
-        <div key={el.id} className="border border-slate-200 rounded overflow-hidden bg-white shadow-sm">
-          <div className="px-2 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2">
+        <div key={el.id} className="border border-stone-200 rounded overflow-hidden bg-white shadow-sm">
+          <div className="px-2 py-1.5 bg-stone-50 border-b border-stone-200 flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-700 truncate">{el.label}</p>
-              <p className="text-[10px] text-slate-500">p.{el.pageNum}</p>
+              <p className="text-xs font-semibold text-stone-700 truncate">{el.label}</p>
+              <p className="text-[10px] text-stone-500">p.{el.pageNum}</p>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => onOpenLightbox(el)} className="p-1 text-slate-500 hover:text-sage-600" title="Open"><Maximize2 size={12} /></button>
-              <button onClick={() => onUnpin(el.id)} className="p-1 text-slate-500 hover:text-red-600" title="Unpin"><PinOff size={12} /></button>
+              <button onClick={() => onOpenLightbox(el)} className="p-1 text-stone-500 hover:text-sage-600" title="Open"><Maximize2 size={12} /></button>
+              <button onClick={() => onUnpin(el.id)} className="p-1 text-stone-500 hover:text-red-600" title="Unpin"><PinOff size={12} /></button>
             </div>
           </div>
-          <div className="h-40 cursor-zoom-in bg-slate-100 flex items-center justify-center" onClick={() => onOpenLightbox(el)}>
+          <div className="h-40 cursor-zoom-in bg-stone-100 flex items-center justify-center" onClick={() => onOpenLightbox(el)}>
             {el.thumbUrl ? (
               <img src={el.thumbUrl} alt={el.label} className="max-w-full max-h-full object-contain" />
             ) : (
-              <ImageIcon size={32} className="text-slate-400" />
+              <ImageIcon size={32} className="text-stone-400" />
             )}
           </div>
         </div>

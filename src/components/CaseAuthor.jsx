@@ -97,9 +97,9 @@ export default function CaseAuthor() {
 
   if (stage === 'upload') {
     return (
-      <div className="min-h-screen bg-slate-50 p-6">
+      <div className="min-h-screen bg-stone-50 p-6">
         <div className="max-w-2xl mx-auto">
-          <button onClick={() => navigate('/')} className="mb-4 text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1">
+          <button onClick={() => navigate('/')} className="mb-4 text-sm text-stone-600 hover:text-stone-900 flex items-center gap-1">
             <ChevronLeft size={14} /> Back to library
           </button>
           <h1 className="text-2xl font-bold mb-4">New Case</h1>
@@ -107,13 +107,13 @@ export default function CaseAuthor() {
             onClick={() => !loading && fileInputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => { e.preventDefault(); if (!loading) handleFile(e.dataTransfer.files[0]); }}
-            className={`border-2 border-dashed border-slate-300 rounded-lg p-12 text-center transition ${
+            className={`border-2 border-dashed border-stone-300 rounded-lg p-12 text-center transition ${
               loading ? 'opacity-50' : 'hover:border-sage-400 hover:bg-sage-50/50 cursor-pointer'
             }`}
           >
-            <Upload className="mx-auto text-slate-400 mb-3" size={48} />
-            <p className="font-semibold text-slate-700 mb-1">Drop a PDF or click to browse</p>
-            <p className="text-sm text-slate-500">Any PDF works; NEJM Case Records are the primary use case.</p>
+            <Upload className="mx-auto text-stone-400 mb-3" size={48} />
+            <p className="font-semibold text-stone-700 mb-1">Drop a PDF or click to browse</p>
+            <p className="text-sm text-stone-500">Any PDF works; NEJM Case Records are the primary use case.</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -122,45 +122,45 @@ export default function CaseAuthor() {
               onChange={(e) => handleFile(e.target.files[0])}
             />
           </div>
-          {loading && <div className="mt-4 text-center text-sm text-slate-600">{progress}</div>}
+          {loading && <div className="mt-4 text-center text-sm text-stone-600">{progress}</div>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-stone-50">
       <div className="max-w-4xl mx-auto p-6">
-        <button onClick={() => navigate('/')} className="mb-4 text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1">
+        <button onClick={() => navigate('/')} className="mb-4 text-sm text-stone-600 hover:text-stone-900 flex items-center gap-1">
           <ChevronLeft size={14} /> Back to library
         </button>
         <h1 className="text-xl font-bold mb-3">Configure case</h1>
 
-        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4">
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Title</label>
+        <div className="bg-white border border-stone-200 rounded-lg p-4 mb-4">
+          <label className="block text-xs font-semibold text-stone-700 mb-1">Title</label>
           <input
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className="w-full text-sm px-2 py-1.5 border border-slate-300 rounded mb-3"
+            className="w-full text-sm px-2 py-1.5 border border-stone-300 rounded mb-3"
           />
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Source (citation)</label>
+          <label className="block text-xs font-semibold text-stone-700 mb-1">Source (citation)</label>
           <input
             value={source}
             onChange={e => setSource(e.target.value)}
             placeholder="e.g. N Engl J Med 2026;394:907-16"
-            className="w-full text-sm px-2 py-1.5 border border-slate-300 rounded"
+            className="w-full text-sm px-2 py-1.5 border border-stone-300 rounded"
           />
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-lg p-4 mb-4">
+        <div className="bg-white border border-stone-200 rounded-lg p-4 mb-4">
           <div className="flex items-center gap-4 mb-3 flex-wrap">
-            <p className="text-xs font-semibold text-slate-700">Case content pages:</p>
+            <p className="text-xs font-semibold text-stone-700">Case content pages:</p>
             <div className="flex items-center gap-1 text-xs">
               <input
                 type="number"
                 value={contentStart}
                 onChange={e => setContentStart(Math.max(1, Math.min(totalPages, +e.target.value || 1)))}
-                className="w-14 px-1.5 py-0.5 border border-slate-300 rounded text-center"
+                className="w-14 px-1.5 py-0.5 border border-stone-300 rounded text-center"
                 min={1} max={totalPages}
               />
               <span>to</span>
@@ -168,12 +168,12 @@ export default function CaseAuthor() {
                 type="number"
                 value={contentEnd}
                 onChange={e => setContentEnd(Math.max(1, Math.min(totalPages, +e.target.value || 1)))}
-                className="w-14 px-1.5 py-0.5 border border-slate-300 rounded text-center"
+                className="w-14 px-1.5 py-0.5 border border-stone-300 rounded text-center"
                 min={1} max={totalPages}
               />
-              <span className="text-slate-500">of {totalPages}</span>
+              <span className="text-stone-500">of {totalPages}</span>
             </div>
-            <p className="text-xs text-slate-500 italic">Pages outside this range (ads, references) are hidden in the workspace.</p>
+            <p className="text-xs text-stone-500 italic">Pages outside this range (ads, references) are hidden in the workspace.</p>
           </div>
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
             {thumbnails.map((src, i) => {
@@ -181,7 +181,7 @@ export default function CaseAuthor() {
               const inContent = pageNum >= contentStart && pageNum <= contentEnd;
               return (
                 <div key={i} className={`relative rounded border-2 overflow-hidden ${
-                  inContent ? 'border-slate-300' : 'border-slate-200 opacity-40'
+                  inContent ? 'border-stone-300' : 'border-stone-200 opacity-40'
                 }`}>
                   <img src={src} alt={`p${pageNum}`} className="w-full block" />
                   <div className="absolute top-0.5 left-1 bg-black/60 text-white text-[10px] px-1 rounded">p.{pageNum}</div>

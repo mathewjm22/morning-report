@@ -123,9 +123,9 @@ if (tables && tables.length > 0) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Upload NEJM Case PDF</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700" disabled={busy}>
+        <div className="p-6 border-b border-stone-200 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-stone-900">Upload NEJM Case PDF</h2>
+          <button onClick={onClose} className="text-stone-400 hover:text-stone-700" disabled={busy}>
             <X size={20} />
           </button>
         </div>
@@ -137,13 +137,13 @@ if (tables && tables.length > 0) {
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => { e.preventDefault(); }}
                 onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files[0]); }}
-                className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-sage-400 hover:bg-slate-50 transition cursor-pointer"
+                className="border-2 border-dashed border-stone-300 rounded-lg p-8 text-center hover:border-sage-400 hover:bg-stone-50 transition cursor-pointer"
               >
-                <Upload className="mx-auto text-slate-400 mb-3" size={40} />
-                <p className="text-sm font-semibold text-slate-700 mb-1">
+                <Upload className="mx-auto text-stone-400 mb-3" size={40} />
+                <p className="text-sm font-semibold text-stone-700 mb-1">
                   Drop a PDF here or click to browse
                 </p>
-                <p className="text-xs text-slate-500">NEJM Case Records format expected</p>
+                <p className="text-xs text-stone-500">NEJM Case Records format expected</p>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -162,26 +162,26 @@ if (tables && tables.length > 0) {
 
               <div className="mt-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <ImagePlus size={16} className="text-slate-500" />
-                  <p className="text-sm font-semibold text-slate-700">Manual image paste (optional)</p>
+                  <ImagePlus size={16} className="text-stone-500" />
+                  <p className="text-sm font-semibold text-stone-700">Manual image paste (optional)</p>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">
+                <p className="text-xs text-stone-500 mb-2">
                   If figure extraction fails or misses images, paste screenshots below before uploading the PDF.
                 </p>
                 <div
                   onPaste={handlePaste}
                   tabIndex={0}
-                  className="min-h-[80px] border border-slate-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-sage-400"
+                  className="min-h-[80px] border border-stone-300 rounded p-3 focus:outline-none focus:ring-2 focus:ring-sage-400"
                 >
                   {manualFigures.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic text-center py-4">
+                    <p className="text-xs text-stone-400 italic text-center py-4">
                       Click here, then paste (⌘V / Ctrl+V) an image
                     </p>
                   ) : (
                     <div className="grid grid-cols-3 gap-2">
                       {manualFigures.map((fig, idx) => (
                         <div key={idx} className="relative group">
-                          <img src={fig.images[0].url} alt="" className="w-full h-24 object-contain border border-slate-200 rounded bg-slate-50" />
+                          <img src={fig.images[0].url} alt="" className="w-full h-24 object-contain border border-stone-200 rounded bg-stone-50" />
                           <button
                             onClick={() => removeManualFigure(idx)}
                             className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition"
@@ -197,22 +197,22 @@ if (tables && tables.length > 0) {
             </>
           ) : status === 'success' ? (
             <div className="text-center py-8">
-              <p className="text-slate-700">Success — loading walkthrough...</p>
+              <p className="text-stone-700">Success — loading walkthrough...</p>
             </div>
           ) : (
             <div className="text-center py-8">
               <Loader2 className="mx-auto text-sage-600 animate-spin mb-4" size={40} />
-              <p className="text-sm font-semibold text-slate-800 mb-1">
+              <p className="text-sm font-semibold text-stone-800 mb-1">
                 {status === 'extracting' ? 'Extracting from PDF' : 'Parsing case with AI'}
               </p>
-              <p className="text-xs text-slate-500">{progress}</p>
+              <p className="text-xs text-stone-500">{progress}</p>
               {status === 'parsing' && (
-                <p className="text-xs text-slate-400 mt-3">
+                <p className="text-xs text-stone-400 mt-3">
                   Free-tier model rate limits require sequential processing — this takes ~60 seconds. Grab a coffee.
                 </p>
               )}
               {extractedFigures.length > 0 && (
-                <p className="text-xs text-slate-500 mt-3">
+                <p className="text-xs text-stone-500 mt-3">
                   <FileText size={12} className="inline mr-1" />
                   Extracted {extractedFigures.length} figure{extractedFigures.length === 1 ? '' : 's'} from PDF
                 </p>

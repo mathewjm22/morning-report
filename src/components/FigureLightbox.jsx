@@ -52,14 +52,14 @@ export default function FigureLightbox({ open, onClose, imageKey, imageUrl, labe
         style={{ width: size.w + 40, maxHeight: '95vh' }}
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-4 py-3 border-b border-slate-200 gap-3">
+        <div className="flex items-start justify-between px-4 py-3 border-b border-stone-200 gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-900 truncate">{label || 'Figure'}</p>
-            {caption && <p className="text-xs text-slate-500 truncate">{caption}</p>}
+            <p className="text-sm font-semibold text-stone-900 truncate">{label || 'Figure'}</p>
+            {caption && <p className="text-xs text-stone-500 truncate">{caption}</p>}
           </div>
           <button
             onClick={onClose}
-            className="flex-shrink-0 text-slate-500 hover:text-slate-800 p-1 hover:bg-slate-100 rounded"
+            className="flex-shrink-0 text-stone-500 hover:text-stone-800 p-1 hover:bg-stone-100 rounded"
             title="Close (Esc)"
           >
             <X size={20} />
@@ -67,7 +67,7 @@ export default function FigureLightbox({ open, onClose, imageKey, imageUrl, labe
         </div>
 
         {/* Canvas — uses zoom-specific key so strokes at this scale live in their own bucket */}
-        <div className="flex-1 overflow-auto p-4 bg-slate-50 flex items-center justify-center">
+        <div className="flex-1 overflow-auto p-4 bg-stone-50 flex items-center justify-center">
           <AnnotationCanvas
             imageKey={`${imageKey}:zoom`}
             imageUrl={imageUrl}
@@ -78,9 +78,9 @@ export default function FigureLightbox({ open, onClose, imageKey, imageUrl, labe
           />
         </div>
 
-        <div className="px-4 py-2 border-t border-slate-200 text-xs text-slate-500 flex items-center justify-between">
+        <div className="px-4 py-2 border-t border-stone-200 text-xs text-stone-500 flex items-center justify-between">
           <span>Annotations here are saved separately from the thumbnail (different scale).</span>
-          <span>Press <kbd className="px-1 py-0.5 bg-slate-100 border border-slate-300 rounded text-slate-700">Esc</kbd> to close</span>
+          <span>Press <kbd className="px-1 py-0.5 bg-stone-100 border border-stone-300 rounded text-stone-700">Esc</kbd> to close</span>
         </div>
       </div>
     </div>

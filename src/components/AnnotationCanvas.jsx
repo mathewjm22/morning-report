@@ -143,17 +143,17 @@ export default function AnnotationCanvas({ imageKey, imageUrl, annotations, setA
   const undo = () => setAnnotations({ ...annotations, [imageKey]: strokes.slice(0, -1) });
 
   return (
-    <div className="border border-slate-300 rounded overflow-hidden bg-white">
-      <div className="bg-slate-100 px-2 py-1.5 flex items-center gap-1 border-b border-slate-300 flex-wrap">
-        <button onClick={() => setTool('pen')} className={`p-1.5 rounded ${tool === 'pen' ? 'bg-sage-600 text-white' : 'hover:bg-slate-200 text-slate-700'}`} title="Pen"><Pencil size={14} /></button>
-        <button onClick={() => setTool('arrow')} className={`p-1.5 rounded ${tool === 'arrow' ? 'bg-sage-600 text-white' : 'hover:bg-slate-200 text-slate-700'}`} title="Arrow"><MoveUpRight size={14} /></button>
-        <button onClick={() => setTool('eraser')} className={`p-1.5 rounded ${tool === 'eraser' ? 'bg-sage-600 text-white' : 'hover:bg-slate-200 text-slate-700'}`} title="Eraser"><Eraser size={14} /></button>
-        <div className="w-px h-5 bg-slate-300 mx-1" />
+    <div className="border border-stone-300 rounded overflow-hidden bg-white">
+      <div className="bg-stone-100 px-2 py-1.5 flex items-center gap-1 border-b border-stone-300 flex-wrap">
+        <button onClick={() => setTool('pen')} className={`p-1.5 rounded ${tool === 'pen' ? 'bg-sage-600 text-white' : 'hover:bg-stone-200 text-stone-700'}`} title="Pen"><Pencil size={14} /></button>
+        <button onClick={() => setTool('arrow')} className={`p-1.5 rounded ${tool === 'arrow' ? 'bg-sage-600 text-white' : 'hover:bg-stone-200 text-stone-700'}`} title="Arrow"><MoveUpRight size={14} /></button>
+        <button onClick={() => setTool('eraser')} className={`p-1.5 rounded ${tool === 'eraser' ? 'bg-sage-600 text-white' : 'hover:bg-stone-200 text-stone-700'}`} title="Eraser"><Eraser size={14} /></button>
+        <div className="w-px h-5 bg-stone-300 mx-1" />
         {colors.map(c => (
-          <button key={c} onClick={() => setColor(c)} className={`w-5 h-5 rounded-full border-2 ${color === c ? 'border-slate-900 scale-110' : 'border-slate-300'} transition`} style={{ backgroundColor: c }} title={c} />
+          <button key={c} onClick={() => setColor(c)} className={`w-5 h-5 rounded-full border-2 ${color === c ? 'border-stone-900 scale-110' : 'border-stone-300'} transition`} style={{ backgroundColor: c }} title={c} />
         ))}
         <div className="flex-1" />
-        <button onClick={undo} disabled={strokes.length === 0} className="p-1.5 rounded hover:bg-slate-200 text-slate-700 disabled:opacity-30" title="Undo"><Undo2 size={14} /></button>
+        <button onClick={undo} disabled={strokes.length === 0} className="p-1.5 rounded hover:bg-stone-200 text-stone-700 disabled:opacity-30" title="Undo"><Undo2 size={14} /></button>
         <button onClick={clearAll} disabled={strokes.length === 0} className="p-1.5 rounded hover:bg-red-100 text-red-600 disabled:opacity-30" title="Clear all"><Trash2 size={14} /></button>
       </div>
       <canvas

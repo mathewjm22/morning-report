@@ -32,12 +32,12 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-amber-100 to-orange-100">
+        <div className="px-5 py-3 border-b border-stone-200 flex items-center justify-between bg-gradient-to-r from-amber-100 to-orange-100">
           <div className="flex items-center gap-2">
             <Award size={18} className="text-amber-700" />
-            <h2 className="text-base font-semibold text-slate-900">DDx vs. Reveal</h2>
+            <h2 className="text-base font-semibold text-stone-900">DDx vs. Reveal</h2>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 p-1 hover:bg-white/50 rounded">
+          <button onClick={onClose} className="text-stone-500 hover:text-stone-800 p-1 hover:bg-white/50 rounded">
             <X size={18} />
           </button>
         </div>
@@ -47,20 +47,20 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Target size={14} className="text-sage-700" />
-              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Your committed DDx</h3>
+              <h3 className="text-xs font-bold text-stone-700 uppercase tracking-wide">Your committed DDx</h3>
             </div>
-            <div className="border border-slate-200 rounded overflow-hidden">
+            <div className="border border-stone-200 rounded overflow-hidden">
               {committedDdx.map((d, i) => {
                 const isMatch = matchInfo?.matchedRank === i + 1;
                 return (
                   <div
                     key={d.id}
-                    className={`px-3 py-2 flex items-center gap-3 border-b border-slate-100 last:border-b-0 ${
-                      isMatch ? 'bg-green-100' : (i % 2 === 0 ? 'bg-sage-50' : 'bg-slate-50')
+                    className={`px-3 py-2 flex items-center gap-3 border-b border-stone-100 last:border-b-0 ${
+                      isMatch ? 'bg-green-100' : (i % 2 === 0 ? 'bg-sage-50' : 'bg-stone-50')
                     }`}
                   >
                     <span className="text-xs font-bold text-sage-700 w-6 flex-shrink-0">#{i + 1}</span>
-                    <span className="text-sm text-slate-800 flex-1">{d.name || '(unnamed)'}</span>
+                    <span className="text-sm text-stone-800 flex-1">{d.name || '(unnamed)'}</span>
                     {isMatch && (
                       <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0">
                         <CheckCircle2 size={11} /> Match
@@ -74,7 +74,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
 
           {/* Actual diagnosis input */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+            <label className="block text-xs font-bold text-stone-700 uppercase tracking-wide mb-1.5">
               Actual final diagnosis (from the case)
             </label>
             <input
@@ -82,7 +82,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
               onChange={e => { setActualDx(e.target.value); setSubmitted(false); }}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(); }}}
               placeholder="e.g. Periprosthetic joint infection with M. bovis BCG"
-              className="w-full text-sm px-3 py-2 border-2 border-slate-300 rounded focus:outline-none focus:border-amber-500"
+              className="w-full text-sm px-3 py-2 border-2 border-stone-300 rounded focus:outline-none focus:border-amber-500"
               autoFocus
             />
             {!submitted && actualDx.trim() && (
@@ -109,12 +109,12 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
                   <XCircle size={22} className="text-orange-600 flex-shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-stone-900">
                     {matchInfo.matchedRank === 1 && '🎯 Nailed it — #1 on your list.'}
                     {matchInfo.matchedRank > 1 && `On your list at position #${matchInfo.matchedRank}.`}
                     {!matchInfo.matchedRank && 'Not on your list.'}
                   </p>
-                  <p className="text-xs text-slate-600 mt-1">
+                  <p className="text-xs text-stone-600 mt-1">
                     {matchInfo.matchedRank === 1 && 'Perfect calibration. You had the right leading diagnosis.'}
                     {matchInfo.matchedRank === 2 && 'Very close — you were nearby but ranked something else higher.'}
                     {matchInfo.matchedRank > 2 && `You considered it, but at rank ${matchInfo.matchedRank} — what would have shifted it higher?`}
@@ -130,7 +130,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <Sparkles size={14} className="text-purple-600" />
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                <label className="text-xs font-bold text-stone-700 uppercase tracking-wide">
                   Learning points
                 </label>
               </div>
@@ -139,7 +139,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
                 onChange={e => setLearningPoints(e.target.value)}
                 placeholder="What did this case teach you? Key features, cognitive traps, next-time-I'll..."
                 rows={5}
-                className="w-full text-sm px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-purple-500 resize-none"
+                className="w-full text-sm px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-purple-500 resize-none"
               />
             </div>
           )}
@@ -147,14 +147,14 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
 
         {/* Footer */}
         {submitted && (
-          <div className="px-5 py-3 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-            <p className="text-xs text-slate-500">
+          <div className="px-5 py-3 border-t border-stone-200 flex items-center justify-between bg-stone-50">
+            <p className="text-xs text-stone-500">
               Saved outcomes appear in your progress; you can reopen and edit anytime.
             </p>
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-200 rounded"
+                className="px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-200 rounded"
               >
                 Cancel
               </button>

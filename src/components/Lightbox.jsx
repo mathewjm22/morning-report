@@ -24,19 +24,19 @@ export default function Lightbox({ element, caseEntry, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col" onClick={onClose}>
       <div
-        className="bg-slate-900 border-b border-slate-700 px-6 py-3 flex items-center justify-between text-white"
+        className="bg-stone-900 border-b border-stone-700 px-6 py-3 flex items-center justify-between text-white"
         onClick={e => e.stopPropagation()}
       >
         <div>
           <p className="font-semibold">{element.label}</p>
-          <p className="text-xs text-slate-400">From page {element.pageNum}</p>
+          <p className="text-xs text-stone-400">From page {element.pageNum}</p>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-slate-700 rounded"><X size={20} /></button>
+        <button onClick={onClose} className="p-2 hover:bg-stone-700 rounded"><X size={20} /></button>
       </div>
 
       <div className="flex-1 flex overflow-hidden" onClick={e => e.stopPropagation()}>
         {/* Tool rail */}
-        <div className="w-14 bg-slate-800 border-r border-slate-700 flex flex-col items-center py-2 gap-1">
+        <div className="w-14 bg-stone-800 border-r border-stone-700 flex flex-col items-center py-2 gap-1">
           {TOOLS.filter(t => t.id !== 'select').map(t => {
             const Icon = t.icon;
             return (
@@ -44,7 +44,7 @@ export default function Lightbox({ element, caseEntry, onClose }) {
                 key={t.id}
                 onClick={() => setTool(t.id)}
                 className={`p-2.5 rounded transition ${
-                  tool === t.id ? 'bg-sage-600 text-white' : 'text-slate-400 hover:bg-slate-700 hover:text-white'
+                  tool === t.id ? 'bg-sage-600 text-white' : 'text-stone-400 hover:bg-stone-700 hover:text-white'
                 }`}
                 title={t.label}
               >
@@ -52,19 +52,19 @@ export default function Lightbox({ element, caseEntry, onClose }) {
               </button>
             );
           })}
-          <div className="border-t border-slate-700 w-full my-2" />
+          <div className="border-t border-stone-700 w-full my-2" />
           {COLORS.map(c => (
             <button
               key={c}
               onClick={() => setColor(c)}
               className={`w-7 h-7 rounded-full border-2 transition ${
-                color === c ? 'border-white scale-110' : 'border-slate-600'
+                color === c ? 'border-white scale-110' : 'border-stone-600'
               }`}
               style={{ backgroundColor: c }}
             />
           ))}
-          <div className="border-t border-slate-700 w-full my-2" />
-          <button onClick={() => setStrokes(s => s.slice(0, -1))} className="p-2.5 rounded text-slate-400 hover:bg-slate-700 hover:text-white" title="Undo">
+          <div className="border-t border-stone-700 w-full my-2" />
+          <button onClick={() => setStrokes(s => s.slice(0, -1))} className="p-2.5 rounded text-stone-400 hover:bg-stone-700 hover:text-white" title="Undo">
             <Undo2 size={16} />
           </button>
           <button onClick={() => setStrokes([])} className="p-2.5 rounded text-red-400 hover:bg-red-900/50" title="Clear all">
@@ -73,7 +73,7 @@ export default function Lightbox({ element, caseEntry, onClose }) {
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 flex items-center justify-center bg-slate-950 overflow-auto p-8">
+        <div className="flex-1 flex items-center justify-center bg-stone-950 overflow-auto p-8">
           <div className="relative bg-white shadow-2xl" style={{ width: w * zoom, height: h * zoom }}>
             <img
               src={element.imageUrl}
@@ -95,16 +95,16 @@ export default function Lightbox({ element, caseEntry, onClose }) {
         </div>
 
         {/* Info sidebar */}
-        <div className="w-60 bg-slate-800 border-l border-slate-700 p-4 text-white text-sm overflow-y-auto">
+        <div className="w-60 bg-stone-800 border-l border-stone-700 p-4 text-white text-sm overflow-y-auto">
           <h3 className="font-semibold mb-2">Annotations ({strokes.length})</h3>
           <div className="space-y-1">
             {strokes.map((s, i) => (
-              <div key={i} className="text-xs bg-slate-700/50 px-2 py-1 rounded flex items-center gap-2">
+              <div key={i} className="text-xs bg-stone-700/50 px-2 py-1 rounded flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                <span className="capitalize text-slate-300">{s.type}</span>
+                <span className="capitalize text-stone-300">{s.type}</span>
               </div>
             ))}
-            {strokes.length === 0 && <p className="text-xs text-slate-500 italic">Draw on the image.</p>}
+            {strokes.length === 0 && <p className="text-xs text-stone-500 italic">Draw on the image.</p>}
           </div>
           <div className="mt-6 p-3 bg-sage-900/30 border border-sage-800 rounded">
             <p className="text-xs font-semibold text-sage-200 mb-1">EKG reference</p>
@@ -115,18 +115,18 @@ export default function Lightbox({ element, caseEntry, onClose }) {
               5 large = 1 second
             </p>
           </div>
-          <div className="mt-3 p-3 bg-slate-700/40 rounded text-[10px] text-slate-300">
+          <div className="mt-3 p-3 bg-stone-700/40 rounded text-[10px] text-stone-300">
             Click and drag any annotation to move it. For arrows/rulers/calipers, drag either endpoint to fine-tune. Select an annotation and press Delete to remove.
           </div>
         </div>
       </div>
 
-      <div className="bg-slate-900 border-t border-slate-700 px-6 py-2 flex items-center justify-center gap-3 text-white text-xs">
-        <button onClick={() => setZoom(z => Math.max(0.5, z - 0.2))} className="p-1 hover:bg-slate-700 rounded"><ZoomOut size={14} /></button>
+      <div className="bg-stone-900 border-t border-stone-700 px-6 py-2 flex items-center justify-center gap-3 text-white text-xs">
+        <button onClick={() => setZoom(z => Math.max(0.5, z - 0.2))} className="p-1 hover:bg-stone-700 rounded"><ZoomOut size={14} /></button>
         <span className="w-16 text-center font-mono">{Math.round(zoom * 100)}%</span>
-        <button onClick={() => setZoom(z => Math.min(4, z + 0.2))} className="p-1 hover:bg-slate-700 rounded"><ZoomIn size={14} /></button>
-        <span className="mx-4 text-slate-500">|</span>
-        <span className="text-slate-400">Press <kbd className="px-1.5 py-0.5 bg-slate-700 rounded">Esc</kbd> to close</span>
+        <button onClick={() => setZoom(z => Math.min(4, z + 0.2))} className="p-1 hover:bg-stone-700 rounded"><ZoomIn size={14} /></button>
+        <span className="mx-4 text-stone-500">|</span>
+        <span className="text-stone-400">Press <kbd className="px-1.5 py-0.5 bg-stone-700 rounded">Esc</kbd> to close</span>
       </div>
     </div>
   );
