@@ -14,7 +14,7 @@ import HighlightsTray from './HighlightsTray.jsx';
 import DdxCompareModal from './DdxCompareModal.jsx';
 import { Brain } from 'lucide-react';
 import FrameworksDrawer from './FrameworksDrawer.jsx';
-
+import ResearchTray from './ResearchTray.jsx';
 
 
 export default function CaseWorkspace({ shared }) {
@@ -35,7 +35,13 @@ export default function CaseWorkspace({ shared }) {
   const [finalOutcome, setFinalOutcome] = useState(null); // { actualDiagnosis, learningPoints, matchInfo }
   const [showRevealModal, setShowRevealModal] = useState(false);
   const [frameworksOpen, setFrameworksOpen] = useState(false);
-  
+  const [researchQuery, setResearchQuery] = useState('');
+
+  const sendToResearch = (text) => {
+  setResearchQuery(text);
+  setRightTab('research');
+};
+
   // Load case
   useEffect(() => {
     let cancelled = false;
@@ -181,33 +187,41 @@ export default function CaseWorkspace({ shared }) {
 
         <div className="w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0">
   <div className="flex border-b border-stone-200">
-    <button
-      onClick={() => setRightTab('whiteboard')}
-      className={`flex-1 py-2.5 text-xs font-medium ${
-        rightTab === 'whiteboard' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
-      }`}
-    >
-      Whiteboard
-    </button>
-    <button
-      onClick={() => setRightTab('highlights')}
-      className={`flex-1 py-2.5 text-xs font-medium relative ${
-        rightTab === 'highlights' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
-      }`}
-    >
-      Highlights
-      {highlightCount > 0 && <span className="ml-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
-    </button>
-    <button
-      onClick={() => setRightTab('pinned')}
-      className={`flex-1 py-2.5 text-xs font-medium relative ${
-        rightTab === 'pinned' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
-      }`}
-    >
-      Pinned
-      {pinned.length > 0 && <span className="ml-1 bg-sage-600 text-white text-xs px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
-    </button>
-  </div>
+  <button
+    onClick={() => setRightTab('whiteboard')}
+    className={`flex-1 py-2.5 text-xs font-medium ${
+      rightTab === 'whiteboard' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
+    }`}
+  >
+    Whiteboard
+  </button>
+  <button
+    onClick={() => setRightTab('highlights')}
+    className={`flex-1 py-2.5 text-xs font-medium relative ${
+      rightTab === 'highlights' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
+    }`}
+  >
+    Highlights
+    {highlightCount > 0 && <span className="ml-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
+  </button>
+  <button
+    onClick={() => setRightTab('research')}
+    className={`flex-1 py-2.5 text-xs font-medium ${
+      rightTab === 'research' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
+    }`}
+  >
+    Research
+  </button>
+  <button
+    onClick={() => setRightTab('pinned')}
+    className={`flex-1 py-2.5 text-xs font-medium relative ${
+      rightTab === 'pinned' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
+    }`}
+  >
+    Pinned
+    {pinned.length > 0 && <span className="ml-1 bg-sage-600 text-white text-xs px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
+  </button>
+</div>
   {rightTab === 'whiteboard' && (
   <Whiteboard
     ddx={ddx} setDdx={setDdx}
@@ -218,8 +232,20 @@ export default function CaseWorkspace({ shared }) {
     onOpenReveal={() => setShowRevealModal(true)}
   />
 )}
-  {rightTab === 'highlights' && <HighlightsTray annotations={annotations} setAnnotations={setAnnotations} />}
-  {rightTab === 'pinned' && <PinnedTray elements={pinned} onUnpin={unpin} onOpenLightbox={setLightbox} />}
+  {rightTab === 'highlights' && (
+  <HighlightsTray
+    annotations={annotations}
+    setAnnotations={setAnnotations}
+    onSendToResearch={sendToResearch}
+  />
+)}
+{rightTab === 'research' && (
+  <ResearchTray
+    initialQuery={researchQuery}
+    onQueryConsumed={() => setResearchQuery('')}
+  />
+)}
+{rightTab === 'pinned' && <PinnedTray elements={pinned} onUnpin={unpin} onOpenLightbox={setLightbox} />}
 </div>
       </div>
 
