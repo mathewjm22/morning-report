@@ -23,11 +23,6 @@ export default function Whiteboard({
   );
 }
 
-import { useState, useRef } from 'react';
-import { Plus, X, GripVertical, Stethoscope, ListChecks, Lock, Award, List, LayoutGrid, Layers } from 'lucide-react';
-import { DDX_VIEWS } from '../lib/ddxViews.js';
-
-// Replace the existing DdxSection with this version
 function DdxSection({
   ddx, setDdx,
   committedDdx, onCommitDdx, onUncommitDdx, onOpenReveal,
@@ -75,7 +70,6 @@ function DdxSection({
         />
       )}
 
-      {/* Commit / Reveal buttons */}
       <div className="px-3 pb-3">
         {!locked && ddx.length > 0 && (
           <button
@@ -126,7 +120,6 @@ function ViewSwitcher({ currentView, onChange }) {
   );
 }
 
-// The original flat list, extracted into its own component
 function ListView({ ddx, setDdx, committedDdx }) {
   const [draftName, setDraftName] = useState('');
   const [dragIdx, setDragIdx] = useState(null);
@@ -236,14 +229,12 @@ function ListView({ ddx, setDdx, committedDdx }) {
   );
 }
 
-// The new grouped view for anatomic / VINDICATE
 function CategoryView({ ddx, setDdx, committedDdx, categories }) {
   const [dragId, setDragId] = useState(null);
   const [dragOverCat, setDragOverCat] = useState(null);
   const locked = !!committedDdx;
   const displayList = locked ? committedDdx : ddx;
 
-  // Group items by category id
   const grouped = {};
   for (const cat of categories) grouped[cat.id] = [];
   const unassigned = [];
@@ -267,7 +258,6 @@ function CategoryView({ ddx, setDdx, committedDdx, categories }) {
   const handleDrop = (e, catId) => {
     if (locked || dragId === null) return;
     e.preventDefault();
-    // Assign the dragged item to this category
     const newCat = catId === '__unassigned__' ? null : catId;
     setDdx(ddx.map(d => d.id === dragId ? { ...d, category: newCat } : d));
     setDragId(null);
@@ -315,7 +305,7 @@ function CategoryView({ ddx, setDdx, committedDdx, categories }) {
           onDrop={(e) => handleDrop(e, '__unassigned__')}
           onDragStart={handleDragStart}
           onDragEnd={() => { setDragId(null); setDragOverCat(null); }}
-          onAddItem={null} // no "add" in unassigned — items only appear here when uncategorized
+          onAddItem={null}
           onUpdateItem={updateDdx}
           onRemoveItem={removeDdx}
           isUnassigned
@@ -461,9 +451,9 @@ function PlanSection({ plan, setPlan }) {
       <div className="px-3 py-3 space-y-1.5">
         {items.map((it, i) => (
           <div
-  key={it.id}
-  className="bg-white border border-stone-200 rounded-md p-2 flex items-center gap-2 hover:border-amber-300 transition"
->
+            key={it.id}
+            className="bg-white border border-stone-200 rounded-md p-2 flex items-center gap-2 hover:border-amber-300 transition"
+          >
             <span className="text-xs font-bold text-amber-600 w-5 flex-shrink-0 text-center">{i + 1}.</span>
             <input
               value={it.text}
