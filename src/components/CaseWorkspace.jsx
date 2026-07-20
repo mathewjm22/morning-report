@@ -156,11 +156,11 @@ export default function CaseWorkspace({ shared }) {
       </div>
 
       {shareState.url && (
-        <div className="px-4 py-2 border-b bg-green-50 border-green-200 flex items-center gap-2 text-sm">
-          <span className="font-medium text-green-800">Share link:</span>
+        <div className="px-4 py-2 border-b bg-sage-50 border-sage-200 flex items-center gap-2 text-sm">
+          <span className="font-medium text-sage-800">Share link:</span>
           <input readOnly value={shareState.url} onFocus={e => e.target.select()}
-            className="flex-1 px-2 py-1 border border-green-300 rounded text-xs bg-white" />
-          <button onClick={copyShare} className="text-xs px-2 py-1 bg-white border border-green-300 rounded flex items-center gap-1">
+            className="flex-1 px-2 py-1 border border-sage-300 rounded text-xs bg-white" />
+          <button onClick={copyShare} className="text-xs px-2 py-1 bg-white border border-sage-300 rounded flex items-center gap-1">
             {shareState.copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
           </button>
           <button onClick={() => setShareState({ loading: false, url: null, copied: false, error: null })} className="text-stone-400 hover:text-stone-700">×</button>

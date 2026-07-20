@@ -56,13 +56,13 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
                   <div
                     key={d.id}
                     className={`px-3 py-2 flex items-center gap-3 border-b border-stone-100 last:border-b-0 ${
-                      isMatch ? 'bg-green-100' : (i % 2 === 0 ? 'bg-sage-50' : 'bg-stone-50')
+                      isMatch ? 'bg-sage-100' : (i % 2 === 0 ? 'bg-sage-50' : 'bg-stone-50')
                     }`}
                   >
                     <span className="text-xs font-bold text-sage-700 w-6 flex-shrink-0">#{i + 1}</span>
                     <span className="text-sm text-stone-800 flex-1">{d.name || '(unnamed)'}</span>
                     {isMatch && (
-                      <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0">
+                      <span className="text-xs bg-sage-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0">
                         <CheckCircle2 size={11} /> Match
                       </span>
                     )}
@@ -98,13 +98,13 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
           {/* Verdict */}
           {submitted && matchInfo && (
             <div className={`rounded-lg p-4 border-2 ${
-              matchInfo.matchedRank === 1 ? 'bg-green-50 border-green-400' :
+              matchInfo.matchedRank === 1 ? 'bg-sage-50 border-sage-400' :
               matchInfo.matchedRank ? 'bg-sage-50 border-sage-400' :
               'bg-orange-50 border-orange-400'
             }`}>
               <div className="flex items-start gap-3">
                 {matchInfo.matchedRank ? (
-                  <CheckCircle2 size={22} className="text-green-600 flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 size={22} className="text-sage-600 flex-shrink-0 mt-0.5" />
                 ) : (
                   <XCircle size={22} className="text-orange-600 flex-shrink-0 mt-0.5" />
                 )}
@@ -129,7 +129,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
           {submitted && (
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <Sparkles size={14} className="text-purple-600" />
+                <Sparkles size={14} className="text-amber-600" />
                 <label className="text-xs font-bold text-stone-700 uppercase tracking-wide">
                   Learning points
                 </label>
@@ -139,7 +139,7 @@ export default function DdxCompareModal({ committedDdx, existingOutcome, onSave,
                 onChange={e => setLearningPoints(e.target.value)}
                 placeholder="What did this case teach you? Key features, cognitive traps, next-time-I'll..."
                 rows={5}
-                className="w-full text-sm px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-purple-500 resize-none"
+                className="w-full text-sm px-3 py-2 border border-stone-300 rounded focus:outline-none focus:border-amber-500 resize-none"
               />
             </div>
           )}

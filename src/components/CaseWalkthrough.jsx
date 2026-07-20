@@ -294,14 +294,14 @@ const gatesWithFigures = gates.map(g => {
 
       {/* Share URL banner */}
       {(shareState.url || shareState.error) && (
-        <div className={`px-4 py-2 border-b flex items-center gap-2 text-sm ${shareState.error ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'}`}>
+        <div className={`px-4 py-2 border-b flex items-center gap-2 text-sm ${shareState.error ? 'bg-red-50 border-red-200 text-red-800' : 'bg-sage-50 border-sage-200 text-sage-800'}`}>
           {shareState.error ? (
             <span>Share failed: {shareState.error}</span>
           ) : (
             <>
               <span className="font-medium">Share link:</span>
-              <input readOnly value={shareState.url} className="flex-1 px-2 py-1 border border-green-300 rounded text-xs bg-white text-stone-700" onFocus={e => e.target.select()} />
-              <button onClick={copyShare} className="text-xs px-2 py-1 bg-white border border-green-300 rounded hover:bg-green-100 flex items-center gap-1">
+              <input readOnly value={shareState.url} className="flex-1 px-2 py-1 border border-sage-300 rounded text-xs bg-white text-stone-700" onFocus={e => e.target.select()} />
+              <button onClick={copyShare} className="text-xs px-2 py-1 bg-white border border-sage-300 rounded hover:bg-sage-100 flex items-center gap-1">
                 {shareState.copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
               </button>
             </>
