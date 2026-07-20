@@ -12,6 +12,10 @@ import PinnedTray from './PinnedTray.jsx';
 import Lightbox from './Lightbox.jsx';
 import HighlightsTray from './HighlightsTray.jsx';
 import DdxCompareModal from './DdxCompareModal.jsx';
+import { Brain } from 'lucide-react';
+import FrameworksDrawer from './FrameworksDrawer.jsx';
+
+
 
 export default function CaseWorkspace({ shared }) {
   const { caseId, shareId } = useParams();
@@ -30,7 +34,7 @@ export default function CaseWorkspace({ shared }) {
   const [committedDdx, setCommittedDdx] = useState(null); // snapshot when user commits
   const [finalOutcome, setFinalOutcome] = useState(null); // { actualDiagnosis, learningPoints, matchInfo }
   const [showRevealModal, setShowRevealModal] = useState(false);
-
+  const [frameworksOpen, setFrameworksOpen] = useState(false);
   
   // Load case
   useEffect(() => {
@@ -134,6 +138,13 @@ export default function CaseWorkspace({ shared }) {
             </button>
           )}
           <button
+  onClick={() => setFrameworksOpen(true)}
+  className="text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition bg-slate-100 text-slate-700 hover:bg-slate-200"
+  title="Clinical reasoning frameworks"
+>
+  <Brain size={14} /> Frameworks
+</button>
+          <button
             onClick={() => setAttendingMode(!attendingMode)}
             className={`text-xs px-3 py-1.5 rounded flex items-center gap-1.5 transition ${
               attendingMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -226,6 +237,8 @@ export default function CaseWorkspace({ shared }) {
     onClose={() => setShowRevealModal(false)}
   />
 )}
+            <FrameworksDrawer open={frameworksOpen} onClose={() => setFrameworksOpen(false)} />
+
     </div>
   );
 }
