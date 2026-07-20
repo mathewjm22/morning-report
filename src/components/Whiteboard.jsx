@@ -95,7 +95,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
 
       <div className="px-3 py-3 space-y-1.5">
         {displayList.map((d, i) => {
-          const bg = i % 2 === 0 ? 'bg-sage-100 border-sage-200' : 'bg-stone-100 border-stone-200';
+          const bg = i % 2 === 0 ? 'bg-sage-50 border-sage-200' : 'bg-white border-stone-200';
           const isDragging = dragIdx === i;
           const isDragOver = dragOverIdx === i;
           return (
@@ -107,9 +107,9 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, i)}
               onDragEnd={handleDragEnd}
-              className={`relative border-2 rounded p-2 shadow-sm transition ${bg} ${
-                isDragging ? 'opacity-30' : ''
-              } ${isDragOver ? 'ring-2 ring-sage-500 -translate-y-0.5' : ''} ${locked ? 'opacity-95' : ''}`}
+              className={`relative border rounded-md p-3 transition ${bg} ${
+  isDragging ? 'opacity-30' : ''
+} ${isDragOver ? 'ring-2 ring-sage-500 -translate-y-0.5 shadow-md' : ''} ${locked ? 'opacity-95' : ''}`}
             >
               <div className="flex items-center gap-1">
                 {!locked && <GripVertical size={14} className="text-stone-400 cursor-move flex-shrink-0" />}
@@ -155,7 +155,7 @@ function DdxSection({ ddx, setDdx, committedDdx, onCommitDdx, onUncommitDdx, onO
         })}
 
         {!locked && (
-          <div className="border-2 border-dashed border-blue-300 rounded p-2 bg-white">
+          <div className="border-2 border-dashed border-sage-300 rounded-md p-3 bg-white hover:border-sage-400 hover:bg-sage-50/30 transition">
             <div className="flex items-center gap-1">
               <Plus size={14} className="text-sage-500 flex-shrink-0" />
               <input
@@ -236,9 +236,9 @@ function PlanSection({ plan, setPlan }) {
       <div className="px-3 py-3 space-y-1.5">
         {items.map((it, i) => (
           <div
-            key={it.id}
-            className="bg-white border border-amber-200 rounded p-1.5 flex items-center gap-2 shadow-sm"
-          >
+  key={it.id}
+  className="bg-white border border-stone-200 rounded-md p-2 flex items-center gap-2 hover:border-amber-300 transition"
+>
             <span className="text-xs font-bold text-amber-600 w-5 flex-shrink-0 text-center">{i + 1}.</span>
             <input
               value={it.text}
@@ -255,7 +255,7 @@ function PlanSection({ plan, setPlan }) {
           </div>
         ))}
 
-        <div className="border-2 border-dashed border-amber-300 rounded p-2 bg-white">
+        <div className="border-2 border-dashed border-amber-300 rounded-md p-3 bg-white hover:border-amber-400 hover:bg-amber-50/30 transition">
           <div className="flex items-center gap-1">
             <Plus size={14} className="text-amber-500 flex-shrink-0" />
             <input

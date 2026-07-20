@@ -41,9 +41,9 @@ export default function Home() {
 
         <div className="grid gap-4 mb-8">
           <button
-            onClick={() => navigate('/author')}
-            className="bg-white border-2 border-dashed border-stone-300 rounded-lg p-6 text-left hover:border-sage-400 hover:shadow-md transition"
-          >
+  onClick={() => navigate('/author')}
+  className="bg-white border-2 border-dashed border-stone-300 rounded-md p-6 text-left hover:border-sage-400 hover:bg-sage-50/30 transition"
+>
             <div className="flex items-center gap-2 mb-2 text-stone-700">
               <Plus size={20} />
               <span className="font-semibold">New Case — Upload PDF</span>
@@ -61,17 +61,18 @@ export default function Home() {
               Loading...
             </div>
           ) : cases.length === 0 ? (
-            <div className="bg-white rounded-lg border border-stone-200 p-8 text-center text-stone-500">
-              No cases yet. Upload a PDF to get started.
-            </div>
+  <div className="bg-white rounded-md border border-stone-200 p-10 text-center">
+    <p className="text-sm font-medium text-stone-700 mb-1.5">No cases yet</p>
+    <p className="text-xs text-stone-500">Upload a PDF above to create your first case.</p>
+  </div>
           ) : (
             <div className="space-y-2">
               {cases.map(c => (
                 <div
-                  key={c.id}
-                  onClick={() => navigate(`/case/${encodeURIComponent(c.id)}`)}
-                  className="bg-white rounded-lg border border-stone-200 p-4 hover:border-sage-400 hover:shadow-md transition cursor-pointer flex items-start justify-between gap-3"
-                >
+  key={c.id}
+  onClick={() => navigate(`/case/${encodeURIComponent(c.id)}`)}
+  className="bg-white rounded-md border border-stone-200 p-4 hover:border-sage-400 hover:shadow-sm transition cursor-pointer flex items-start justify-between gap-3"
+>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-stone-900 truncate">{c.title}</h3>
                     <p className="text-sm text-stone-500 truncate">{c.source}</p>

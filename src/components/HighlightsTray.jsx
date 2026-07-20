@@ -29,22 +29,22 @@ export default function HighlightsTray({ annotations, setAnnotations }) {
   };
 
   if (highlights.length === 0) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-6 text-center">
-        <div>
-          <Highlighter size={40} className="mx-auto text-stone-300 mb-2" />
-          <p className="text-sm text-stone-500 mb-1">No highlights yet</p>
-          <p className="text-xs text-stone-400">Use the Highlighter tool on the PDF. The captured text will appear here with its page number.</p>
-        </div>
+  return (
+    <div className="flex-1 flex items-center justify-center p-8 text-center">
+      <div className="max-w-[240px]">
+        <Highlighter size={36} className="mx-auto text-stone-300 mb-3" strokeWidth={1.5} />
+        <p className="text-sm font-medium text-stone-700 mb-1.5">No highlights yet</p>
+        <p className="text-xs text-stone-500 leading-relaxed">Select the <span className="font-medium text-stone-700">Highlighter</span> tool and drag over any text in the PDF. Captured phrases appear here with their page number.</p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <>
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {highlights.map(h => (
-          <div key={h.key} className="bg-white border border-stone-200 rounded p-2 shadow-sm hover:border-stone-300 group">
+          <div key={h.key} className="bg-white border border-stone-200 rounded-md p-3 hover:border-sage-300 hover:shadow-sm transition group">
             <div className="flex items-start gap-2">
               <div
                 className="w-1 flex-shrink-0 rounded-full self-stretch mt-0.5"
