@@ -445,7 +445,6 @@ function wordAtPoint(pt, textItems) {
       pt.x >= it.x && pt.x <= it.x + it.w &&
       pt.y >= it.y && pt.y <= it.y + it.h
     ) {
-      console.log('CLICKED ITEM:', JSON.stringify(it));
       return it;
     }
   }
