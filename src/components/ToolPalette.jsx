@@ -3,7 +3,7 @@ import { TOOLS, COLORS } from '../lib/constants.js';
 
 export default function ToolPalette({ tool, setTool, color, setColor, strokeWidth, setStrokeWidth }) {
   return (
-    <div className="w-14 bg-white border-r border-stone-200 flex flex-col p-1.5 gap-0.5 overflow-y-auto">
+    <div className="w-14 bg-stone-50 border-r border-stone-200 flex flex-col p-2 gap-1 overflow-y-auto">
       {TOOLS.map(t => {
         const Icon = t.icon;
         return (

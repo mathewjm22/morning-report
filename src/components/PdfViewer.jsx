@@ -87,13 +87,13 @@ const buf = caseEntry.pdfBlob instanceof ArrayBuffer
         strokeWidth={strokeWidth} setStrokeWidth={setStrokeWidth}
       />
 
-      <div className="flex-1 flex flex-col bg-stone-800 overflow-hidden">
+      <div className="flex-1 flex flex-col bg-stone-100 overflow-hidden">
         <div className="bg-stone-900 border-b border-stone-700 px-3 py-1.5 flex items-center justify-between text-stone-300 text-xs">
           <span>Page {currentPage} of {caseEntry.totalPages}</span>
           <div className="flex items-center gap-2">
             <button onClick={() => setZoom(z => Math.max(0.6, z - 0.15))} className="p-1 hover:bg-stone-700 rounded"><ZoomOut size={14} /></button>
             <span className="w-12 text-center">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(z => Math.min(3, z + 0.15))} className="p-1 hover:bg-stone-700 rounded"><ZoomIn size={14} /></button>
+            <button onClick={() => setZoom(z => Math.min(3, z + 0.15))} className="p-1 hover:bg-stone-100 rounded text-stone-600"><ZoomIn size={14} /></button>
           </div>
         </div>
 

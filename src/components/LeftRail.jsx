@@ -22,30 +22,28 @@ export default function LeftRail({ caseEntry, visiblePages, currentPage, gatePag
   }, [pdf]); // eslint-disable-line
 
   return (
-    <div className="w-20 bg-white border-r border-stone-200 overflow-y-auto p-1.5 space-y-1.5">
+    <div className="w-20 bg-stone-50 border-r border-stone-200 overflow-y-auto p-2 space-y-2">
       {visiblePages.map(pn => {
         const inGate = gatePages.includes(pn);
         const active = pn === currentPage;
         return (
           <button
-            key={pn}
-            onClick={() => onJumpToPage(pn)}
-            className={`relative w-full aspect-[3/4] rounded border-2 transition overflow-hidden ${
-              active
-                ? 'border-sage-600 ring-2 ring-blue-300'
-                : inGate
-                ? 'border-blue-300 hover:border-sage-500'
-                : 'border-stone-200 opacity-50 hover:opacity-80'
-            }`}
-          >
+  key={pn}
+  onClick={() => onJumpToPage(pn)}
+  className={`relative w-full aspect-[3/4] rounded border transition overflow-hidden ${
+    active
+      ? 'border-sage-600 ring-2 ring-sage-300 shadow'
+      : 'border-stone-200 hover:border-sage-400 hover:shadow-sm'
+  }`}
+>
             {thumbs[pn] ? (
               <img src={thumbs[pn]} alt={`p${pn}`} className="w-full h-full object-cover" />
             ) : (
               <div className="bg-stone-100 w-full h-full flex items-center justify-center text-stone-400 text-xs">…</div>
             )}
-            <div className="absolute top-0.5 left-1 bg-black/60 text-white text-xs px-1 rounded">
-              p.{pn}
-            </div>
+            <div className="absolute top-1 left-1 bg-stone-900/70 text-white text-xs px-1.5 py-0.5 rounded">
+  {pn}
+</div>
           </button>
         );
       })}

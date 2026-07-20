@@ -123,20 +123,13 @@ useEffect(() => {
 
   return (
     <div
-      className={`relative bg-white shadow-2xl transition ${
-        isFocus ? 'ring-2 ring-sage-500' : 'ring-1 ring-stone-700 opacity-70 hover:opacity-100'
-      }`}
-      style={{ width, height }}
-    >
-      <div className="absolute -left-10 top-2 bg-stone-900 text-white text-xs px-2 py-1 rounded font-mono z-10">
-        {pageNum}
-      </div>
-      {!isFocus && (
-        <div className="absolute -left-10 top-10 bg-stone-700 text-stone-300 text-xs px-1.5 py-0.5 rounded z-10">
-          outside gate
-        </div>
-      )}
-
+  className="relative bg-white shadow-lg transition ring-1 ring-stone-200"
+  style={{ width, height }}
+>
+      <div className="absolute -left-10 top-2 bg-stone-700 text-white text-xs px-2 py-1 rounded font-mono z-10 shadow-sm">
+  {pageNum}
+</div>
+      
       <canvas ref={canvasRef} className="block" />
 
       {/* Zone overlay — only interactive when Select tool is active */}
@@ -204,10 +197,10 @@ onMouseLeave={() => hideZoneMenu()}
 />
 
       {rendering && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/60 pointer-events-none">
-          <span className="text-xs text-stone-500">Rendering page {pageNum}...</span>
-        </div>
-      )}
+  <div className="absolute inset-0 flex items-center justify-center bg-white/80 pointer-events-none">
+    <span className="text-xs text-stone-500">Rendering page {pageNum}...</span>
+  </div>
+)}
     </div>
   );
 }
