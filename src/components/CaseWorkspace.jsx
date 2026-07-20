@@ -37,6 +37,7 @@ export default function CaseWorkspace({ shared }) {
   const [frameworksOpen, setFrameworksOpen] = useState(false);
   const [researchQuery, setResearchQuery] = useState('');
   const [compareElements, setCompareElements] = useState(null); // array of pinned items or null
+  const [ddxView, setDdxView] = useState('list'); // 'list' | 'anatomic' | 'vindicate'
 
   const sendToResearch = (text) => {
   setResearchQuery(text);
@@ -68,6 +69,7 @@ export default function CaseWorkspace({ shared }) {
       setPinned(p.pinned || []);
       setCommittedDdx(p.committedDdx || null);
       setFinalOutcome(p.finalOutcome || null);
+      setDdxView(p.ddxView || 'list');
     }
   });
 }, [caseEntry, shared]);
@@ -76,9 +78,9 @@ export default function CaseWorkspace({ shared }) {
   useEffect(() => {
   if (!caseEntry || shared) return;
   saveProgress(caseEntry.id, {
-    ddx, plan, annotations, pinned, committedDdx, finalOutcome,
+    ddx, plan, annotations, pinned, committedDdx, finalOutcome, ddxView,
   });
-}, [caseEntry, shared, ddx, plan, annotations, pinned, committedDdx, finalOutcome]);
+}, [caseEntry, shared, ddx, plan, annotations, pinned, committedDdx, finalOutcome, ddxView]);
 
   if (loadError) return <ErrorScreen message={loadError} />;
   if (!caseEntry) return <div className="min-h-screen bg-stone-50 flex items-center justify-center text-stone-500">Loading...</div>;
@@ -231,6 +233,8 @@ export default function CaseWorkspace({ shared }) {
     onCommitDdx={handleCommitDdx}
     onUncommitDdx={handleUncommitDdx}
     onOpenReveal={() => setShowRevealModal(true)}
+    ddxView={ddxView}
+    setDdxView={setDdxView}
   />
 )}
   {rightTab === 'highlights' && (
