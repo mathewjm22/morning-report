@@ -152,7 +152,7 @@ const transform = `
   <div className="mt-6 pt-4 border-t border-stone-700">
     <p className="text-xs font-semibold text-stone-300 uppercase tracking-wide mb-2">Reference</p>
     
-      href="https://my-statdx-com.va.proxy.liblynxgateway.com/main"
+      <a href="https://my-statdx-com.va.proxy.liblynxgateway.com/main"
       target="_blank"
       rel="noopener noreferrer"
       className="block w-full px-3 py-2 bg-sage-700 hover:bg-sage-600 rounded text-xs text-white transition flex items-center justify-between group"
