@@ -1,7 +1,7 @@
 
 // The main reading workspace: gate bar on top, PDF center, whiteboard right.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Home, GraduationCap, Share2, Copy, Check } from 'lucide-react';
 import { getCase, loadProgress, saveProgress } from '../lib/storage.js';
@@ -16,6 +16,7 @@ import { Brain } from 'lucide-react';
 import FrameworksDrawer from './FrameworksDrawer.jsx';
 import ResearchTray from './ResearchTray.jsx';
 import CompareView from './CompareView.jsx';
+import WhiteboardCanvas from './WhiteboardCanvas.jsx';
 
 export default function CaseWorkspace({ shared }) {
   const { caseId, shareId } = useParams();
@@ -39,10 +40,20 @@ export default function CaseWorkspace({ shared }) {
   const [compareElements, setCompareElements] = useState(null); // array of pinned items or null
   const [ddxView, setDdxView] = useState('list'); // 'list' | 'anatomic' | 'vindicate'
 
+  const [boardWidth, setBoardWidth] = useState(() => {
+  const saved = parseInt(localStorage.getItem('boardWidth') || '0', 10);
+  return isNaN(saved) ? 0 : Math.min(1400, Math.max(0, saved));
+  });
+  useEffect(() => {
+  localStorage.setItem('boardWidth', String(boardWidth));
+  }, [boardWidth]);
+
+  const [boardContent, setBoardContent] = useState({});
+
   const sendToResearch = (text) => {
   setResearchQuery(text);
   setRightTab('research');
-};
+  };
 
   // Load case
   useEffect(() => {
@@ -59,7 +70,7 @@ export default function CaseWorkspace({ shared }) {
   }, [caseId, shareId, shared]);
 
   // Load progress
-  useEffect(() => {
+useEffect(() => {
   if (!caseEntry || shared) return;
   loadProgress(caseEntry.id).then(p => {
     if (p) {
@@ -70,17 +81,18 @@ export default function CaseWorkspace({ shared }) {
       setCommittedDdx(p.committedDdx || null);
       setFinalOutcome(p.finalOutcome || null);
       setDdxView(p.ddxView || 'list');
+      setBoardContent(p.boardContent || {});
     }
   });
 }, [caseEntry, shared]);
 
   // Save progress
-  useEffect(() => {
+useEffect(() => {
   if (!caseEntry || shared) return;
   saveProgress(caseEntry.id, {
-    ddx, plan, annotations, pinned, committedDdx, finalOutcome, ddxView,
+    ddx, plan, annotations, pinned, committedDdx, finalOutcome, ddxView, boardContent,
   });
-}, [caseEntry, shared, ddx, plan, annotations, pinned, committedDdx, finalOutcome, ddxView]);
+}, [caseEntry, shared, ddx, plan, annotations, pinned, committedDdx, finalOutcome, ddxView, boardContent]);
 
   if (loadError) return <ErrorScreen message={loadError} />;
   if (!caseEntry) return <div className="min-h-screen bg-stone-50 flex items-center justify-center text-stone-500">Loading...</div>;
@@ -179,16 +191,37 @@ export default function CaseWorkspace({ shared }) {
       
       {/* Main columns */}
       <div className="flex-1 flex overflow-hidden">
-        <PdfViewer
-  caseEntry={caseEntry}
-  annotations={annotations}
-  setAnnotations={setAnnotations}
-  onPinElement={pinElement}
-  onOpenLightbox={setLightbox}
-  attendingMode={attendingMode}
-/>
+  <PdfViewer
+    caseEntry={caseEntry}
+    annotations={annotations}
+    setAnnotations={setAnnotations}
+    onPinElement={pinElement}
+    onOpenLightbox={setLightbox}
+    attendingMode={attendingMode}
+  />
 
-        <div className="w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0">
+  {/* Whiteboard area — only rendered when boardWidth > 0 (visible only in the Whiteboard tab) */}
+  {rightTab === 'whiteboard' && boardWidth > 0 && (
+    <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
+      <WhiteboardCanvas
+        content={boardContent}
+        setContent={setBoardContent}
+        width={boardWidth}
+      />
+    </div>
+  )}
+
+  {/* Draggable BOARD handle — only shown on the Whiteboard tab */}
+  {rightTab === 'whiteboard' && (
+    <BoardResizeHandle
+      currentWidth={boardWidth}
+      onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
+      onToggle={() => setBoardWidth(w => w > 0 ? 0 : 600)}
+    />
+  )}
+
+  {/* Right sidebar — DDx + Plan + Highlights + Research + Pinned */}
+  <div className="w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0">
   <div className="flex border-b border-stone-200">
   <button
     onClick={() => setRightTab('whiteboard')}
@@ -316,5 +349,58 @@ function IconButton({ icon: Icon, onClick, disabled, active, label }) {
         {label}
       </span>
     </button>
+  );
+}
+function BoardResizeHandle({ currentWidth, onResize, onToggle }) {
+  const draggingRef = useRef(false);
+  const lastXRef = useRef(0);
+
+  const startDrag = (e) => {
+    draggingRef.current = true;
+    lastXRef.current = e.clientX;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (!draggingRef.current) return;
+      const delta = e.clientX - lastXRef.current;
+      lastXRef.current = e.clientX;
+      if (delta !== 0) onResize(delta);
+    };
+    const handleUp = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [onResize]);
+
+  const collapsed = currentWidth === 0;
+
+  return (
+    <div
+      onMouseDown={startDrag}
+      onDoubleClick={onToggle}
+      className={`flex-shrink-0 flex items-center justify-center relative group transition-colors cursor-col-resize ${
+        collapsed ? 'bg-sage-600 hover:bg-sage-700' : 'bg-stone-200 hover:bg-sage-400'
+      }`}
+      style={{ width: collapsed ? 24 : 6 }}
+      title={collapsed ? 'Drag left to open Board — double-click for default' : 'Drag to resize · Double-click to close'}
+    >
+      {collapsed && (
+        <div className="text-white font-bold text-xs tracking-widest select-none pointer-events-none"
+             style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+          BOARD
+        </div>
+      )}
+    </div>
   );
 }
