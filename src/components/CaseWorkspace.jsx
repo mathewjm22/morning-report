@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Home, GraduationCap, Share2, Copy, Check } from 'lucide-react';
+import { Home, GraduationCap, Share2, Copy, Check, ChevronRight } from 'lucide-react';
 import { getCase, loadProgress, saveProgress } from '../lib/storage.js';
 import { loadSharedCase, saveCaseShare } from '../lib/api.js';
 import PdfViewer from './PdfViewer.jsx';
@@ -385,22 +385,50 @@ function BoardResizeHandle({ currentWidth, onResize, onToggle }) {
 
   const collapsed = currentWidth === 0;
 
-  return (
-    <div
-      onMouseDown={startDrag}
-      onDoubleClick={onToggle}
-      className={`flex-shrink-0 flex items-center justify-center relative group transition-colors cursor-col-resize ${
-        collapsed ? 'bg-sage-600 hover:bg-sage-700' : 'bg-stone-200 hover:bg-sage-400'
-      }`}
-      style={{ width: collapsed ? 24 : 6 }}
-      title={collapsed ? 'Drag left to open Board — double-click for default' : 'Drag to resize · Double-click to close'}
-    >
-      {collapsed && (
+  if (collapsed) {
+    return (
+      <div
+        onMouseDown={startDrag}
+        onDoubleClick={onToggle}
+        className="flex-shrink-0 flex items-center justify-center relative bg-sage-600 hover:bg-sage-700 cursor-col-resize transition"
+        style={{ width: 24 }}
+        title="Drag left to open the board"
+      >
         <div className="text-white font-bold text-xs tracking-widest select-none pointer-events-none"
              style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
           BOARD
         </div>
-      )}
+      </div>
+    );
+  }
+
+  // Expanded state: visible sage bar with a collapse chevron button and drag zone
+  return (
+    <div className="flex-shrink-0 flex flex-col relative bg-sage-100 hover:bg-sage-200 transition" style={{ width: 12 }}>
+      {/* Collapse button at top */}
+      <button
+        onClick={onToggle}
+        className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-white hover:bg-sage-50 border border-sage-400 rounded p-0.5 shadow-sm"
+        title="Close the board"
+      >
+        <ChevronRight size={12} className="text-sage-700" />
+      </button>
+      {/* Drag handle */}
+      <div
+        onMouseDown={startDrag}
+        onDoubleClick={onToggle}
+        className="flex-1 cursor-col-resize"
+        title="Drag to resize · Double-click to close"
+      >
+        {/* Vertical grip lines for affordance */}
+        <div className="h-full flex items-center justify-center">
+          <div className="flex flex-col gap-1">
+            <div className="w-0.5 h-1 bg-sage-500 rounded-full" />
+            <div className="w-0.5 h-1 bg-sage-500 rounded-full" />
+            <div className="w-0.5 h-1 bg-sage-500 rounded-full" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
