@@ -222,8 +222,11 @@ export default function AnnotationLayer({
     return () => window.removeEventListener('keydown', onKey);
   }, [selectedIdx, strokes]); // eslint-disable-line
 
-  const cursor = isEraser ? 'cell' : (isCreationTool && !dragging) ? 'crosshair' : 'default';
-  const pointerEvents = (isCreationTool || isEraser || strokes.length > 0) && !isRegion ? 'auto' : 'none';
+const cursor = isEraser ? 'cell' : (isCreationTool && !dragging) ? 'crosshair' : 'default';
+// Only capture pointer events when a tool that needs it is active.
+// Select / Region tools should NOT be blocked by the annotation layer,
+// even if strokes are present — otherwise you can't hover figures once you've drawn.
+const pointerEvents = (isCreationTool || isEraser) && !isRegion ? 'auto' : 'none';
 
   return (
   <>
