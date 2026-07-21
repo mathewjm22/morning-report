@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { ZoomIn, ZoomOut, ChevronLeft } from 'lucide-react';
 import { loadPdf } from '../lib/pdfLoader.js';
 import PdfPage from './PdfPage.jsx';
 import ToolPalette from './ToolPalette.jsx';
@@ -27,15 +27,32 @@ export default function PdfViewer({
   );
 
   const [leftRailWidth, setLeftRailWidth] = useState(() => {
-  // Persist the user's preferred width across sessions
   const saved = localStorage.getItem('leftRailWidth');
   const parsed = saved ? parseInt(saved, 10) : 80;
-  return isNaN(parsed) ? 80 : clamp(parsed, 60, 400);
+  return isNaN(parsed) ? 80 : parsed < 0 ? 0 : Math.min(400, parsed);
+});
+// Remember last visible width so "show" restores to what the user had before
+const [lastVisibleWidth, setLastVisibleWidth] = useState(() => {
+  const saved = localStorage.getItem('leftRailWidthPrev');
+  const parsed = saved ? parseInt(saved, 10) : 80;
+  return isNaN(parsed) ? 80 : Math.min(400, Math.max(60, parsed));
 });
 
 useEffect(() => {
   localStorage.setItem('leftRailWidth', String(leftRailWidth));
+  if (leftRailWidth > 0) {
+    localStorage.setItem('leftRailWidthPrev', String(leftRailWidth));
+    setLastVisibleWidth(leftRailWidth);
+  }
 }, [leftRailWidth]);
+
+const toggleLeftRail = () => {
+  if (leftRailWidth === 0) {
+    setLeftRailWidth(lastVisibleWidth);
+  } else {
+    setLeftRailWidth(0);
+  }
+};
 
   useEffect(() => {
     setCurrentPage(contentStart);
@@ -83,29 +100,30 @@ const buf = caseEntry.pdfBlob instanceof ArrayBuffer
 
   return (
   <div className="flex-1 flex overflow-hidden">
-    <div
-      className="flex flex-shrink-0"
-      style={{ height: '100%' }}
-    >
-      <LeftRail
-        caseEntry={caseEntry}
-        visiblePages={visiblePages}
-        currentPage={currentPage}
-        gatePages={visiblePages}
-        onJumpToPage={jumpToPage}
-        pdf={pdf}
-        width={leftRailWidth}
-      />
-
-      <ResizeHandle
-        onResize={(delta) =>
-          setLeftRailWidth(width =>
-            clamp(width + delta, 60, 400)
-          )
-        }
-        onDoubleClick={() => setLeftRailWidth(80)}
-      />
-    </div>
+    <div className="flex flex-shrink-0" style={{ height: '100%' }}>
+  {leftRailWidth > 0 && (
+    <LeftRail
+      caseEntry={caseEntry}
+      visiblePages={visiblePages}
+      currentPage={currentPage}
+      gatePages={visiblePages}
+      onJumpToPage={jumpToPage}
+      pdf={pdf}
+      width={leftRailWidth}
+    />
+  )}
+  <ResizeHandle
+    collapsed={leftRailWidth === 0}
+    onResize={(delta) => setLeftRailWidth(w => {
+      const next = w + delta;
+      // Allow drag to close: if dragged small enough, snap to 0
+      if (next < 40) return 0;
+      return clamp(next, 60, 400);
+    })}
+    onDoubleClick={() => setLeftRailWidth(80)}
+    onToggle={toggleLeftRail}
+  />
+</div>
 
     <ToolPalette
       tool={tool}
@@ -197,12 +215,15 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
-function ResizeHandle({ onResize, onDoubleClick }) {
+function ResizeHandle({ onResize, onDoubleClick, onToggle, collapsed }) {
   const draggingRef = useRef(false);
+  const dragMovedRef = useRef(false);
   const lastXRef = useRef(0);
 
   const startDrag = (e) => {
+    if (collapsed) return; // don't allow drag when collapsed; must toggle first
     draggingRef.current = true;
+    dragMovedRef.current = false;
     lastXRef.current = e.clientX;
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
@@ -213,7 +234,10 @@ function ResizeHandle({ onResize, onDoubleClick }) {
       if (!draggingRef.current) return;
       const delta = e.clientX - lastXRef.current;
       lastXRef.current = e.clientX;
-      if (delta !== 0) onResize(delta);
+      if (delta !== 0) {
+        dragMovedRef.current = true;
+        onResize(delta);
+      }
     };
     const handleUp = () => {
       if (!draggingRef.current) return;
@@ -229,15 +253,44 @@ function ResizeHandle({ onResize, onDoubleClick }) {
     };
   }, [onResize]);
 
+  if (collapsed) {
+    // Small vertical strip with a "PAGES" label — click to expand back
+    return (
+      <button
+        onClick={onToggle}
+        className="flex-shrink-0 flex items-center justify-center bg-sage-600 hover:bg-sage-700 text-white transition"
+        style={{ width: 22 }}
+        title="Show page thumbnails"
+      >
+        <span
+          className="font-bold text-xs tracking-widest select-none"
+          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+        >
+          PAGES
+        </span>
+      </button>
+    );
+  }
+
   return (
-    <div
-      onMouseDown={startDrag}
-      onDoubleClick={onDoubleClick}
-      className="w-1 hover:w-1.5 bg-stone-200 hover:bg-sage-400 cursor-col-resize transition-all flex-shrink-0 relative group"
-      title="Drag to resize · Double-click to reset"
-    >
-      {/* Wider invisible hitbox so it's easy to grab */}
-      <div className="absolute inset-y-0 -left-1 -right-1" />
+    <div className="flex-shrink-0 relative group flex flex-col">
+      {/* Toggle button (top) */}
+      <button
+        onClick={onToggle}
+        className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-white border border-stone-300 hover:border-sage-500 rounded p-0.5 shadow-sm opacity-0 group-hover:opacity-100 transition"
+        title="Hide page thumbnails"
+      >
+        <ChevronLeft size={12} className="text-stone-600" />
+      </button>
+      {/* Drag handle */}
+      <div
+        onMouseDown={startDrag}
+        onDoubleClick={onDoubleClick}
+        className="w-1 hover:w-1.5 bg-stone-200 hover:bg-sage-400 cursor-col-resize transition-all flex-1"
+        title="Drag to resize · Double-click to reset · Drag left edge to close"
+      >
+        <div className="absolute inset-y-0 -left-1 -right-1" />
+      </div>
     </div>
   );
 }
