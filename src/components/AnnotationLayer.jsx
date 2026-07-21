@@ -49,6 +49,14 @@ export default function AnnotationLayer({
     return false;
   };
 
+  // Returns true if `pt` is inside the center-grip pill for line-style strokes
+const centerGripHit = (s, pt) => {
+  if (!s.start || !s.end || s.type === 'circle' || s.type === 'note') return false;
+  const mx = (s.start.x + s.end.x) / 2;
+  const my = (s.start.y + s.end.y) / 2;
+  return pt.x >= mx - 16 && pt.x <= mx + 16 && pt.y >= my - 11 && pt.y <= my + 11;
+};
+
   const handleMouseDown = (e) => {
     const pt = getPt(e);
 
@@ -58,26 +66,45 @@ export default function AnnotationLayer({
     }
 
     // Check for handle drag on an existing stroke
-    for (let i = strokes.length - 1; i >= 0; i--) {
-      const s = strokes[i];
-      if (s.start && s.end && ['arrow', 'ruler', 'caliper', 'circle'].includes(s.type)) {
-        if (Math.hypot(s.start.x - pt.x, s.start.y - pt.y) < HANDLE_R + 4) {
-          setDragging({ strokeIdx: i, handle: 'start', origPt: pt, origStroke: s });
-          setSelectedIdx(i);
-          return;
-        }
-        if (Math.hypot(s.end.x - pt.x, s.end.y - pt.y) < HANDLE_R + 4) {
-          setDragging({ strokeIdx: i, handle: 'end', origPt: pt, origStroke: s });
-          setSelectedIdx(i);
-          return;
-        }
-      }
-      if (strokeHit(s, pt)) {
-        setDragging({ strokeIdx: i, handle: 'whole', origPt: pt, origStroke: s });
-        setSelectedIdx(i);
-        return;
-      }
+    // Check for handle drag on an existing stroke.
+// Selected stroke gets priority — its handles are drawn on top and should
+// intercept clicks even if another stroke is beneath.
+const selectedFirst = selectedIdx !== null
+  ? [selectedIdx, ...strokes.map((_, i) => i).filter(i => i !== selectedIdx).reverse()]
+  : strokes.map((_, i) => i).reverse();
+
+for (const i of selectedFirst) {
+  const s = strokes[i];
+  if (!s) continue;
+  const isSelected = i === selectedIdx;
+
+  if (s.start && s.end && ['arrow', 'ruler', 'caliper', 'circle'].includes(s.type)) {
+    // Endpoint drag — bigger hitbox when selected (the visible handles are larger)
+    const endpointHitR = isSelected ? HANDLE_R + 8 : HANDLE_R + 4;
+    if (Math.hypot(s.start.x - pt.x, s.start.y - pt.y) < endpointHitR) {
+      setDragging({ strokeIdx: i, handle: 'start', origPt: pt, origStroke: s });
+      setSelectedIdx(i);
+      return;
     }
+    if (Math.hypot(s.end.x - pt.x, s.end.y - pt.y) < endpointHitR) {
+      setDragging({ strokeIdx: i, handle: 'end', origPt: pt, origStroke: s });
+      setSelectedIdx(i);
+      return;
+    }
+    // Center grip (only shown when selected) — always intercepts translation
+    if (isSelected && centerGripHit(s, pt)) {
+      setDragging({ strokeIdx: i, handle: 'whole', origPt: pt, origStroke: s });
+      return;
+    }
+  }
+
+  // Fallback: click on the stroke body itself
+  if (strokeHit(s, pt)) {
+    setDragging({ strokeIdx: i, handle: 'whole', origPt: pt, origStroke: s });
+    setSelectedIdx(i);
+    return;
+  }
+}
 
     if (!isCreationTool) { setSelectedIdx(null); return; }
 
@@ -384,7 +411,7 @@ function StrokeRenderer({ stroke: s, selected, preview, onEditNote }) {
   return null;
 }
 
-function SelectionHandles({ stroke: s, onDelete }) {
+function SelectionHandles({ stroke: s }) {
   if (s.type === 'pen' || s.type === 'highlight') return null;
 
   if (s.type === 'note') {
@@ -396,13 +423,33 @@ function SelectionHandles({ stroke: s, onDelete }) {
     );
   }
 
-  const pts = [s.start, s.end].filter(Boolean);
+  if (!s.start || !s.end) return null;
+
+  // Center grip — draggable middle to translate the whole annotation
+  const mx = (s.start.x + s.end.x) / 2;
+  const my = (s.start.y + s.end.y) / 2;
+
   return (
-    <g>
-      {pts.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={HANDLE_R + 2}
-          fill="white" stroke="#3b82f6" strokeWidth="2" style={{ cursor: 'grab' }} />
+    <g style={{ pointerEvents: 'none' }}>
+      {/* Endpoint handles (blue circles) — resize */}
+      {[s.start, s.end].map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r={HANDLE_R + 4}
+            fill="white" stroke="#3b82f6" strokeWidth="2.5" />
+          <circle cx={p.x} cy={p.y} r={2} fill="#3b82f6" />
+        </g>
       ))}
+
+      {/* Center grip (sage pill with move icon) — translate */}
+      <g transform={`translate(${mx}, ${my})`}>
+        <rect x={-14} y={-9} width={28} height={18} rx={9}
+          fill="#5a865e" stroke="white" strokeWidth="2" />
+        {/* Move icon: crosshair-style arrows */}
+        <path
+          d="M 0 -5 L 0 5 M -5 0 L 5 0 M -3 -3 L 0 -6 L 3 -3 M -3 3 L 0 6 L 3 3 M -3 -3 L -6 0 L -3 3 M 3 -3 L 6 0 L 3 3"
+          fill="none" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
+        />
+      </g>
     </g>
   );
 }
