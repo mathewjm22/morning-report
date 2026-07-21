@@ -67,7 +67,7 @@ const ROW_DIVIDER_SCOPES = {
 const FISHBONES = [
   {
     id: 'cbc', cell: 'labs',
-    relX: 0.10, relY: 0.28, relW: 0.32,
+    relX: 0.05, relY: 0.30, relW: 0.28,
     slots: [
       { id: 'wbc', label: 'WBC', dx: 0.00, dy: 0.50 },
       { id: 'hgb', label: 'Hgb', dx: 0.50, dy: 0.15 },
@@ -77,15 +77,15 @@ const FISHBONES = [
   },
   {
     id: 'bmp', cell: 'labs',
-    relX: 0.48, relY: 0.28, relW: 0.48,
+    relX: 0.42, relY: 0.30, relW: 0.52,
     slots: [
-      { id: 'na',  label: 'Na',   dx: 0.00, dy: 0.30 },
-      { id: 'k',   label: 'K',    dx: 0.00, dy: 0.70 },
-      { id: 'cl',  label: 'Cl',   dx: 0.30, dy: 0.30 },
-      { id: 'co2', label: 'CO₂',  dx: 0.30, dy: 0.70 },
-      { id: 'bun', label: 'BUN',  dx: 0.60, dy: 0.30 },
-      { id: 'cr',  label: 'Cr',   dx: 0.60, dy: 0.70 },
-      { id: 'glu', label: 'Glu',  dx: 0.90, dy: 0.50 },
+      { id: 'na',  label: 'Na',   dx: 0.05, dy: 0.30 },
+      { id: 'k',   label: 'K',    dx: 0.05, dy: 0.70 },
+      { id: 'cl',  label: 'Cl',   dx: 0.32, dy: 0.30 },
+      { id: 'co2', label: 'CO₂',  dx: 0.32, dy: 0.70 },
+      { id: 'bun', label: 'BUN',  dx: 0.58, dy: 0.30 },
+      { id: 'cr',  label: 'Cr',   dx: 0.58, dy: 0.70 },
+      { id: 'glu', label: 'Glu',  dx: 0.88, dy: 0.50 },
     ],
   },
 ];
@@ -520,22 +520,22 @@ function Fishbone({ fb, x, y, w, h, values, onChange }) {
             <line x1={w * 0.5} y1={h * 0.15} x2={w * 0.5} y2={h * 0.85} stroke="#78716c" strokeWidth={1.5} />
           </>
         ) : (
-          // BMP pattern:
-          //   Na │ Cl │ BUN \
-          //   ───┼────┼─────── Glu
-          //   K  │CO₂│  Cr /
-          <>
-            {/* Horizontal center line */}
-            <line x1={0} y1={h * 0.5} x2={w * 0.75} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
-            {/* Vertical dividers between cell pairs */}
-            <line x1={w * 0.15} y1={h * 0.2} x2={w * 0.15} y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
-            <line x1={w * 0.45} y1={h * 0.2} x2={w * 0.45} y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
-            <line x1={w * 0.75} y1={h * 0.2} x2={w * 0.75} y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
-            {/* Diagonal lines from BUN/Cr converging to Glu */}
-            <line x1={w * 0.75} y1={h * 0.2} x2={w * 0.9} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
-            <line x1={w * 0.75} y1={h * 0.8} x2={w * 0.9} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
-          </>
-        )}
+  // BMP pattern:
+  //   Na │ Cl │ BUN \
+  //   ───┼────┼─────── Glu
+  //   K  │CO₂│  Cr /
+  <>
+    {/* Horizontal center line */}
+    <line x1={w * 0.05} y1={h * 0.5} x2={w * 0.75} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
+    {/* Vertical dividers between cell pairs */}
+    <line x1={w * 0.18} y1={h * 0.2} x2={w * 0.18} y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
+    <line x1={w * 0.45} y1={h * 0.2} x2={w * 0.45} y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
+    <line x1={w * 0.72} y1={h * 0.2} x2={w * 0.72} y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
+    {/* Diagonal lines from BUN/Cr converging to Glu */}
+    <line x1={w * 0.72} y1={h * 0.2} x2={w * 0.88} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
+    <line x1={w * 0.72} y1={h * 0.8} x2={w * 0.88} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
+  </>
+)}
       </svg>
       {fb.slots.map(slot => {
         const key = `${fb.id}.${slot.id}`;

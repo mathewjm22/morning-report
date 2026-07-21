@@ -59,16 +59,25 @@ function DdxSection({
         </div>
       )}
 
-      {currentView.id === 'list' ? (
-        <ListView ddx={ddx} setDdx={setDdx} committedDdx={committedDdx} />
-      ) : (
-        <CategoryView
-          ddx={ddx}
-          setDdx={setDdx}
-          committedDdx={committedDdx}
-          categories={currentView.categories}
-        />
-      )}
+      {currentView.id === 'list' && (
+  <ListView ddx={ddx} setDdx={setDdx} committedDdx={committedDdx} />
+)}
+{currentView.id === 'anatomic' && (
+  <CategoryView
+    ddx={ddx}
+    setDdx={setDdx}
+    committedDdx={committedDdx}
+    categories={currentView.categories}
+  />
+)}
+{currentView.id === 'vindicate' && (
+  <HorizontalMnemonicView
+    ddx={ddx}
+    setDdx={setDdx}
+    committedDdx={committedDdx}
+    categories={currentView.categories}
+  />
+)}
 
       <div className="px-3 pb-3">
         {!locked && ddx.length > 0 && (
@@ -410,6 +419,173 @@ function CategoryGroup({
             </div>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+function HorizontalMnemonicView({ ddx, setDdx, committedDdx, categories }) {
+  const [dragId, setDragId] = useState(null);
+  const [dragOverCat, setDragOverCat] = useState(null);
+  const [drafts, setDrafts] = useState({}); // per-category input state
+  const locked = !!committedDdx;
+  const displayList = locked ? committedDdx : ddx;
+
+  const grouped = {};
+  for (const cat of categories) grouped[cat.id] = [];
+  const unassigned = [];
+  for (const item of displayList) {
+    if (item.category && grouped[item.category]) grouped[item.category].push(item);
+    else unassigned.push(item);
+  }
+
+  const updateDdx = (id, field, val) => {
+    if (locked) return;
+    setDdx(ddx.map(d => d.id === id ? { ...d, [field]: val } : d));
+  };
+  const removeDdx = (id) => { if (!locked) setDdx(ddx.filter(d => d.id !== id)); };
+
+  const addToCategory = (catId) => {
+    const name = (drafts[catId] || '').trim();
+    if (!name) return;
+    setDdx([...ddx, { id: Date.now() + Math.random(), name, notes: '', category: catId }]);
+    setDrafts({ ...drafts, [catId]: '' });
+  };
+
+  const handleDragStart = (id) => { if (!locked) setDragId(id); };
+  const handleDragOver = (e, catId) => {
+    if (locked || dragId === null) return;
+    e.preventDefault();
+    setDragOverCat(catId);
+  };
+  const handleDrop = (e, catId) => {
+    if (locked || dragId === null) return;
+    e.preventDefault();
+    const newCat = catId === '__unassigned__' ? null : catId;
+    setDdx(ddx.map(d => d.id === dragId ? { ...d, category: newCat } : d));
+    setDragId(null);
+    setDragOverCat(null);
+  };
+
+  return (
+    <div className="px-2 py-3">
+      {/* Horizontal grid of letter columns */}
+      <div className="grid" style={{ gridTemplateColumns: `repeat(${categories.length}, minmax(0, 1fr))`, gap: 4 }}>
+        {categories.map(cat => {
+          const items = grouped[cat.id] || [];
+          const isDragOver = dragOverCat === cat.id;
+          return (
+            <div
+              key={cat.id}
+              onDragOver={(e) => handleDragOver(e, cat.id)}
+              onDragLeave={() => setDragOverCat(null)}
+              onDrop={(e) => handleDrop(e, cat.id)}
+              className={`border rounded transition min-h-[120px] ${
+                isDragOver ? 'border-sage-500 bg-sage-50' : 'border-stone-200 bg-white'
+              }`}
+            >
+              {/* Big letter header */}
+              <div className="text-center py-1 border-b border-stone-200 bg-sage-100">
+                <span className="text-base font-bold text-sage-800" title={cat.label}>
+                  {cat.letter}
+                </span>
+              </div>
+              {/* Items */}
+              <div className="p-1 space-y-1">
+                {items.map(item => (
+                  <div
+                    key={item.id}
+                    draggable={!locked}
+                    onDragStart={() => handleDragStart(item.id)}
+                    onDragEnd={() => { setDragId(null); setDragOverCat(null); }}
+                    className="text-xs bg-sage-50 border border-sage-200 rounded p-1 cursor-move hover:border-sage-400 transition group relative"
+                    title={item.name}
+                  >
+                    <input
+                      value={item.name}
+                      onChange={e => updateDdx(item.id, 'name', e.target.value)}
+                      readOnly={locked}
+                      className="w-full bg-transparent focus:outline-none min-w-0"
+                    />
+                    {!locked && (
+                      <button
+                        onClick={() => removeDdx(item.id)}
+                        className="absolute -top-1 -right-1 bg-white border border-stone-300 rounded-full w-4 h-4 flex items-center justify-center text-stone-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition text-xs"
+                        title="Remove"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {items.length === 0 && !isDragOver && (
+                  <p className="text-xs text-stone-300 italic text-center py-2">—</p>
+                )}
+                {!locked && (
+                  <input
+                    value={drafts[cat.id] || ''}
+                    onChange={e => setDrafts({ ...drafts, [cat.id]: e.target.value })}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') { e.preventDefault(); addToCategory(cat.id); }
+                    }}
+                    placeholder="+ add"
+                    className="w-full text-xs border border-dashed border-sage-300 rounded p-1 bg-white focus:border-sage-500 focus:bg-sage-50/30 focus:outline-none placeholder-stone-400 min-w-0"
+                  />
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Category legend below columns */}
+      <div className="mt-3 grid text-xs text-stone-500" style={{ gridTemplateColumns: `repeat(${categories.length}, minmax(0, 1fr))`, gap: 4 }}>
+        {categories.map(cat => (
+          <div key={cat.id} className="text-center leading-tight px-0.5" title={cat.label}>
+            {cat.label}
+          </div>
+        ))}
+      </div>
+
+      {/* Unassigned bin (only if items exist) */}
+      {unassigned.length > 0 && (
+        <div
+          onDragOver={(e) => handleDragOver(e, '__unassigned__')}
+          onDragLeave={() => setDragOverCat(null)}
+          onDrop={(e) => handleDrop(e, '__unassigned__')}
+          className={`mt-4 border-2 rounded p-2 transition ${
+            dragOverCat === '__unassigned__' ? 'border-sage-500 bg-sage-50' : 'border-amber-300 bg-amber-50/50'
+          }`}
+        >
+          <p className="text-xs font-bold text-amber-800 uppercase mb-2">Unassigned — drag to a letter</p>
+          <div className="flex flex-wrap gap-1">
+            {unassigned.map(item => (
+              <div
+                key={item.id}
+                draggable={!locked}
+                onDragStart={() => handleDragStart(item.id)}
+                onDragEnd={() => { setDragId(null); setDragOverCat(null); }}
+                className="text-xs bg-white border border-stone-300 rounded px-2 py-1 cursor-move hover:border-sage-400 group relative"
+              >
+                {item.name}
+                {!locked && (
+                  <button
+                    onClick={() => removeDdx(item.id)}
+                    className="ml-1 text-stone-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {displayList.length === 0 && (
+        <p className="text-xs text-stone-500 italic mt-3 text-center">
+          Add a diagnosis under any letter, or add without a category and drag it later.
+        </p>
       )}
     </div>
   );
