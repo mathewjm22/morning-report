@@ -78,6 +78,13 @@ useEffect(() => {
   const width = viewport?.width || 800;
   const height = viewport?.height || 1000;
 
+  // Render smaller zones on top so they win hover conflicts with larger ones
+  const sortedZones = viewport && zones
+    ? [...zones]
+        .map((z, origIdx) => ({ zone: z, origIdx, area: z.bbox.w * z.bbox.h }))
+        .sort((a, b) => b.area - a.area)
+    : [];
+
   const handlePinZone = async (zone) => {
   // Low-res thumbnail for the pinned tray display
   const thumbCnv = document.createElement('canvas');
@@ -149,65 +156,63 @@ useEffect(() => {
 
   return (
     <div
-  className="relative bg-white shadow-lg transition ring-1 ring-stone-200"
-  style={{ width, height }}
->
+      className="relative bg-white shadow-lg transition ring-1 ring-stone-200"
+      style={{ width, height }}
+    >
       <div className="absolute -left-10 top-2 bg-stone-700 text-white text-xs px-2 py-1 rounded font-mono z-10 shadow-sm">
-  {pageNum}
-</div>
-      
+        {pageNum}
+      </div>
+
       <canvas ref={canvasRef} className="block" />
 
       {/* Zone overlay — only interactive when Select tool is active */}
-      {viewport && zones && zones.map((zone, i) => {
-  const hovered = hoveredZoneIdx === i;
-  return (
-    <div
-      key={i}
-onMouseEnter={() => isSelect && showZoneMenu(i)}
-onMouseLeave={() => hideZoneMenu()}
-      className={`absolute pointer-events-${isSelect ? 'auto' : 'none'} transition ${
-        isSelect && hovered ? 'ring-4 ring-sage-500 bg-sage-500/10' : ''
-      }`}
-      style={{
-        left: zone.bbox.x,
-        top: zone.bbox.y,
-        width: zone.bbox.w,
-        height: zone.bbox.h,
-        cursor: isSelect ? 'pointer' : 'default',
-      }}
-    >
-      {isSelect && hovered && (
-        <>
-          {/* Invisible bridge — extends hover area upward to the buttons
-              so moving between zone and buttons doesn't lose the hover */}
+      {sortedZones.map(({ zone, origIdx: i }) => {
+        const hovered = hoveredZoneIdx === i;
+        return (
           <div
-            className="absolute left-0 right-0"
-            style={{ top: -40, height: 40 }}
-          />
-          {/* Button popup — sits flush against the top edge of the zone */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-lg border border-stone-200 px-1.5 py-1 flex items-center gap-1 whitespace-nowrap"
-            style={{ top: -36 }}
+            key={i}
+            onMouseEnter={() => isSelect && showZoneMenu(i)}
+            onMouseLeave={() => hideZoneMenu()}
+            className={`absolute pointer-events-${isSelect ? 'auto' : 'none'} transition ${
+              isSelect && hovered ? 'ring-4 ring-sage-500 bg-sage-500/10' : ''
+            }`}
+            style={{
+              left: zone.bbox.x,
+              top: zone.bbox.y,
+              width: zone.bbox.w,
+              height: zone.bbox.h,
+              cursor: isSelect ? 'pointer' : 'default',
+            }}
           >
-            <button
-              onClick={() => handleOpenZone(zone)}
-              className="text-xs bg-sage-600 hover:bg-sage-700 text-white px-2.5 py-1 rounded flex items-center gap-1"
-            >
-              <Maximize2 size={11} /> Open
-            </button>
-            <button
-              onClick={() => handlePinZone(zone)}
-              className="text-xs bg-white border border-stone-300 hover:bg-stone-50 text-stone-700 px-2.5 py-1 rounded flex items-center gap-1"
-            >
-              <Plus size={11} /> Pin
-            </button>
+            {isSelect && hovered && (
+              <div
+                className="absolute left-1/2 -translate-x-1/2"
+                style={{ top: -44, zIndex: 50 }}
+                onMouseEnter={() => showZoneMenu(i)}
+                onMouseLeave={hideZoneMenu}
+              >
+                {/* Invisible bridge (the space between zone edge and popup) */}
+                <div style={{ height: 8, width: '100%' }} />
+                {/* Popup */}
+                <div className="bg-white rounded-lg shadow-lg border border-stone-200 px-1.5 py-1 flex items-center gap-1 whitespace-nowrap">
+                  <button
+                    onClick={() => handleOpenZone(zone)}
+                    className="text-xs bg-sage-600 hover:bg-sage-700 text-white px-2.5 py-1 rounded flex items-center gap-1"
+                  >
+                    <Maximize2 size={11} /> Open
+                  </button>
+                  <button
+                    onClick={() => handlePinZone(zone)}
+                    className="text-xs bg-white border border-stone-300 hover:bg-stone-50 text-stone-700 px-2.5 py-1 rounded flex items-center gap-1"
+                  >
+                    <Plus size={11} /> Pin
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </>
-      )}
-    </div>
-  );
-})}
+        );
+      })}
 {/* Manual region-selection overlay */}
 {isRegion && (
   <RegionSelector
