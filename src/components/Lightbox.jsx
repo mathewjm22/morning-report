@@ -1,7 +1,7 @@
 
 
 import { useState, useEffect } from 'react';
-import { X, ZoomIn, ZoomOut, Undo2, Trash2, RotateCw, RotateCcw, FlipHorizontal2, FlipVertical2 } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, Undo2, Trash2, RotateCw, RotateCcw, FlipHorizontal2, FlipVertical2, ExternalLink } from 'lucide-react';
 import { TOOLS, COLORS } from '../lib/constants.js';
 import AnnotationLayer from './AnnotationLayer.jsx';
 
@@ -137,18 +137,39 @@ const transform = `
 
         {/* Info sidebar */}
         <div className="w-60 bg-stone-800 border-l border-stone-700 p-4 text-white text-sm overflow-y-auto">
-          <h3 className="font-semibold mb-2">Annotations ({strokes.length})</h3>
-          <div className="space-y-1">
-            {strokes.map((s, i) => (
-              <div key={i} className="text-xs bg-stone-700/50 px-2 py-1 rounded flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
-                <span className="capitalize text-stone-300">{s.type}</span>
-              </div>
-            ))}
-            {strokes.length === 0 && <p className="text-xs text-stone-500 italic">Draw on the image.</p>}
-          </div>
-          <div className="mt-6 p-3 bg-sage-900/30 border border-sage-800 rounded">
-            <p className="text-xs font-semibold text-sage-200 mb-1">EKG reference</p>
+  <h3 className="font-semibold mb-2">Annotations ({strokes.length})</h3>
+  <div className="space-y-1">
+    {strokes.map((s, i) => (
+      <div key={i} className="text-xs bg-stone-700/50 px-2 py-1 rounded flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+        <span className="capitalize text-stone-300">{s.type}</span>
+      </div>
+    ))}
+    {strokes.length === 0 && <p className="text-xs text-stone-500 italic">Draw on the image.</p>}
+  </div>
+
+  {/* Imaging reference lookup */}
+  <div className="mt-6 pt-4 border-t border-stone-700">
+    <p className="text-xs font-semibold text-stone-300 uppercase tracking-wide mb-2">Reference</p>
+    
+      href="https://my-statdx-com.va.proxy.liblynxgateway.com/main"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block w-full px-3 py-2 bg-sage-700 hover:bg-sage-600 rounded text-xs text-white transition flex items-center justify-between group"
+    >
+      <span className="flex items-center gap-2">
+        <span className="font-semibold">StatDx</span>
+        <span className="text-sage-200 text-xs">Radiology reference</span>
+      </span>
+      <ExternalLink size={12} className="text-sage-200 group-hover:text-white" />
+    </a>
+    <p className="text-xs text-stone-500 mt-1.5 leading-tight">
+      Look up imaging findings, differential diagnoses, and reporting templates.
+    </p>
+  </div>
+
+  <div className="mt-6 p-3 bg-sage-900/30 border border-sage-800 rounded">
+    <p className="text-xs font-semibold text-sage-200 mb-1">EKG reference</p>
             <p className="text-xs text-sage-300 leading-relaxed">
               25 mm/s, 10 mm/mV<br/>
               1 small box = 40 ms<br/>
