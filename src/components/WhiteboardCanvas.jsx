@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Type, Pencil, Eraser, Undo2, Trash2, ChevronsUp, ChevronsDown, X } from 'lucide-react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
+import { Type, Pencil, Eraser, Undo2, Trash2 } from 'lucide-react';
 
 const COLORS = ['#1f2937', '#dc2626', '#2563eb', '#059669'];
 const FONT_SIZES = [
@@ -8,84 +8,155 @@ const FONT_SIZES = [
   { id: 'lg', label: 'L', px: 22 },
 ];
 
-// Fixed template layout — designed to match the drawn morning-report whiteboard.
-// Cells use fractional coordinates (0-1) so they scale with the canvas width.
-const TEMPLATE = {
-  cells: [
-    { id: 'cc',       label: 'CC',              x: 0.00, y: 0.00, w: 0.44, h: 0.10 },
-    { id: 'hpi',      label: 'HPI',             x: 0.00, y: 0.10, w: 0.44, h: 0.40 },
-    { id: 'pmh',      label: 'PMH',             x: 0.00, y: 0.50, w: 0.22, h: 0.50 },
-    { id: 'meds',     label: 'Meds',            x: 0.00, y: 0.85, w: 0.22, h: 0.15 },
-    { id: 'famhx',    label: 'Fam Hx',          x: 0.22, y: 0.50, w: 0.22, h: 0.13 },
-    { id: 'sochx',    label: 'Soc Hx',          x: 0.22, y: 0.63, w: 0.22, h: 0.13 },
-    { id: 'surghx',   label: 'Surgical Hx',     x: 0.22, y: 0.76, w: 0.22, h: 0.13 },
-    { id: 'allergies',label: 'Allergies',       x: 0.22, y: 0.89, w: 0.22, h: 0.11 },
-    { id: 'vitals',   label: 'Vitals / Exam',   x: 0.44, y: 0.00, w: 0.56, h: 0.22 },
-    { id: 'labs',     label: 'Notable Labs & Imaging', x: 0.44, y: 0.22, w: 0.56, h: 0.56 },
-    { id: 'assess',   label: 'Assessment',      x: 0.44, y: 0.78, w: 0.56, h: 0.22 },
-  ],
-  // Fishbone diagrams live inside the "labs" cell at relative positions
-  fishbones: [
-    // CBC fishbone
-    {
-      id: 'cbc',
-      cell: 'labs',
-      relX: 0.15, relY: 0.30, relW: 0.35,
-      slots: [
-        { id: 'wbc', label: 'WBC', dx: 0.00, dy: 0.50 },
-        { id: 'hgb', label: 'Hgb', dx: 0.50, dy: 0.15 },
-        { id: 'hct', label: 'Hct', dx: 1.00, dy: 0.50 },
-        { id: 'plt', label: 'Plt', dx: 0.50, dy: 0.85 },
-      ],
-    },
-    // BMP fishbone
-    {
-      id: 'bmp',
-      cell: 'labs',
-      relX: 0.55, relY: 0.30, relW: 0.40,
-      slots: [
-        { id: 'na',  label: 'Na',   dx: 0.00, dy: 0.30 },
-        { id: 'cl',  label: 'Cl',   dx: 0.35, dy: 0.30 },
-        { id: 'bun', label: 'BUN',  dx: 0.75, dy: 0.30 },
-        { id: 'k',   label: 'K',    dx: 0.00, dy: 0.70 },
-        { id: 'co2', label: 'CO₂',  dx: 0.35, dy: 0.70 },
-        { id: 'cr',  label: 'Cr',   dx: 0.75, dy: 0.70 },
-        { id: 'glu', label: 'Glu',  dx: 1.05, dy: 0.50 },
-      ],
-    },
-  ],
+// The template describes:
+//  - Vertical dividers by their x position (fraction 0-1). Named for reference.
+//  - Horizontal dividers by their y position, scoped to the column region they belong to.
+//  - Cells reference the dividers that form their edges.
+const DEFAULT_DIVIDERS = {
+  // Main column boundaries (whole page height)
+  colLeft:      0.22, // between "left column" (PMH/Meds) and "middle column" (Fam/Soc/Surg/Allergies)
+  colMiddle:    0.44, // between "middle column" and "right column" (Vitals/Labs/Assess)
+
+  // Horizontal splits in the LEFT column
+  leftRow1:     0.10, // CC vs HPI
+  leftRow2:     0.50, // HPI vs PMH+Meds
+  leftRow3:     0.85, // PMH vs Meds
+
+  // Horizontal splits in the MIDDLE column
+  middleRow1:   0.50, // (aligned with leftRow2) — HPI/CC section vs Fam/Soc stack
+  middleRow2:   0.63, // Fam Hx vs Soc Hx
+  middleRow3:   0.76, // Soc Hx vs Surgical Hx
+  middleRow4:   0.89, // Surgical Hx vs Allergies
+
+  // Horizontal splits in the RIGHT column
+  rightRow1:    0.22, // Vitals/Exam vs Notable Labs
+  rightRow2:    0.78, // Notable Labs vs Assessment
 };
+
+// Each cell is defined by four dividers (or fixed edges 0/1).
+// Type: 'v' or 'h' or fixed literal number.
+const CELLS = [
+  { id: 'cc',       label: 'CC',                 left: 0,           right: 'colLeft',   top: 0,             bottom: 'leftRow1' },
+  { id: 'hpi',      label: 'HPI',                left: 0,           right: 'colLeft',   top: 'leftRow1',    bottom: 'leftRow2' },
+  { id: 'pmh',      label: 'PMH',                left: 0,           right: 'colLeft',   top: 'leftRow2',    bottom: 'leftRow3' },
+  { id: 'meds',     label: 'Meds',               left: 0,           right: 'colLeft',   top: 'leftRow3',    bottom: 1 },
+  { id: 'famhx',    label: 'Fam Hx',             left: 'colLeft',   right: 'colMiddle', top: 'middleRow1',  bottom: 'middleRow2' },
+  { id: 'sochx',    label: 'Soc Hx',             left: 'colLeft',   right: 'colMiddle', top: 'middleRow2',  bottom: 'middleRow3' },
+  { id: 'surghx',   label: 'Surgical Hx',        left: 'colLeft',   right: 'colMiddle', top: 'middleRow3',  bottom: 'middleRow4' },
+  { id: 'allergies',label: 'Allergies',          left: 'colLeft',   right: 'colMiddle', top: 'middleRow4',  bottom: 1 },
+  { id: 'vitals',   label: 'Vitals / Exam',      left: 'colMiddle', right: 1,           top: 0,             bottom: 'rightRow1' },
+  { id: 'labs',     label: 'Notable Labs & Imaging', left: 'colMiddle', right: 1,       top: 'rightRow1',   bottom: 'rightRow2' },
+  { id: 'assess',   label: 'Assessment',         left: 'colMiddle', right: 1,           top: 'rightRow2',   bottom: 1 },
+];
+
+// Which dividers are "column dividers" (vertical, span the full height)
+const COLUMN_DIVIDERS = ['colLeft', 'colMiddle'];
+// The rest are row dividers, each scoped to one column range
+const ROW_DIVIDER_SCOPES = {
+  leftRow1:   { left: 0,           right: 'colLeft' },
+  leftRow2:   { left: 0,           right: 'colLeft' },
+  leftRow3:   { left: 0,           right: 'colLeft' },
+  middleRow1: { left: 'colLeft',   right: 'colMiddle' },
+  middleRow2: { left: 'colLeft',   right: 'colMiddle' },
+  middleRow3: { left: 'colLeft',   right: 'colMiddle' },
+  middleRow4: { left: 'colLeft',   right: 'colMiddle' },
+  rightRow1:  { left: 'colMiddle', right: 1 },
+  rightRow2:  { left: 'colMiddle', right: 1 },
+};
+
+const FISHBONES = [
+  {
+    id: 'cbc', cell: 'labs',
+    relX: 0.15, relY: 0.30, relW: 0.35,
+    slots: [
+      { id: 'wbc', label: 'WBC', dx: 0.00, dy: 0.50 },
+      { id: 'hgb', label: 'Hgb', dx: 0.50, dy: 0.15 },
+      { id: 'hct', label: 'Hct', dx: 1.00, dy: 0.50 },
+      { id: 'plt', label: 'Plt', dx: 0.50, dy: 0.85 },
+    ],
+  },
+  {
+    id: 'bmp', cell: 'labs',
+    relX: 0.55, relY: 0.30, relW: 0.40,
+    slots: [
+      { id: 'na',  label: 'Na',   dx: 0.00, dy: 0.30 },
+      { id: 'cl',  label: 'Cl',   dx: 0.35, dy: 0.30 },
+      { id: 'bun', label: 'BUN',  dx: 0.75, dy: 0.30 },
+      { id: 'k',   label: 'K',    dx: 0.00, dy: 0.70 },
+      { id: 'co2', label: 'CO₂',  dx: 0.35, dy: 0.70 },
+      { id: 'cr',  label: 'Cr',   dx: 0.75, dy: 0.70 },
+      { id: 'glu', label: 'Glu',  dx: 1.05, dy: 0.50 },
+    ],
+  },
+];
+
+const MIN_GAP = 0.04; // minimum distance between adjacent dividers (as fraction)
 
 export default function WhiteboardCanvas({ content, setContent, width }) {
   const [tool, setTool] = useState('text');
   const [color, setColor] = useState(COLORS[0]);
   const [fontSize, setFontSize] = useState('md');
-  const [drawing, setDrawing] = useState(null); // current pen stroke in progress
-  const [editing, setEditing] = useState(null); // { id, x, y, initialText? } for text-tool click
+  const [drawing, setDrawing] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [dividerDrag, setDividerDrag] = useState(null); // { id, orientation }
   const canvasRef = useRef(null);
   const editInputRef = useRef(null);
 
-  // Data model (all stored in content object which is persisted)
   const texts = content.texts || [];
   const strokes = content.strokes || [];
-  const fishboneValues = content.fishboneValues || {}; // { 'cbc.wbc': '11.3', ... }
+  const fishboneValues = content.fishboneValues || {};
+  const dividers = { ...DEFAULT_DIVIDERS, ...(content.dividers || {}) };
 
   const updateContent = (patch) => setContent({ ...content, ...patch });
+  const setDividers = (newDivs) => updateContent({ dividers: { ...dividers, ...newDivs } });
 
-  // Canvas dimensions — pixel width follows the parent, height is proportional to typical whiteboard aspect
   const height = Math.round(width * 0.68);
+
+  // Resolve a divider reference (name or literal number) to a fractional position
+  const resolveDiv = (ref) => {
+    if (typeof ref === 'number') return ref;
+    return dividers[ref] ?? 0;
+  };
 
   const getPt = (e) => {
     const r = canvasRef.current.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
+  // ----- Divider dragging -----
+  useEffect(() => {
+    if (!dividerDrag) return;
+    const handleMove = (e) => {
+      const r = canvasRef.current?.getBoundingClientRect();
+      if (!r) return;
+      if (dividerDrag.orientation === 'v') {
+        const newX = (e.clientX - r.left) / width;
+        // Clamp so dividers don't overlap or leave the canvas
+        const clamped = Math.max(MIN_GAP, Math.min(1 - MIN_GAP, newX));
+        setDividers({ [dividerDrag.id]: clamped });
+      } else {
+        const newY = (e.clientY - r.top) / height;
+        const clamped = Math.max(MIN_GAP, Math.min(1 - MIN_GAP, newY));
+        setDividers({ [dividerDrag.id]: clamped });
+      }
+    };
+    const handleUp = () => setDividerDrag(null);
+    document.body.style.cursor = dividerDrag.orientation === 'v' ? 'col-resize' : 'row-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [dividerDrag, width, height]); // eslint-disable-line
+
   // ----- Text tool -----
   const handleCanvasClick = (e) => {
-    // Don't fire if clicking a text item, fishbone slot, etc. (those stopPropagation)
     if (tool !== 'text') return;
     const pt = getPt(e);
-    // Start editing a new text at this location
     const newId = `t-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setEditing({ id: newId, x: pt.x, y: pt.y, isNew: true });
   };
@@ -97,23 +168,17 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
       if (trimmed) {
         updateContent({
           texts: [...texts, {
-            id: editing.id,
-            x: editing.x,
-            y: editing.y,
-            text: trimmed,
-            color,
-            size: fontSize,
+            id: editing.id, x: editing.x, y: editing.y,
+            text: trimmed, color, size: fontSize,
           }],
         });
       }
     } else {
-      // Existing text edit
       if (trimmed) {
         updateContent({
           texts: texts.map(t => t.id === editing.id ? { ...t, text: trimmed } : t),
         });
       } else {
-        // Empty on edit = delete
         updateContent({ texts: texts.filter(t => t.id !== editing.id) });
       }
     }
@@ -154,7 +219,6 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
       !s.points.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < thresh)
     );
     const survivingTexts = texts.filter(t => {
-      // Rough hitbox around each text
       const px = FONT_SIZES.find(f => f.id === t.size)?.px || 16;
       return !(pt.x >= t.x - 4 && pt.x <= t.x + 200 && pt.y >= t.y - px && pt.y <= t.y + 4);
     });
@@ -164,7 +228,6 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
   };
 
   const undo = () => {
-    // Undo the last thing added, whether text or stroke
     if (strokes.length === 0 && texts.length === 0) return;
     const lastStrokeTime = strokes.length ? parseInt(strokes[strokes.length - 1].id.split('-')[1], 10) : 0;
     const lastTextTime = texts.length ? parseInt(texts[texts.length - 1].id.split('-')[1], 10) : 0;
@@ -176,11 +239,17 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
   };
 
   const clearAll = () => {
-    if (!confirm('Clear the entire whiteboard? Fishbone values stay.')) return;
+    if (!confirm('Clear the entire whiteboard? Fishbone values and layout stay.')) return;
     updateContent({ texts: [], strokes: [] });
   };
 
+  const resetLayout = () => {
+    if (!confirm('Reset the divider layout to default? Text and drawings stay.')) return;
+    updateContent({ dividers: {} });
+  };
+
   const cursor =
+    dividerDrag ? (dividerDrag.orientation === 'v' ? 'col-resize' : 'row-resize') :
     tool === 'text' ? 'text' :
     tool === 'pen' ? 'crosshair' :
     tool === 'eraser' ? 'cell' :
@@ -195,27 +264,18 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
           <ToolBtn active={tool==='pen'}  onClick={() => setTool('pen')}  icon={Pencil} label="Pen" />
           <ToolBtn active={tool==='eraser'} onClick={() => setTool('eraser')} icon={Eraser} label="Eraser" />
         </div>
-
         <div className="w-px h-6 bg-stone-200" />
-
-        {/* Color swatches */}
         <div className="flex items-center gap-1">
           {COLORS.map(c => (
             <button
               key={c}
               onClick={() => setColor(c)}
-              className={`w-6 h-6 rounded-full border-2 transition ${
-                color === c ? 'border-stone-900 scale-110' : 'border-stone-300'
-              }`}
+              className={`w-6 h-6 rounded-full border-2 transition ${color === c ? 'border-stone-900 scale-110' : 'border-stone-300'}`}
               style={{ backgroundColor: c }}
-              title={c}
             />
           ))}
         </div>
-
         <div className="w-px h-6 bg-stone-200" />
-
-        {/* Font size (only relevant for text tool) */}
         <div className="flex items-center gap-0.5 bg-stone-100 rounded p-0.5">
           {FONT_SIZES.map(f => (
             <button
@@ -230,9 +290,14 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
             </button>
           ))}
         </div>
-
         <div className="flex-1" />
-
+        <button
+          onClick={resetLayout}
+          className="p-1.5 rounded text-stone-600 hover:bg-stone-100 text-xs px-2"
+          title="Reset divider layout"
+        >
+          Reset layout
+        </button>
         <button
           onClick={undo}
           disabled={strokes.length === 0 && texts.length === 0}
@@ -263,28 +328,37 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
           className="relative bg-white border border-stone-300 shadow-sm mx-auto"
           style={{ width, height, cursor }}
         >
-          {/* Template cells (border grid + labels) */}
-          {TEMPLATE.cells.map(cell => (
-            <div
-              key={cell.id}
-              className="absolute border border-stone-400 p-1.5 pointer-events-none"
-              style={{
-                left: cell.x * width, top: cell.y * height,
-                width: cell.w * width, height: cell.h * height,
-              }}
-            >
-              <span className="text-xs font-semibold text-stone-700">{cell.label}:</span>
-            </div>
-          ))}
+          {/* Cell backgrounds and labels */}
+          {CELLS.map(cell => {
+            const left   = resolveDiv(cell.left)   * width;
+            const top    = resolveDiv(cell.top)    * height;
+            const right  = resolveDiv(cell.right)  * width;
+            const bottom = resolveDiv(cell.bottom) * height;
+            return (
+              <div
+                key={cell.id}
+                className="absolute pointer-events-none p-1.5"
+                style={{ left, top, width: right - left, height: bottom - top }}
+              >
+                <span className="text-xs font-semibold text-stone-700">{cell.label}:</span>
+              </div>
+            );
+          })}
 
-          {/* Fishbone diagrams */}
-          {TEMPLATE.fishbones.map(fb => {
-            const parent = TEMPLATE.cells.find(c => c.id === fb.cell);
+          {/* Fishbones */}
+          {FISHBONES.map(fb => {
+            const parent = CELLS.find(c => c.id === fb.cell);
             if (!parent) return null;
-            const fbX = (parent.x + parent.w * fb.relX) * width;
-            const fbY = (parent.y + parent.h * fb.relY) * height;
-            const fbW = parent.w * fb.relW * width;
-            const fbH = fbW * 0.5; // fishbones roughly 2:1 aspect
+            const pLeft   = resolveDiv(parent.left)   * width;
+            const pTop    = resolveDiv(parent.top)    * height;
+            const pRight  = resolveDiv(parent.right)  * width;
+            const pBottom = resolveDiv(parent.bottom) * height;
+            const pW = pRight - pLeft;
+            const pH = pBottom - pTop;
+            const fbX = pLeft + pW * fb.relX;
+            const fbY = pTop + pH * fb.relY;
+            const fbW = pW * fb.relW;
+            const fbH = fbW * 0.5;
             return (
               <Fishbone
                 key={fb.id}
@@ -300,7 +374,7 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
             );
           })}
 
-          {/* Committed pen strokes */}
+          {/* Committed strokes */}
           <svg className="absolute inset-0 pointer-events-none" width={width} height={height}>
             {strokes.map(s => (
               <path
@@ -319,7 +393,7 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
             )}
           </svg>
 
-          {/* Committed text items */}
+          {/* Text items */}
           {texts.map(t => {
             const px = FONT_SIZES.find(f => f.id === t.size)?.px || 16;
             return (
@@ -335,10 +409,8 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
                 style={{
                   left: t.x, top: t.y - px,
                   color: t.color, fontSize: px,
-                  fontFamily: 'inherit',
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: 1,
-                  padding: '0 2px',
+                  fontFamily: 'inherit', whiteSpace: 'pre-wrap',
+                  lineHeight: 1, padding: '0 2px',
                 }}
               >
                 {t.text}
@@ -346,7 +418,59 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
             );
           })}
 
-          {/* Active text editor (input for the item being edited/created) */}
+          {/* Divider handles — drawn last, on top of everything, always interactive */}
+          {/* Vertical column dividers */}
+          {COLUMN_DIVIDERS.map(name => (
+            <div
+              key={name}
+              className="absolute group"
+              style={{
+                left: dividers[name] * width - 4,
+                top: 0,
+                width: 8,
+                height,
+                cursor: 'col-resize',
+                zIndex: 10,
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                setDividerDrag({ id: name, orientation: 'v' });
+              }}
+            >
+              {/* Visible line */}
+              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-stone-400 group-hover:bg-sage-500 group-hover:w-0.5 transition-all -translate-x-1/2" />
+            </div>
+          ))}
+          {/* Horizontal row dividers */}
+          {Object.entries(ROW_DIVIDER_SCOPES).map(([name, scope]) => {
+            const leftPx = resolveDiv(scope.left) * width;
+            const rightPx = resolveDiv(scope.right) * width;
+            const y = dividers[name] * height;
+            return (
+              <div
+                key={name}
+                className="absolute group"
+                style={{
+                  left: leftPx,
+                  top: y - 4,
+                  width: rightPx - leftPx,
+                  height: 8,
+                  cursor: 'row-resize',
+                  zIndex: 10,
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  setDividerDrag({ id: name, orientation: 'h' });
+                }}
+              >
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-stone-400 group-hover:bg-sage-500 group-hover:h-0.5 transition-all -translate-y-1/2" />
+              </div>
+            );
+          })}
+          {/* Outer border */}
+          <div className="absolute inset-0 pointer-events-none border border-stone-400" />
+
+          {/* Text editor (input for active edit) */}
           {editing && (
             <TextEditor
               ref={editInputRef}
@@ -379,33 +503,27 @@ function ToolBtn({ active, onClick, icon: Icon, label }) {
   );
 }
 
-// Fishbone SVG with clickable value slots.
-// CBC has 4 slots in a diamond; BMP has 6 slots plus a glucose off-shoot.
 function Fishbone({ fb, x, y, w, h, values, onChange }) {
   const isCbc = fb.id === 'cbc';
   return (
     <div className="absolute" style={{ left: x, top: y, width: w, height: h }}>
-      {/* Skeleton lines */}
       <svg className="absolute inset-0" width={w} height={h}>
         {isCbc ? (
-          // CBC: X shape — 4 lines from center to each corner-ish slot
           <>
-            <line x1={w * 0.0} y1={h * 0.5} x2={w * 0.5} y2={h * 0.15} stroke="#78716c" strokeWidth={1.5} />
-            <line x1={w * 0.5} y1={h * 0.15} x2={w * 1.0} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
-            <line x1={w * 1.0} y1={h * 0.5} x2={w * 0.5} y2={h * 0.85} stroke="#78716c" strokeWidth={1.5} />
-            <line x1={w * 0.5} y1={h * 0.85} x2={w * 0.0} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
+            <line x1={0} y1={h * 0.5} x2={w * 0.5} y2={h * 0.15} stroke="#78716c" strokeWidth={1.5} />
+            <line x1={w * 0.5} y1={h * 0.15} x2={w} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
+            <line x1={w} y1={h * 0.5} x2={w * 0.5} y2={h * 0.85} stroke="#78716c" strokeWidth={1.5} />
+            <line x1={w * 0.5} y1={h * 0.85} x2={0} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
           </>
         ) : (
-          // BMP: horizontal line + verticals
           <>
             <line x1={0} y1={h * 0.5} x2={w * 0.85} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
             <line x1={w * 0.15} y1={h * 0.2} x2={w * 0.15} y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
             <line x1={w * 0.5}  y1={h * 0.2} x2={w * 0.5}  y2={h * 0.8} stroke="#78716c" strokeWidth={1.5} />
-            <line x1={w * 0.85} y1={h * 0.5} x2={w * 1.0}  y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
+            <line x1={w * 0.85} y1={h * 0.5} x2={w} y2={h * 0.5} stroke="#78716c" strokeWidth={1.5} />
           </>
         )}
       </svg>
-      {/* Clickable value slots */}
       {fb.slots.map(slot => {
         const key = `${fb.id}.${slot.id}`;
         const val = values[key] || '';
@@ -462,10 +580,6 @@ function FishboneSlot({ label, value, x, y, onChange }) {
   );
 }
 
-// Inline text editor. Uses a contenteditable-ish input positioned absolutely
-// where the user clicked, so text appears exactly at the cursor.
-import { forwardRef } from 'react';
-
 const TextEditor = forwardRef(function TextEditor(
   { initialValue, x, y, color, fontSize, onCommit, onCancel }, ref
 ) {
@@ -479,7 +593,6 @@ const TextEditor = forwardRef(function TextEditor(
     }
   }, []);
 
-  // Expose focus to parent through ref
   useEffect(() => {
     if (ref) {
       if (typeof ref === 'function') ref(inputRef.current);
@@ -508,20 +621,15 @@ const TextEditor = forwardRef(function TextEditor(
       onClick={(e) => e.stopPropagation()}
       style={{
         position: 'absolute',
-        left: x,
-        top: y - fontSize,
-        color,
-        fontSize,
+        left: x, top: y - fontSize,
+        color, fontSize,
         fontFamily: 'inherit',
         lineHeight: 1.1,
         border: '1px dashed #5a865e',
         background: 'rgba(255,255,240,0.95)',
-        padding: '0 2px',
-        margin: 0,
-        outline: 'none',
-        resize: 'none',
-        minWidth: 60,
-        overflow: 'hidden',
+        padding: '0 2px', margin: 0,
+        outline: 'none', resize: 'none',
+        minWidth: 60, overflow: 'hidden',
       }}
       rows={1}
     />
