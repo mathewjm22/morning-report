@@ -1,10 +1,9 @@
-
 // Wraps pdf.js: loading a PDF, rendering pages to canvas, detecting
 // image/table bounding boxes for interactive zones.
 
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs?url';
-import { loadPdf, renderPage, extractCaseTitle, extractCaseIdentifier, extractCaseSource } from '../lib/pdfLoader.js';
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 // Load a PDF from an ArrayBuffer or URL, return the pdfjs document
