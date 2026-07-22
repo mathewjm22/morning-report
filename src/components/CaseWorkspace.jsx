@@ -41,23 +41,20 @@ export default function CaseWorkspace({ shared }) {
   const [ddxView, setDdxView] = useState('list'); // 'list' | 'anatomic' | 'vindicate'
 
   const [boardWidth, setBoardWidth] = useState(() => {
-  const saved = parseInt(localStorage.getItem('boardWidth') || '0', 10);
-
-
-const [rightColumnWidth, setRightColumnWidth] = useState(() => {
-  const saved = parseInt(localStorage.getItem('rightColumnWidth') || '380', 10);
-  return isNaN(saved) ? 380 : Math.max(280, Math.min(900, saved));
-});
-useEffect(() => {
-  localStorage.setItem('rightColumnWidth', String(rightColumnWidth));
-}, [rightColumnWidth]);
-
-
-  return isNaN(saved) ? 0 : Math.min(1400, Math.max(0, saved));
+    const saved = parseInt(localStorage.getItem('boardWidth') || '0', 10);
+    return isNaN(saved) ? 0 : Math.min(1400, Math.max(0, saved));
   });
   useEffect(() => {
-  localStorage.setItem('boardWidth', String(boardWidth));
+    localStorage.setItem('boardWidth', String(boardWidth));
   }, [boardWidth]);
+
+  const [rightColumnWidth, setRightColumnWidth] = useState(() => {
+    const saved = parseInt(localStorage.getItem('rightColumnWidth') || '380', 10);
+    return isNaN(saved) ? 380 : Math.max(280, Math.min(900, saved));
+  });
+  useEffect(() => {
+    localStorage.setItem('rightColumnWidth', String(rightColumnWidth));
+  }, [rightColumnWidth]);
 
   const [boardContent, setBoardContent] = useState({});
 
