@@ -457,35 +457,27 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
               </div>
             );
           })}
-          {/* Divider handles — drawn last, on top of everything, always interactive */}
-{/* Vertical column dividers */}
-{showTemplate &&
-  COLUMN_DIVIDERS.map((name) => {
-    const leftPx = resolveDiv(scope.left) * width;
-    const rightPx = resolveDiv(scope.right) * width;
-    const y = dividers[name] * height;
-
-    return (
-              <div
-                key={name}
-                className="absolute group"
-                style={{
-                  left: leftPx,
-                  top: y - 4,
-                  width: rightPx - leftPx,
-                  height: 8,
-                  cursor: 'row-resize',
-                  zIndex: 10,
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  setDividerDrag({ id: name, orientation: 'h' });
-                }}
-              >
-                <div className="absolute top-1/2 left-0 right-0 h-px bg-stone-400 group-hover:bg-sage-500 group-hover:h-0.5 transition-all -translate-y-1/2" />
-              </div>
-            );
-          })}
+          {/* Vertical column dividers */}
+          {showTemplate && COLUMN_DIVIDERS.map(name => (
+            <div
+              key={name}
+              className="absolute group"
+              style={{
+                left: dividers[name] * width - 4,
+                top: 0,
+                width: 8,
+                height,
+                cursor: 'col-resize',
+                zIndex: 10,
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                setDividerDrag({ id: name, orientation: 'v' });
+              }}
+            >
+              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-stone-400 group-hover:bg-sage-500 group-hover:w-0.5 transition-all -translate-x-1/2" />
+            </div>
+          ))}
           {/* Outer border — part of the template */}
 {showTemplate && <div className="absolute inset-0 pointer-events-none border border-stone-400" />}
 
