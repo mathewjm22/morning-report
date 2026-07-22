@@ -34,9 +34,6 @@ const DEFAULT_DIVIDERS = {
 };
 
 
-const showTemplate = content.showTemplate !== false; // default true
-const toggleTemplate = () => updateContent({ showTemplate: !showTemplate });
-
 // Each cell is defined by four dividers (or fixed edges 0/1).
 // Type: 'v' or 'h' or fixed literal number.
 const CELLS = [
@@ -113,6 +110,8 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
 
   const updateContent = (patch) => setContent({ ...content, ...patch });
   const setDividers = (newDivs) => updateContent({ dividers: { ...dividers, ...newDivs } });
+  const showTemplate = content.showTemplate !== false; // default true
+  const toggleTemplate = () => updateContent({ showTemplate: !showTemplate });
 
   const height = Math.round(width * 0.68);
 
@@ -360,7 +359,7 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
 })}
 
 {/* Fishbones */}
-          {FISHBONES.map(fb => {
+{showTemplate && FISHBONES.map(fb => {
             const parent = CELLS.find(c => c.id === fb.cell);
             if (!parent) return null;
             const pLeft   = resolveDiv(parent.left)   * width;
@@ -432,36 +431,41 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
             );
           })}
 
-          {/* Divider handles — drawn last, on top of everything, always interactive */}
-{/* Vertical column dividers */}
-{showTemplate && COLUMN_DIVIDERS.map(name => (
-            <div
-              key={name}
-              className="absolute group"
-              style={{
-                left: dividers[name] * width - 4,
-                top: 0,
-                width: 8,
-                height,
-                cursor: 'col-resize',
-                zIndex: 10,
-              }}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                setDividerDrag({ id: name, orientation: 'v' });
-              }}
-            >
-              {/* Visible line */}
-              <div className="absolute left-1/2 top-0 bottom-0 w-px bg-stone-400 group-hover:bg-sage-500 group-hover:w-0.5 transition-all -translate-x-1/2" />
-            </div>
-          ))}
-          {/* Divider handles — drawn last, on top of everything, always interactive */}
-{/* Vertical column dividers */}
-{showTemplate && COLUMN_DIVIDERS.map(name => (
+          {/* Horizontal row dividers */}
+          {showTemplate && Object.entries(ROW_DIVIDER_SCOPES).map(([name, scope]) => {
             const leftPx = resolveDiv(scope.left) * width;
             const rightPx = resolveDiv(scope.right) * width;
             const y = dividers[name] * height;
             return (
+              <div
+                key={name}
+                className="absolute group"
+                style={{
+                  left: leftPx,
+                  top: y - 4,
+                  width: rightPx - leftPx,
+                  height: 8,
+                  cursor: 'row-resize',
+                  zIndex: 10,
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  setDividerDrag({ id: name, orientation: 'h' });
+                }}
+              >
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-stone-400 group-hover:bg-sage-500 group-hover:h-0.5 transition-all -translate-y-1/2" />
+              </div>
+            );
+          })}
+          {/* Divider handles — drawn last, on top of everything, always interactive */}
+{/* Vertical column dividers */}
+{showTemplate &&
+  COLUMN_DIVIDERS.map((name) => {
+    const leftPx = resolveDiv(scope.left) * width;
+    const rightPx = resolveDiv(scope.right) * width;
+    const y = dividers[name] * height;
+
+    return (
               <div
                 key={name}
                 className="absolute group"
