@@ -68,6 +68,40 @@ export async function getPageTextItems(pdf, pageNum, viewport) {
   return items;
 }
 
+
+// In pdfLoader.js, add:
+export async function extractCaseSource(pdf) {
+  try {
+    const page = await pdf.getPage(1);
+    const content = await page.getTextContent();
+    const fullText = content.items
+      .filter(i => i.str && i.str.trim())
+      .map(i => i.str)
+      .join(' ')
+      .replace(/\s+/g, ' ');
+    const match = fullText.match(/N\s*Engl\s*J\s*Med\s+\d{4}\s*;\s*\d+\s*:\s*[\d-]+/i);
+    return match ? match[0].replace(/\s+/g, ' ') : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function extractCaseIdentifier(pdf) {
+  try {
+    const page = await pdf.getPage(1);
+    const content = await page.getTextContent();
+    const fullText = content.items
+      .filter(i => i.str && i.str.trim())
+      .map(i => i.str)
+      .join(' ')
+      .replace(/\s+/g, ' ');
+    const match = fullText.match(/Case\s+(\d+[-\u2013]\d{4})/);
+    return match ? `Case ${match[1]}` : null;
+  } catch {
+    return null;
+  }
+}
+
 // Render one page to a supplied canvas at the given scale.
 // Returns the viewport used (for coordinate conversions).
 export async function renderPage(pdf, pageNum, canvas, scale = 1.5) {
@@ -211,3 +245,4 @@ export async function detectTableZones(pdf, pageNum, viewport) {
 
   return zones;
 }
+

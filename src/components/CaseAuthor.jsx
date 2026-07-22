@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, ChevronLeft, Save } from 'lucide-react';
-import { loadPdf, renderPage } from '../lib/pdfLoader.js';
+import { loadPdf, renderPage, extractCaseTitle, extractCaseIdentifier } from '../lib/pdfLoader.js';
 import { saveCase } from '../lib/storage.js';
 
 export default function CaseAuthor() {
@@ -25,11 +25,25 @@ export default function CaseAuthor() {
     setProgress('Loading PDF...');
     try {
       const buf = await file.arrayBuffer();
-      const doc = await loadPdf(buf.slice(0));
-      setPdfFile(file);
-      setTotalPages(doc.numPages);
-      setContentEnd(doc.numPages);
-      setTitle(file.name.replace(/\.pdf$/i, ''));
+const doc = await loadPdf(buf.slice(0));
+setPdfFile(file);
+setTotalPages(doc.numPages);
+setContentEnd(doc.numPages);
+
+// Try to extract a real title from the PDF; fall back to filename
+setProgress('Extracting case title...');
+const [extractedTitle, extractedId] = await Promise.all([
+  extractCaseTitle(doc),
+  extractCaseIdentifier(doc),
+]);
+
+if (extractedTitle && extractedId) {
+  setTitle(`${extractedId}: ${extractedTitle}`);
+} else if (extractedTitle) {
+  setTitle(extractedTitle);
+} else {
+  setTitle(file.name.replace(/\.pdf$/i, ''));
+}
 
       const thumbs = [];
       for (let p = 1; p <= doc.numPages; p++) {
@@ -47,6 +61,23 @@ export default function CaseAuthor() {
       setProgress('');
     }
   };
+
+  const [extractedTitle, extractedId, extractedSource] = await Promise.all([
+  extractCaseTitle(doc),
+  extractCaseIdentifier(doc),
+  extractCaseSource(doc),
+]);
+
+if (extractedTitle && extractedId) {
+  setTitle(`${extractedId}: ${extractedTitle}`);
+} else if (extractedTitle) {
+  setTitle(extractedTitle);
+} else {
+  setTitle(file.name.replace(/\.pdf$/i, ''));
+}
+
+if (extractedSource) setSource(extractedSource);
+
 
   const save = async () => {
   if (!title.trim()) { setSaveError('Title required'); return; }
@@ -207,4 +238,53 @@ export default function CaseAuthor() {
       </div>
     </div>
   );
+}
+
+
+// Extract the case title from a NEJM PDF's first page. Returns null if no match.
+// NEJM format: "Case NN-YYYY: <title spanning 1-2 lines>" followed by author byline
+// (which begins with a name + credential suffix like M.D., D.O., Ph.D., R.N., etc.).
+export async function extractCaseTitle(pdf) {
+  try {
+    const page = await pdf.getPage(1);
+    const content = await page.getTextContent();
+    const fullText = content.items
+      .filter(i => i.str && i.str.trim())
+      .map(i => i.str)
+      .join(' ')
+      .replace(/\s+/g, ' ');
+
+    // Match "Case NN-YYYY:" then capture text up to the first author byline.
+    // Byline pattern: a name (2-4 capitalized words, possibly with middle initial or hyphen)
+    // followed by a comma and a credential suffix.
+    const CREDENTIALS = [
+      'M\\.?\\s*D\\.?', 'D\\.?\\s*O\\.?', 'Ph\\.?\\s*D\\.?',
+      'M\\.?\\s*B\\.?\\s*B\\.?\\s*S\\.?', 'M\\.?\\s*B\\.?\\s*Ch\\.?\\s*B\\.?',
+      'M\\.?\\s*S\\.?\\s*N\\.?', 'R\\.?\\s*N\\.?',
+      'D\\.?\\s*N\\.?\\s*P\\.?', 'N\\.?\\s*P\\.?',
+      'P\\.?\\s*A\\.?', 'P\\.?\\s*A\\.?-C',
+      'Pharm\\.?\\s*D\\.?',
+      'M\\.?\\s*P\\.?\\s*H\\.?', 'M\\.?\\s*S\\.?', 'M\\.?\\s*A\\.?',
+      'B\\.?\\s*S\\.?', 'B\\.?\\s*A\\.?',
+      'D\\.?\\s*M\\.?\\s*D\\.?', 'D\\.?\\s*D\\.?\\s*S\\.?',
+      'D\\.?\\s*V\\.?\\s*M\\.?',
+    ];
+    const credentialAlt = `(?:${CREDENTIALS.join('|')})`;
+
+    // Author name pattern: 2-4 capitalized name tokens (allowing hyphens, apostrophes, periods for initials)
+    const nameToken = "[A-Z][A-Za-z\\.\\-\\']+";
+    const authorPattern = new RegExp(
+      `Case\\s+\\d+[-\\u2013]\\d{4}:\\s*(.*?)\\s+${nameToken}(?:\\s+${nameToken}){1,3},?\\s*${credentialAlt}\\b`,
+      'i'
+    );
+
+    const match = fullText.match(authorPattern);
+    if (match && match[1]) {
+      return match[1].trim().replace(/\s+/g, ' ').replace(/[-\u2013\u2014]$/, '').trim();
+    }
+    return null;
+  } catch (e) {
+    console.warn('extractCaseTitle failed:', e);
+    return null;
+  }
 }
