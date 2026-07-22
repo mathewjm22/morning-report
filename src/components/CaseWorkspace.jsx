@@ -200,25 +200,25 @@ useEffect(() => {
     attendingMode={attendingMode}
   />
 
-  {/* Whiteboard area — only rendered when boardWidth > 0 (visible only in the Whiteboard tab) */}
-  {rightTab === 'whiteboard' && boardWidth > 0 && (
-    <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
-      <WhiteboardCanvas
-        content={boardContent}
-        setContent={setBoardContent}
-        width={boardWidth}
-      />
-    </div>
-  )}
+  {/* Draggable BOARD handle — sits at the left edge of the whiteboard */}
+{rightTab === 'whiteboard' && (
+  <BoardResizeHandle
+    currentWidth={boardWidth}
+    onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
+    onToggle={() => setBoardWidth(w => w > 0 ? 0 : 600)}
+  />
+)}
 
-  {/* Draggable BOARD handle — only shown on the Whiteboard tab */}
-  {rightTab === 'whiteboard' && (
-    <BoardResizeHandle
-      currentWidth={boardWidth}
-      onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
-      onToggle={() => setBoardWidth(w => w > 0 ? 0 : 600)}
+{/* Whiteboard area — sits between the handle and the DDx panel */}
+{rightTab === 'whiteboard' && boardWidth > 0 && (
+  <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
+    <WhiteboardCanvas
+      content={boardContent}
+      setContent={setBoardContent}
+      width={boardWidth}
     />
-  )}
+  </div>
+)}
 
   {/* Right sidebar — DDx + Plan + Highlights + Research + Pinned */}
   <div className="w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0">
@@ -392,7 +392,7 @@ function BoardResizeHandle({ currentWidth, onResize, onToggle }) {
         onDoubleClick={onToggle}
         className="flex-shrink-0 flex items-center justify-center relative bg-sage-600 hover:bg-sage-700 cursor-col-resize transition"
         style={{ width: 24 }}
-        title="Drag left to open the board"
+        title="Drag left to open the board · Double-click to reveal"
       >
         <div className="text-white font-bold text-xs tracking-widest select-none pointer-events-none"
              style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
