@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, forwardRef } from 'react';
-import { Type, Pencil, Eraser, Undo2, Trash2 } from 'lucide-react';
+import { Type, Pencil, Eraser, Undo2, Trash2, Grid, EyeOff } from 'lucide-react';
 
 const COLORS = ['#1f2937', '#dc2626', '#2563eb', '#059669'];
 const FONT_SIZES = [
@@ -32,6 +32,10 @@ const DEFAULT_DIVIDERS = {
   rightRow1:    0.22, // Vitals/Exam vs Notable Labs
   rightRow2:    0.78, // Notable Labs vs Assessment
 };
+
+
+const showTemplate = content.showTemplate !== false; // default true
+const toggleTemplate = () => updateContent({ showTemplate: !showTemplate });
 
 // Each cell is defined by four dividers (or fixed edges 0/1).
 // Type: 'v' or 'h' or fixed literal number.
@@ -292,6 +296,16 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
         </div>
         <div className="flex-1" />
         <button
+  onClick={toggleTemplate}
+  className={`p-1.5 rounded transition text-xs px-2 flex items-center gap-1 ${
+    showTemplate ? 'text-stone-700 hover:bg-stone-100' : 'bg-sage-100 text-sage-700 hover:bg-sage-200'
+  }`}
+  title={showTemplate ? 'Hide template lines and labels' : 'Show template lines and labels'}
+>
+  {showTemplate ? <EyeOff size={12} /> : <Grid size={12} />}
+  {showTemplate ? 'Hide grid' : 'Show grid'}
+</button>
+        <button
           onClick={resetLayout}
           className="p-1.5 rounded text-stone-600 hover:bg-stone-100 text-xs px-2"
           title="Reset divider layout"
@@ -329,23 +343,23 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
           style={{ width, height, cursor }}
         >
           {/* Cell backgrounds and labels */}
-          {CELLS.map(cell => {
-            const left   = resolveDiv(cell.left)   * width;
-            const top    = resolveDiv(cell.top)    * height;
-            const right  = resolveDiv(cell.right)  * width;
-            const bottom = resolveDiv(cell.bottom) * height;
-            return (
-              <div
-                key={cell.id}
-                className="absolute pointer-events-none p-1.5"
-                style={{ left, top, width: right - left, height: bottom - top }}
-              >
-                <span className="text-xs font-semibold text-stone-700">{cell.label}:</span>
-              </div>
-            );
-          })}
+{showTemplate && CELLS.map(cell => {
+  const left   = resolveDiv(cell.left)   * width;
+  const top    = resolveDiv(cell.top)    * height;
+  const right  = resolveDiv(cell.right)  * width;
+  const bottom = resolveDiv(cell.bottom) * height;
+  return (
+    <div
+      key={cell.id}
+      className="absolute pointer-events-none p-1.5"
+      style={{ left, top, width: right - left, height: bottom - top }}
+    >
+      <span className="text-xs font-semibold text-stone-700">{cell.label}:</span>
+    </div>
+  );
+})}
 
-          {/* Fishbones */}
+{/* Fishbones */}
           {FISHBONES.map(fb => {
             const parent = CELLS.find(c => c.id === fb.cell);
             if (!parent) return null;
@@ -419,8 +433,8 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
           })}
 
           {/* Divider handles — drawn last, on top of everything, always interactive */}
-          {/* Vertical column dividers */}
-          {COLUMN_DIVIDERS.map(name => (
+{/* Vertical column dividers */}
+{showTemplate && COLUMN_DIVIDERS.map(name => (
             <div
               key={name}
               className="absolute group"
@@ -441,8 +455,9 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
               <div className="absolute left-1/2 top-0 bottom-0 w-px bg-stone-400 group-hover:bg-sage-500 group-hover:w-0.5 transition-all -translate-x-1/2" />
             </div>
           ))}
-          {/* Horizontal row dividers */}
-          {Object.entries(ROW_DIVIDER_SCOPES).map(([name, scope]) => {
+          {/* Divider handles — drawn last, on top of everything, always interactive */}
+{/* Vertical column dividers */}
+{showTemplate && COLUMN_DIVIDERS.map(name => (
             const leftPx = resolveDiv(scope.left) * width;
             const rightPx = resolveDiv(scope.right) * width;
             const y = dividers[name] * height;
@@ -467,8 +482,8 @@ export default function WhiteboardCanvas({ content, setContent, width }) {
               </div>
             );
           })}
-          {/* Outer border */}
-          <div className="absolute inset-0 pointer-events-none border border-stone-400" />
+          {/* Outer border — part of the template */}
+{showTemplate && <div className="absolute inset-0 pointer-events-none border border-stone-400" />}
 
           {/* Text editor (input for active edit) */}
           {editing && (
