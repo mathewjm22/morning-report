@@ -294,12 +294,16 @@ useEffect(() => {
 </div>
 
       {lightbox && (
-        <Lightbox
-          element={lightbox}
-          caseEntry={caseEntry}
-          onClose={() => setLightbox(null)}
-        />
-      )}
+  <Lightbox
+    element={lightbox}
+    caseEntry={caseEntry}
+    onClose={() => setLightbox(null)}
+    onCompare={(elements) => {
+      setLightbox(null);
+      setCompareElements(elements);
+    }}
+  />
+)}
       {showRevealModal && committedDdx && (
   <DdxCompareModal
     committedDdx={committedDdx}

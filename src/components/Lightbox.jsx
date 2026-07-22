@@ -1,12 +1,12 @@
 
 
 import { useState, useEffect } from 'react';
-import { X, ZoomIn, ZoomOut, Undo2, Trash2, RotateCw, RotateCcw, FlipHorizontal2, FlipVertical2, ExternalLink } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, Undo2, Trash2, RotateCw, RotateCcw, FlipHorizontal2, FlipVertical2, ExternalLink, Search, Clipboard, Copy } from 'lucide-react';
 import { TOOLS, COLORS } from '../lib/constants.js';
 import AnnotationLayer from './AnnotationLayer.jsx';
 
 
-export default function Lightbox({ element, caseEntry, onClose }) {
+export default function Lightbox({ element, caseEntry, onClose, onCompare }) {
   const [tool, setTool] = useState('ruler');
   const [color, setColor] = useState('#ef4444');
   const [strokeWidth, setStrokeWidth] = useState(2.5);
@@ -15,6 +15,9 @@ export default function Lightbox({ element, caseEntry, onClose }) {
   const [rotation, setRotation] = useState(0); // degrees: 0, 90, 180, 270
   const [flipH, setFlipH] = useState(false);
   const [flipV, setFlipV] = useState(false);
+  const [statdxQuery, setStatdxQuery] = useState('');
+  const [pastedImage, setPastedImage] = useState(null); // { imageUrl, naturalWidth, naturalHeight, label } or null
+  const [pasteStatus, setPasteStatus] = useState(null); // 'listening' | 'error' | null
 
 
   useEffect(() => {
@@ -23,6 +26,48 @@ export default function Lightbox({ element, caseEntry, onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+
+  // Listen for paste events to enable image comparison
+useEffect(() => {
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const blob = item.getAsFile();
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+  const pastedEl = {
+    id: `pasted-${Date.now()}`,
+    imageUrl: reader.result,
+    naturalWidth: img.width,
+    naturalHeight: img.height,
+    label: 'Pasted image',
+    pageNum: '—',
+  };
+  if (onCompare) {
+    onCompare([element, pastedEl]);
+  } else {
+    setPastedImage(pastedEl);
+  }
+  setPasteStatus(null);
+};
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(blob);
+        return;
+      }
+    }
+    // No image found in clipboard
+    setPasteStatus('error');
+    setTimeout(() => setPasteStatus(null), 2000);
+  };
+  window.addEventListener('paste', handlePaste);
+  return () => window.removeEventListener('paste', handlePaste);
+}, []);
 
   useEffect(() => {
   setRotation(0);
@@ -148,25 +193,73 @@ const transform = `
     {strokes.length === 0 && <p className="text-xs text-stone-500 italic">Draw on the image.</p>}
   </div>
 
-  {/* Imaging reference lookup */}
-  <div className="mt-6 pt-4 border-t border-stone-700">
-    <p className="text-xs font-semibold text-stone-300 uppercase tracking-wide mb-2">Reference</p>
-    
-      <a href="https://my-statdx-com.va.proxy.liblynxgateway.com/main"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block w-full px-3 py-2 bg-sage-700 hover:bg-sage-600 rounded text-xs text-white transition flex items-center justify-between group"
-    >
-      <span className="flex items-center gap-2">
-        <span className="font-semibold">StatDx</span>
-        <span className="text-sage-200 text-xs">Radiology reference</span>
-      </span>
-      <ExternalLink size={12} className="text-sage-200 group-hover:text-white" />
-    </a>
-    <p className="text-xs text-stone-500 mt-1.5 leading-tight">
-      Look up imaging findings, differential diagnoses, and reporting templates.
-    </p>
+  {/* Compare with pasted image */}
+<div className="mt-6 pt-4 border-t border-stone-700">
+  <p className="text-xs font-semibold text-stone-300 uppercase tracking-wide mb-2">Compare</p>
+  <div className="bg-stone-700/40 rounded p-2.5 flex items-start gap-2">
+    <Clipboard size={14} className="text-sage-400 flex-shrink-0 mt-0.5" />
+    <div className="min-w-0">
+      <p className="text-xs text-stone-200 leading-tight">
+        Copy an image (e.g., a normal X-ray from another source) and press{' '}
+        <kbd className="px-1 py-0.5 bg-stone-800 border border-stone-600 rounded text-stone-300 text-xs">⌘/Ctrl+V</kbd>{' '}
+        to open a side-by-side comparison.
+      </p>
+      {pasteStatus === 'error' && (
+        <p className="text-xs text-red-400 mt-1">No image found in clipboard.</p>
+      )}
+    </div>
   </div>
+</div>
+
+{/* Imaging reference lookup */}
+<div className="mt-6 pt-4 border-t border-stone-700">
+  <p className="text-xs font-semibold text-stone-300 uppercase tracking-wide mb-2">Reference</p>
+
+  {/* StatDx search input */}
+  <form
+    onSubmit={(e) => {
+      e.preventDefault();
+      const term = statdxQuery.trim();
+      if (!term) return;
+      const url = `https://my-statdx-com.va.proxy.liblynxgateway.com/search?term=${encodeURIComponent(term)}&startIndex=0&documentTypeFilters=all&searchType=documents&category=All`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }}
+    className="mb-2"
+  >
+    <div className="relative">
+      <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-stone-400" />
+      <input
+        value={statdxQuery}
+        onChange={(e) => setStatdxQuery(e.target.value)}
+        placeholder="Search StatDx..."
+        className="w-full pl-7 pr-16 py-1.5 text-xs bg-stone-700 border border-stone-600 rounded focus:outline-none focus:border-sage-500 text-white placeholder-stone-400"
+      />
+      <button
+        type="submit"
+        disabled={!statdxQuery.trim()}
+        className="absolute right-1 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-sage-600 hover:bg-sage-500 disabled:opacity-40 disabled:cursor-not-allowed rounded text-xs text-white"
+      >
+        Search
+      </button>
+    </div>
+  </form>
+
+  {/* Direct link to StatDx home */}
+  
+    href="https://my-statdx-com.va.proxy.liblynxgateway.com/main"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="w-full px-3 py-2 bg-sage-700 hover:bg-sage-600 rounded text-xs text-white transition flex items-center justify-between group"
+  >
+    <span className="flex items-center gap-2">
+      <span className="font-semibold">Open StatDx home</span>
+    </span>
+    <ExternalLink size={12} className="text-sage-200 group-hover:text-white" />
+  </a>
+  <p className="text-xs text-stone-500 mt-1.5 leading-tight">
+    Look up imaging findings, differential diagnoses, and reporting templates.
+  </p>
+</div>
 
   <div className="mt-6 p-3 bg-sage-900/30 border border-sage-800 rounded">
     <p className="text-xs font-semibold text-sage-200 mb-1">EKG reference</p>
