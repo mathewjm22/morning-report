@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Home, GraduationCap, Share2, Copy, Check, ChevronRight } from 'lucide-react';
+import { Home, GraduationCap, Share2, Copy, Check, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { getCase, loadProgress, saveProgress } from '../lib/storage.js';
 import { loadSharedCase, saveCaseShare } from '../lib/api.js';
 import PdfViewer from './PdfViewer.jsx';
@@ -85,6 +85,21 @@ useEffect(() => {
     }
   });
 }, [caseEntry, shared]);
+
+const [rightLayout, setRightLayout] = useState(() => {
+  return localStorage.getItem('rightLayout') === 'horizontal' ? 'horizontal' : 'vertical';
+});
+useEffect(() => {
+  localStorage.setItem('rightLayout', rightLayout);
+}, [rightLayout]);
+
+const [horizontalHeight, setHorizontalHeight] = useState(() => {
+  const saved = parseInt(localStorage.getItem('horizontalHeight') || '260', 10);
+  return isNaN(saved) ? 260 : Math.max(120, Math.min(600, saved));
+});
+useEffect(() => {
+  localStorage.setItem('horizontalHeight', String(horizontalHeight));
+}, [horizontalHeight]);
 
   // Save progress
 useEffect(() => {
@@ -189,110 +204,94 @@ useEffect(() => {
         </div>
       )}
       
-      {/* Main columns */}
-      <div className="flex-1 flex overflow-hidden">
-  <PdfViewer
-    caseEntry={caseEntry}
-    annotations={annotations}
-    setAnnotations={setAnnotations}
-    onPinElement={pinElement}
-    onOpenLightbox={setLightbox}
-    attendingMode={attendingMode}
-  />
-
-  {/* Draggable BOARD handle — sits at the left edge of the whiteboard */}
-{rightTab === 'whiteboard' && (
-  <BoardResizeHandle
-    currentWidth={boardWidth}
-    onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
-    onToggle={() => setBoardWidth(w => w > 0 ? 0 : 600)}
-  />
-)}
-
-{/* Whiteboard area — sits between the handle and the DDx panel */}
-{rightTab === 'whiteboard' && boardWidth > 0 && (
-  <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
-    <WhiteboardCanvas
-      content={boardContent}
-      setContent={setBoardContent}
-      width={boardWidth}
+      {/* Main workspace layout */}
+<div className="flex-1 flex overflow-hidden flex-col">
+  {/* Top row: PDF + (optionally) Whiteboard + (if vertical layout) right panel */}
+  <div className="flex-1 flex overflow-hidden">
+    <PdfViewer
+      caseEntry={caseEntry}
+      annotations={annotations}
+      setAnnotations={setAnnotations}
+      onPinElement={pinElement}
+      onOpenLightbox={setLightbox}
+      attendingMode={attendingMode}
     />
-  </div>
-)}
 
-  {/* Right sidebar — DDx + Plan + Highlights + Research + Pinned */}
-  <div className="w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0">
-  <div className="flex border-b border-stone-200">
-  <button
-    onClick={() => setRightTab('whiteboard')}
-    className={`flex-1 py-2.5 text-xs font-medium ${
-      rightTab === 'whiteboard' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
-    }`}
-  >
-    Whiteboard
-  </button>
-  <button
-    onClick={() => setRightTab('highlights')}
-    className={`flex-1 py-2.5 text-xs font-medium relative ${
-      rightTab === 'highlights' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
-    }`}
-  >
-    Highlights
-    {highlightCount > 0 && <span className="ml-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
-  </button>
-  <button
-    onClick={() => setRightTab('research')}
-    className={`flex-1 py-2.5 text-xs font-medium ${
-      rightTab === 'research' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
-    }`}
-  >
-    Research
-  </button>
-  <button
-    onClick={() => setRightTab('pinned')}
-    className={`flex-1 py-2.5 text-xs font-medium relative ${
-      rightTab === 'pinned' ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
-    }`}
-  >
-    Pinned
-    {pinned.length > 0 && <span className="ml-1 bg-sage-600 text-white text-xs px-1.5 py-0.5 rounded-full">{pinned.length}</span>}
-  </button>
-</div>
-  {rightTab === 'whiteboard' && (
-  <Whiteboard
-    ddx={ddx} setDdx={setDdx}
-    plan={plan} setPlan={setPlan}
-    committedDdx={committedDdx}
-    onCommitDdx={handleCommitDdx}
-    onUncommitDdx={handleUncommitDdx}
-    onOpenReveal={() => setShowRevealModal(true)}
-    ddxView={ddxView}
-    setDdxView={setDdxView}
-  />
-)}
-  {rightTab === 'highlights' && (
-  <HighlightsTray
-    annotations={annotations}
-    setAnnotations={setAnnotations}
-    onSendToResearch={sendToResearch}
-  />
-)}
-{rightTab === 'research' && (
-  <ResearchTray
-    initialQuery={researchQuery}
-    onQueryConsumed={() => setResearchQuery('')}
-  />
-)}
-{rightTab === 'pinned' && (
-  <PinnedTray
-    elements={pinned}
-    onUnpin={unpin}
-    onOpenLightbox={setLightbox}
-    onOpenCompare={setCompareElements}
-  />
-)}
-</div>
+    {rightTab === 'whiteboard' && (
+      <BoardResizeHandle
+        currentWidth={boardWidth}
+        onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
+        onToggle={() => setBoardWidth(w => w > 0 ? 0 : 600)}
+      />
+    )}
+
+    {rightTab === 'whiteboard' && boardWidth > 0 && (
+      <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
+        <WhiteboardCanvas
+          content={boardContent}
+          setContent={setBoardContent}
+          width={boardWidth}
+        />
       </div>
+    )}
+
+    {/* Vertical right panel — only in vertical layout */}
+    {rightLayout === 'vertical' && (
+      <RightPanel
+        rightTab={rightTab}
+        setRightTab={setRightTab}
+        highlightCount={highlightCount}
+        pinnedCount={pinned.length}
+        rightLayout={rightLayout}
+        onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
+        ddx={ddx} setDdx={setDdx}
+        plan={plan} setPlan={setPlan}
+        committedDdx={committedDdx}
+        handleCommitDdx={handleCommitDdx}
+        handleUncommitDdx={handleUncommitDdx}
+        setShowRevealModal={setShowRevealModal}
+        ddxView={ddxView} setDdxView={setDdxView}
+        annotations={annotations} setAnnotations={setAnnotations}
+        researchQuery={researchQuery} setResearchQuery={setResearchQuery}
+        sendToResearch={sendToResearch}
+        pinned={pinned} unpin={unpin} setLightbox={setLightbox}
+        setCompareElements={setCompareElements}
+      />
+    )}
+  </div>
+
+  {/* Horizontal bottom strip — only in horizontal layout */}
+  {rightLayout === 'horizontal' && (
+    <>
+      <HorizontalResizeHandle
+        height={horizontalHeight}
+        onResize={(delta) => setHorizontalHeight(h => Math.max(120, Math.min(600, h - delta)))}
+      />
+      <div className="flex-shrink-0 border-t border-stone-200" style={{ height: horizontalHeight }}>
+        <RightPanel
+          rightTab={rightTab}
+          setRightTab={setRightTab}
+          highlightCount={highlightCount}
+          pinnedCount={pinned.length}
+          rightLayout={rightLayout}
+          onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
+          ddx={ddx} setDdx={setDdx}
+          plan={plan} setPlan={setPlan}
+          committedDdx={committedDdx}
+          handleCommitDdx={handleCommitDdx}
+          handleUncommitDdx={handleUncommitDdx}
+          setShowRevealModal={setShowRevealModal}
+          ddxView={ddxView} setDdxView={setDdxView}
+          annotations={annotations} setAnnotations={setAnnotations}
+          researchQuery={researchQuery} setResearchQuery={setResearchQuery}
+          sendToResearch={sendToResearch}
+          pinned={pinned} unpin={unpin} setLightbox={setLightbox}
+          setCompareElements={setCompareElements}
+        />
+      </div>
+    </>
+  )}
+</div>
 
       {lightbox && (
         <Lightbox
@@ -351,6 +350,143 @@ function IconButton({ icon: Icon, onClick, disabled, active, label }) {
     </button>
   );
 }
+
+function RightPanel({
+  rightTab, setRightTab, highlightCount, pinnedCount,
+  rightLayout, onToggleLayout,
+  ddx, setDdx, plan, setPlan,
+  committedDdx, handleCommitDdx, handleUncommitDdx, setShowRevealModal,
+  ddxView, setDdxView,
+  annotations, setAnnotations,
+  researchQuery, setResearchQuery, sendToResearch,
+  pinned, unpin, setLightbox, setCompareElements,
+}) {
+  const isHorizontal = rightLayout === 'horizontal';
+  const containerClass = isHorizontal
+    ? 'w-full h-full bg-white flex flex-col overflow-hidden'
+    : 'w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0';
+
+  return (
+    <div className={containerClass}>
+      {/* Tab bar with layout toggle */}
+      <div className="flex border-b border-stone-200 items-stretch">
+        <TabBtn active={rightTab === 'whiteboard'} onClick={() => setRightTab('whiteboard')}>
+          Whiteboard
+        </TabBtn>
+        <TabBtn active={rightTab === 'highlights'} onClick={() => setRightTab('highlights')}>
+          Highlights
+          {highlightCount > 0 && <span className="ml-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">{highlightCount}</span>}
+        </TabBtn>
+        <TabBtn active={rightTab === 'research'} onClick={() => setRightTab('research')}>
+          Research
+        </TabBtn>
+        <TabBtn active={rightTab === 'pinned'} onClick={() => setRightTab('pinned')}>
+          Pinned
+          {pinnedCount > 0 && <span className="ml-1 bg-sage-600 text-white text-xs px-1.5 py-0.5 rounded-full">{pinnedCount}</span>}
+        </TabBtn>
+        <button
+          onClick={onToggleLayout}
+          className="px-2 border-l border-stone-200 text-stone-500 hover:bg-stone-100 hover:text-sage-700 transition flex items-center justify-center"
+          title={isHorizontal ? 'Switch to vertical column' : 'Switch to horizontal strip (more room)'}
+        >
+          {isHorizontal ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+        </button>
+      </div>
+
+      {/* Tab content */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {rightTab === 'whiteboard' && (
+          <Whiteboard
+            ddx={ddx} setDdx={setDdx}
+            plan={plan} setPlan={setPlan}
+            committedDdx={committedDdx}
+            onCommitDdx={handleCommitDdx}
+            onUncommitDdx={handleUncommitDdx}
+            onOpenReveal={() => setShowRevealModal(true)}
+            ddxView={ddxView}
+            setDdxView={setDdxView}
+          />
+        )}
+        {rightTab === 'highlights' && (
+          <HighlightsTray
+            annotations={annotations}
+            setAnnotations={setAnnotations}
+            onSendToResearch={sendToResearch}
+          />
+        )}
+        {rightTab === 'research' && (
+          <ResearchTray
+            initialQuery={researchQuery}
+            onQueryConsumed={() => setResearchQuery('')}
+          />
+        )}
+        {rightTab === 'pinned' && (
+          <PinnedTray
+            elements={pinned}
+            onUnpin={unpin}
+            onOpenLightbox={setLightbox}
+            onOpenCompare={setCompareElements}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TabBtn({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 py-2.5 text-xs font-medium relative transition ${
+        active ? 'bg-sage-50 text-sage-700 border-b-2 border-sage-600' : 'text-stone-600 hover:bg-stone-50'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function HorizontalResizeHandle({ height, onResize }) {
+  const draggingRef = useRef(false);
+  const lastYRef = useRef(0);
+
+  const startDrag = (e) => {
+    draggingRef.current = true;
+    lastYRef.current = e.clientY;
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (!draggingRef.current) return;
+      const delta = e.clientY - lastYRef.current;
+      lastYRef.current = e.clientY;
+      if (delta !== 0) onResize(delta);
+    };
+    const handleUp = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [onResize]);
+
+  return (
+    <div
+      onMouseDown={startDrag}
+      className="flex-shrink-0 h-1.5 bg-stone-200 hover:bg-sage-400 cursor-row-resize transition-colors"
+      title="Drag to resize the panel"
+    />
+  );
+}
+
 function BoardResizeHandle({ currentWidth, onResize, onToggle }) {
   const draggingRef = useRef(false);
   const lastXRef = useRef(0);
