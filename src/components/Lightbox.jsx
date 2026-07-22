@@ -246,7 +246,7 @@ const transform = `
 
   {/* Direct link to StatDx home */}
   
-    <A href="https://my-statdx-com.va.proxy.liblynxgateway.com/main"
+    <a href="https://my-statdx-com.va.proxy.liblynxgateway.com/main"
     target="_blank"
     rel="noopener noreferrer"
     className="w-full px-3 py-2 bg-sage-700 hover:bg-sage-600 rounded text-xs text-white transition flex items-center justify-between group"
