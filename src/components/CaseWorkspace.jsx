@@ -42,6 +42,17 @@ export default function CaseWorkspace({ shared }) {
 
   const [boardWidth, setBoardWidth] = useState(() => {
   const saved = parseInt(localStorage.getItem('boardWidth') || '0', 10);
+
+
+const [rightColumnWidth, setRightColumnWidth] = useState(() => {
+  const saved = parseInt(localStorage.getItem('rightColumnWidth') || '380', 10);
+  return isNaN(saved) ? 380 : Math.max(280, Math.min(900, saved));
+});
+useEffect(() => {
+  localStorage.setItem('rightColumnWidth', String(rightColumnWidth));
+}, [rightColumnWidth]);
+
+
   return isNaN(saved) ? 0 : Math.min(1400, Math.max(0, saved));
   });
   useEffect(() => {
@@ -236,28 +247,35 @@ useEffect(() => {
     )}
 
     {/* Vertical right panel — only in vertical layout */}
-    {rightLayout === 'vertical' && (
-      <RightPanel
-        rightTab={rightTab}
-        setRightTab={setRightTab}
-        highlightCount={highlightCount}
-        pinnedCount={pinned.length}
-        rightLayout={rightLayout}
-        onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
-        ddx={ddx} setDdx={setDdx}
-        plan={plan} setPlan={setPlan}
-        committedDdx={committedDdx}
-        handleCommitDdx={handleCommitDdx}
-        handleUncommitDdx={handleUncommitDdx}
-        setShowRevealModal={setShowRevealModal}
-        ddxView={ddxView} setDdxView={setDdxView}
-        annotations={annotations} setAnnotations={setAnnotations}
-        researchQuery={researchQuery} setResearchQuery={setResearchQuery}
-        sendToResearch={sendToResearch}
-        pinned={pinned} unpin={unpin} setLightbox={setLightbox}
-        setCompareElements={setCompareElements}
-      />
-    )}
+{rightLayout === 'vertical' && (
+  <>
+    <RightColumnResizeHandle
+      onResize={(delta) => setRightColumnWidth(w => Math.max(280, Math.min(900, w - delta)))}
+      onDoubleClick={() => setRightColumnWidth(380)}
+    />
+    <RightPanel
+      rightTab={rightTab}
+      setRightTab={setRightTab}
+      highlightCount={highlightCount}
+      pinnedCount={pinned.length}
+      rightLayout={rightLayout}
+      onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
+      width={rightColumnWidth}
+      ddx={ddx} setDdx={setDdx}
+      plan={plan} setPlan={setPlan}
+      committedDdx={committedDdx}
+      handleCommitDdx={handleCommitDdx}
+      handleUncommitDdx={handleUncommitDdx}
+      setShowRevealModal={setShowRevealModal}
+      ddxView={ddxView} setDdxView={setDdxView}
+      annotations={annotations} setAnnotations={setAnnotations}
+      researchQuery={researchQuery} setResearchQuery={setResearchQuery}
+      sendToResearch={sendToResearch}
+      pinned={pinned} unpin={unpin} setLightbox={setLightbox}
+      setCompareElements={setCompareElements}
+    />
+  </>
+)}
   </div>
 
   {/* Horizontal bottom strip — only in horizontal layout */}
@@ -358,6 +376,7 @@ function IconButton({ icon: Icon, onClick, disabled, active, label }) {
 function RightPanel({
   rightTab, setRightTab, highlightCount, pinnedCount,
   rightLayout, onToggleLayout,
+  width,
   ddx, setDdx, plan, setPlan,
   committedDdx, handleCommitDdx, handleUncommitDdx, setShowRevealModal,
   ddxView, setDdxView,
@@ -368,10 +387,11 @@ function RightPanel({
   const isHorizontal = rightLayout === 'horizontal';
   const containerClass = isHorizontal
     ? 'w-full h-full bg-white flex flex-col overflow-hidden'
-    : 'w-[380px] bg-white border-l border-stone-200 flex flex-col flex-shrink-0';
+    : 'bg-white border-l border-stone-200 flex flex-col flex-shrink-0';
+  const containerStyle = isHorizontal ? {} : { width: width || 380 };
 
   return (
-    <div className={containerClass}>
+    <div className={containerClass} style={containerStyle}>
       {/* Tab bar with layout toggle */}
       <div className="flex border-b border-stone-200 items-stretch">
         <TabBtn active={rightTab === 'whiteboard'} onClick={() => setRightTab('whiteboard')}>
@@ -570,5 +590,46 @@ function BoardResizeHandle({ currentWidth, onResize, onToggle }) {
         </div>
       </div>
     </div>
+  );
+}
+function RightColumnResizeHandle({ onResize, onDoubleClick }) {
+  const draggingRef = useRef(false);
+  const lastXRef = useRef(0);
+
+  const startDrag = (e) => {
+    draggingRef.current = true;
+    lastXRef.current = e.clientX;
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  useEffect(() => {
+    const handleMove = (e) => {
+      if (!draggingRef.current) return;
+      const delta = e.clientX - lastXRef.current;
+      lastXRef.current = e.clientX;
+      if (delta !== 0) onResize(delta);
+    };
+    const handleUp = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+    };
+  }, [onResize]);
+
+  return (
+    <div
+      onMouseDown={startDrag}
+      onDoubleClick={onDoubleClick}
+      className="w-1 hover:w-1.5 bg-stone-200 hover:bg-sage-400 cursor-col-resize transition-all flex-shrink-0"
+      title="Drag to resize · Double-click to reset"
+    />
   );
 }
