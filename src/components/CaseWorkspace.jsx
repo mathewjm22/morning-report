@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Home, GraduationCap, Share2, Copy, Check, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+// Add to lucide imports:
+import { Home, GraduationCap, Share2, Copy, Check, ChevronRight, ChevronDown, ChevronUp, Columns, FileText, Pencil } from 'lucide-react';
 import { getCase, loadProgress, saveProgress } from '../lib/storage.js';
 import { loadSharedCase, saveCaseShare } from '../lib/api.js';
 import PdfViewer from './PdfViewer.jsx';
@@ -40,6 +41,13 @@ export default function CaseWorkspace({ shared }) {
   const [compareElements, setCompareElements] = useState(null); // array of pinned items or null
   const [ddxView, setDdxView] = useState('list'); // 'list' | 'anatomic' | 'vindicate'
 
+const [viewMode, setViewMode] = useState(() => {
+  return localStorage.getItem('viewMode') || 'split';
+}); // 'split' | 'pdf' | 'whiteboard'
+useEffect(() => {
+  localStorage.setItem('viewMode', viewMode);
+}, [viewMode]);
+
   const [boardWidth, setBoardWidth] = useState(() => {
     const saved = parseInt(localStorage.getItem('boardWidth') || '0', 10);
     return isNaN(saved) ? 0 : Math.min(1400, Math.max(0, saved));
@@ -62,6 +70,23 @@ export default function CaseWorkspace({ shared }) {
   setResearchQuery(text);
   setRightTab('research');
   };
+
+  // Ctrl/Cmd+Shift+W toggles between PDF and Whiteboard focused modes.
+// From Split → PDF. From PDF → Whiteboard. From Whiteboard → PDF.
+useEffect(() => {
+  const onKey = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'w') {
+      e.preventDefault();
+      setViewMode(current => {
+        if (current === 'split') return 'pdf';
+        if (current === 'pdf') return 'whiteboard';
+        return 'pdf';
+      });
+    }
+  };
+  window.addEventListener('keydown', onKey);
+  return () => window.removeEventListener('keydown', onKey);
+}, []);
 
   // Load case
   useEffect(() => {
@@ -177,6 +202,9 @@ useEffect(() => {
       <p className="text-xs text-stone-500 truncate">{caseEntry.source}{shared && ' • Shared'}</p>
     </div>
   </div>
+  <div className="flex items-center gap-3">
+  <ViewModeToggle mode={viewMode} onChange={setViewMode} />
+  <div className="w-px h-6 bg-stone-200" />
   <div className="flex items-center gap-1">
     {!shared && (
       <IconButton
@@ -213,19 +241,30 @@ useEffect(() => {
       )}
       
       {/* Main workspace layout */}
-<div className="flex-1 flex overflow-hidden flex-col">
-  {/* Top row: PDF + (optionally) Whiteboard + (if vertical layout) right panel */}
-  <div className="flex-1 flex overflow-hidden">
-    <PdfViewer
-      caseEntry={caseEntry}
-      annotations={annotations}
-      setAnnotations={setAnnotations}
-      onPinElement={pinElement}
-      onOpenLightbox={setLightbox}
-      attendingMode={attendingMode}
-    />
+<div className="flex-1 flex overflow-hidden flex-col relative">
+  {/* Top row */}
+  <div className="flex-1 flex overflow-hidden relative">
+    {/* PDF pane — visible in split and pdf modes */}
+    {(viewMode === 'split' || viewMode === 'pdf') && (
+      <div
+        className={`flex overflow-hidden transition-all duration-300 ${
+          viewMode === 'pdf' ? 'flex-1' : ''
+        }`}
+        style={viewMode === 'split' ? { flex: '1 1 0%' } : {}}
+      >
+        <PdfViewer
+          caseEntry={caseEntry}
+          annotations={annotations}
+          setAnnotations={setAnnotations}
+          onPinElement={pinElement}
+          onOpenLightbox={setLightbox}
+          attendingMode={attendingMode}
+        />
+      </div>
+    )}
 
-    {rightTab === 'whiteboard' && (
+    {/* Whiteboard resize handle — split mode only, and only on whiteboard tab */}
+    {viewMode === 'split' && rightTab === 'whiteboard' && (
       <BoardResizeHandle
         currentWidth={boardWidth}
         onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
@@ -233,7 +272,17 @@ useEffect(() => {
       />
     )}
 
-    {rightTab === 'whiteboard' && boardWidth > 0 && (
+    {/* Whiteboard pane */}
+    {viewMode === 'whiteboard' && (
+      <div className="flex-1 flex overflow-hidden transition-all duration-300">
+        <WhiteboardCanvas
+          content={boardContent}
+          setContent={setBoardContent}
+          width={typeof window !== 'undefined' ? window.innerWidth - 60 : 1200}
+        />
+      </div>
+    )}
+    {viewMode === 'split' && rightTab === 'whiteboard' && boardWidth > 0 && (
       <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
         <WhiteboardCanvas
           content={boardContent}
@@ -243,40 +292,40 @@ useEffect(() => {
       </div>
     )}
 
-    {/* Vertical right panel — only in vertical layout */}
-{rightLayout === 'vertical' && (
-  <>
-    <RightColumnResizeHandle
-      onResize={(delta) => setRightColumnWidth(w => Math.max(280, Math.min(900, w - delta)))}
-      onDoubleClick={() => setRightColumnWidth(380)}
-    />
-    <RightPanel
-      rightTab={rightTab}
-      setRightTab={setRightTab}
-      highlightCount={highlightCount}
-      pinnedCount={pinned.length}
-      rightLayout={rightLayout}
-      onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
-      width={rightColumnWidth}
-      ddx={ddx} setDdx={setDdx}
-      plan={plan} setPlan={setPlan}
-      committedDdx={committedDdx}
-      handleCommitDdx={handleCommitDdx}
-      handleUncommitDdx={handleUncommitDdx}
-      setShowRevealModal={setShowRevealModal}
-      ddxView={ddxView} setDdxView={setDdxView}
-      annotations={annotations} setAnnotations={setAnnotations}
-      researchQuery={researchQuery} setResearchQuery={setResearchQuery}
-      sendToResearch={sendToResearch}
-      pinned={pinned} unpin={unpin} setLightbox={setLightbox}
-      setCompareElements={setCompareElements}
-    />
-  </>
-)}
+    {/* Vertical right panel — only in split mode when rightLayout is vertical */}
+    {viewMode === 'split' && rightLayout === 'vertical' && (
+      <>
+        <RightColumnResizeHandle
+          onResize={(delta) => setRightColumnWidth(w => Math.max(280, Math.min(900, w - delta)))}
+          onDoubleClick={() => setRightColumnWidth(380)}
+        />
+        <RightPanel
+          rightTab={rightTab}
+          setRightTab={setRightTab}
+          highlightCount={highlightCount}
+          pinnedCount={pinned.length}
+          rightLayout={rightLayout}
+          onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
+          width={rightColumnWidth}
+          ddx={ddx} setDdx={setDdx}
+          plan={plan} setPlan={setPlan}
+          committedDdx={committedDdx}
+          handleCommitDdx={handleCommitDdx}
+          handleUncommitDdx={handleUncommitDdx}
+          setShowRevealModal={setShowRevealModal}
+          ddxView={ddxView} setDdxView={setDdxView}
+          annotations={annotations} setAnnotations={setAnnotations}
+          researchQuery={researchQuery} setResearchQuery={setResearchQuery}
+          sendToResearch={sendToResearch}
+          pinned={pinned} unpin={unpin} setLightbox={setLightbox}
+          setCompareElements={setCompareElements}
+        />
+      </>
+    )}
   </div>
 
-  {/* Horizontal bottom strip — only in horizontal layout */}
-  {rightLayout === 'horizontal' && (
+  {/* Horizontal bottom strip — visible in horizontal layout OR in focused modes so DDx is still accessible */}
+  {(rightLayout === 'horizontal' || viewMode !== 'split') && (
     <>
       <HorizontalResizeHandle
         height={horizontalHeight}
@@ -288,7 +337,7 @@ useEffect(() => {
           setRightTab={setRightTab}
           highlightCount={highlightCount}
           pinnedCount={pinned.length}
-          rightLayout={rightLayout}
+          rightLayout={'horizontal'}
           onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
           ddx={ddx} setDdx={setDdx}
           plan={plan} setPlan={setPlan}
@@ -367,6 +416,47 @@ function IconButton({ icon: Icon, onClick, disabled, active, label }) {
         {label}
       </span>
     </button>
+  );
+}
+function ViewModeToggle({ mode, onChange }) {
+  const options = [
+    { id: 'pdf',        icon: FileText, label: 'Article only' },
+    { id: 'split',      icon: Columns,  label: 'Split view' },
+    { id: 'whiteboard', icon: Pencil,   label: 'Whiteboard only' },
+  ];
+
+  return (
+    <div className="flex items-center bg-stone-100 rounded-full p-0.5" role="tablist">
+      {options.map(opt => {
+        const Icon = opt.icon;
+        const active = mode === opt.id;
+        return (
+          <button
+            key={opt.id}
+            onClick={() => onChange(opt.id)}
+            role="tab"
+            aria-selected={active}
+            title={opt.label}
+            className={`relative flex items-center justify-center px-2.5 py-1 rounded-full transition group ${
+              active
+                ? 'bg-sage-600 text-white shadow-sm'
+                : 'text-stone-500 hover:text-stone-900'
+            }`}
+          >
+            <Icon size={14} />
+            {/* Tooltip */}
+            <span className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 px-2 py-1 bg-stone-900 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition z-30 shadow-lg">
+              {opt.label}
+              {opt.id === 'whiteboard' && (
+                <span className="block text-stone-400 text-xs mt-0.5">
+                  Ctrl/⌘+Shift+W to toggle
+                </span>
+              )}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
