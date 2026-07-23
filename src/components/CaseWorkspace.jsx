@@ -71,11 +71,11 @@ useEffect(() => {
   setRightTab('research');
   };
 
-  // Ctrl/Cmd+Shift+W toggles between PDF and Whiteboard focused modes.
+  // Ctrl/Cmd+Shift+o toggles between PDF and Whiteboard focused modes.
 // From Split → PDF. From PDF → Whiteboard. From Whiteboard → PDF.
 useEffect(() => {
   const onKey = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'w') {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
       e.preventDefault();
       setViewMode(current => {
         if (current === 'split') return 'pdf';
@@ -450,7 +450,7 @@ function ViewModeToggle({ mode, onChange }) {
               {opt.label}
               {opt.id === 'whiteboard' && (
                 <span className="block text-stone-400 text-xs mt-0.5">
-                  Ctrl/⌘+Shift+W to toggle
+                  Ctrl/⌘+Shift+o to toggle
                 </span>
               )}
             </span>
