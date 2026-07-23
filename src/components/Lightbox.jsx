@@ -151,32 +151,37 @@ const transform = `
             className="relative bg-white shadow-2xl"
             style={{ width: displayW * zoom, height: displayH * zoom }}
           >
-            <div
-              className="absolute top-1/2 left-1/2"
-              style={{
-                width: w * zoom,
-                height: h * zoom,
-                transform: `translate(-50%, -50%) ${transform}`,
-                transformOrigin: 'center center',
-              }}
-            >
-              <img
-                src={element.imageUrl}
-                alt=""
-                draggable={false}
-                className="absolute inset-0 w-full h-full select-none"
-                style={{ imageRendering: 'auto' }}
-              />
-              <AnnotationLayer
-                width={w * zoom}
-                height={h * zoom}
-                tool={tool}
-                color={color}
-                strokeWidth={strokeWidth}
-                strokes={strokes}
-                setStrokes={setStrokes}
-              />
-            </div>
+            {/* Rotated image container (image rotates/flips inside its display box) */}
+<div
+  className="absolute top-1/2 left-1/2 pointer-events-none"
+  style={{
+    width: w * zoom,
+    height: h * zoom,
+    transform: `translate(-50%, -50%) ${transform}`,
+    transformOrigin: 'center center',
+  }}
+>
+  <img
+    src={element.imageUrl}
+    alt=""
+    draggable={false}
+    className="absolute inset-0 w-full h-full select-none"
+    style={{ imageRendering: 'auto' }}
+  />
+</div>
+
+{/* Annotation layer sits at screen orientation on top, matching the display bounding box */}
+<div className="absolute inset-0">
+  <AnnotationLayer
+    width={displayW * zoom}
+    height={displayH * zoom}
+    tool={tool}
+    color={color}
+    strokeWidth={strokeWidth}
+    strokes={strokes}
+    setStrokes={setStrokes}
+  />
+</div>
           </div>
         </div>
 
