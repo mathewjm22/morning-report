@@ -325,7 +325,7 @@ useEffect(() => {
 )}
 </div>
 
-  {{/* Horizontal bottom strip — visible only when user has toggled to horizontal layout */}
+  {/* Horizontal bottom strip — visible only when user has toggled to horizontal layout */}
 {rightLayout === 'horizontal' && (
   <>
     <HorizontalResizeHandle
