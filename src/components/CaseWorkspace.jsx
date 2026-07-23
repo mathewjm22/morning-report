@@ -244,86 +244,86 @@ useEffect(() => {
       {/* Main workspace layout */}
 <div className="flex-1 flex overflow-hidden flex-col relative">
   {/* Top row */}
-  <div className="flex-1 flex overflow-hidden relative">
-    {/* PDF pane — visible in split and pdf modes */}
-    {(viewMode === 'split' || viewMode === 'pdf') && (
-      <div
-        className={`flex overflow-hidden transition-all duration-300 ${
-          viewMode === 'pdf' ? 'flex-1' : ''
-        }`}
-        style={viewMode === 'split' ? { flex: '1 1 0%' } : {}}
-      >
-        <PdfViewer
-          caseEntry={caseEntry}
-          annotations={annotations}
-          setAnnotations={setAnnotations}
-          onPinElement={pinElement}
-          onOpenLightbox={setLightbox}
-          attendingMode={attendingMode}
-        />
-      </div>
-    )}
-
-    {/* Whiteboard resize handle — split mode only, and only on whiteboard tab */}
-    {viewMode === 'split' && rightTab === 'whiteboard' && (
-      <BoardResizeHandle
-        currentWidth={boardWidth}
-        onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
-        onToggle={() => setBoardWidth(w => w > 0 ? 0 : 600)}
-      />
-    )}
-
-    {/* Whiteboard pane */}
-    {viewMode === 'whiteboard' && (
-      <div className="flex-1 flex overflow-hidden transition-all duration-300">
-        <WhiteboardCanvas
-          content={boardContent}
-          setContent={setBoardContent}
-          width={typeof window !== 'undefined' ? window.innerWidth - 60 : 1200}
-        />
-      </div>
-    )}
-    {viewMode === 'split' && rightTab === 'whiteboard' && boardWidth > 0 && (
-      <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
-        <WhiteboardCanvas
-          content={boardContent}
-          setContent={setBoardContent}
-          width={boardWidth}
-        />
-      </div>
-    )}
-
-    {/* Vertical right panel — only in split mode when rightLayout is vertical */}
-    {viewMode === 'split' && rightLayout === 'vertical' && (
-      <>
-        <RightColumnResizeHandle
-          onResize={(delta) => setRightColumnWidth(w => Math.max(280, Math.min(900, w - delta)))}
-          onDoubleClick={() => setRightColumnWidth(380)}
-        />
-        <RightPanel
-          rightTab={rightTab}
-          setRightTab={setRightTab}
-          highlightCount={highlightCount}
-          pinnedCount={pinned.length}
-          rightLayout={rightLayout}
-          onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
-          width={rightColumnWidth}
-          ddx={ddx} setDdx={setDdx}
-          plan={plan} setPlan={setPlan}
-          committedDdx={committedDdx}
-          handleCommitDdx={handleCommitDdx}
-          handleUncommitDdx={handleUncommitDdx}
-          setShowRevealModal={setShowRevealModal}
-          ddxView={ddxView} setDdxView={setDdxView}
-          annotations={annotations} setAnnotations={setAnnotations}
-          researchQuery={researchQuery} setResearchQuery={setResearchQuery}
-          sendToResearch={sendToResearch}
-          pinned={pinned} unpin={unpin} setLightbox={setLightbox}
-          setCompareElements={setCompareElements}
-        />
-      </>
-    )}
+<div className="flex-1 flex overflow-hidden relative">
+  {/* PDF pane — always mounted, hidden with CSS when not in view */}
+  <div
+    className="flex overflow-hidden transition-all duration-300"
+    style={{
+      flex: viewMode === 'whiteboard' ? '0 0 0px' : '1 1 0%',
+      visibility: viewMode === 'whiteboard' ? 'hidden' : 'visible',
+      width: viewMode === 'whiteboard' ? 0 : undefined,
+    }}
+  >
+    <PdfViewer
+      caseEntry={caseEntry}
+      annotations={annotations}
+      setAnnotations={setAnnotations}
+      onPinElement={pinElement}
+      onOpenLightbox={setLightbox}
+      attendingMode={attendingMode}
+    />
   </div>
+
+  {/* Whiteboard resize handle — only visible in split + whiteboard tab */}
+  {viewMode === 'split' && rightTab === 'whiteboard' && (
+    <BoardResizeHandle
+      currentWidth={boardWidth}
+      onResize={(delta) => setBoardWidth(w => Math.max(0, Math.min(1400, w - delta)))}
+      onToggle={() => setBoardWidth(w => w > 0 ? 0 : 600)}
+    />
+  )}
+
+  {/* Whiteboard pane — always mounted when it has ever been visible; hidden with CSS when out of view */}
+  {viewMode === 'whiteboard' && (
+    <div className="flex-1 flex overflow-hidden transition-all duration-300">
+      <WhiteboardCanvas
+        content={boardContent}
+        setContent={setBoardContent}
+        width={typeof window !== 'undefined' ? window.innerWidth - 60 : 1200}
+      />
+    </div>
+  )}
+  {viewMode === 'split' && rightTab === 'whiteboard' && boardWidth > 0 && (
+    <div className="flex-shrink-0 flex overflow-hidden" style={{ width: boardWidth }}>
+      <WhiteboardCanvas
+        content={boardContent}
+        setContent={setBoardContent}
+        width={boardWidth}
+      />
+    </div>
+  )}
+
+  {/* Vertical right panel — only in split mode when rightLayout is vertical */}
+  {viewMode === 'split' && rightLayout === 'vertical' && (
+    <>
+      <RightColumnResizeHandle
+        onResize={(delta) => setRightColumnWidth(w => Math.max(280, Math.min(900, w - delta)))}
+        onDoubleClick={() => setRightColumnWidth(380)}
+      />
+      <RightPanel
+        rightTab={rightTab}
+        setRightTab={setRightTab}
+        highlightCount={highlightCount}
+        pinnedCount={pinned.length}
+        rightLayout={rightLayout}
+        onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
+        width={rightColumnWidth}
+        ddx={ddx} setDdx={setDdx}
+        plan={plan} setPlan={setPlan}
+        committedDdx={committedDdx}
+        handleCommitDdx={handleCommitDdx}
+        handleUncommitDdx={handleUncommitDdx}
+        setShowRevealModal={setShowRevealModal}
+        ddxView={ddxView} setDdxView={setDdxView}
+        annotations={annotations} setAnnotations={setAnnotations}
+        researchQuery={researchQuery} setResearchQuery={setResearchQuery}
+        sendToResearch={sendToResearch}
+        pinned={pinned} unpin={unpin} setLightbox={setLightbox}
+        setCompareElements={setCompareElements}
+      />
+    </>
+  )}
+</div>
 
   {/* Horizontal bottom strip — visible in horizontal layout OR in focused modes so DDx is still accessible */}
   {(rightLayout === 'horizontal' || viewMode !== 'split') && (

@@ -59,20 +59,24 @@ const toggleLeftRail = () => {
   }, [contentStart]);
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      // pdfBlob might be an ArrayBuffer (from IndexedDB) or a Blob/File (fresh upload).
-// Handle both.
-const buf = caseEntry.pdfBlob instanceof ArrayBuffer
-  ? caseEntry.pdfBlob
-  : await caseEntry.pdfBlob.arrayBuffer();
-      const doc = await loadPdf(buf);
-      if (cancelled) return;
-      setPdf(doc);
+  let cancelled = false;
+  async function load() {
+    // Get a fresh ArrayBuffer each time. If pdfBlob is a Blob, .arrayBuffer()
+    // creates a new one. If it's already an ArrayBuffer, we clone it so
+    // repeated loads don't fail on a consumed buffer.
+    let buf;
+    if (caseEntry.pdfBlob instanceof ArrayBuffer) {
+      buf = caseEntry.pdfBlob.slice(0);
+    } else {
+      buf = await caseEntry.pdfBlob.arrayBuffer();
     }
-    load();
-    return () => { cancelled = true; };
-  }, [caseEntry.pdfBlob]);
+    const doc = await loadPdf(buf);
+    if (cancelled) return;
+    setPdf(doc);
+  }
+  load();
+  return () => { cancelled = true; };
+}, [caseEntry.pdfBlob]);
 
   useEffect(() => {
     const container = scrollRef.current;
