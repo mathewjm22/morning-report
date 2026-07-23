@@ -293,21 +293,53 @@ useEffect(() => {
     </div>
   )}
 
-  {/* Vertical right panel — only in split mode when rightLayout is vertical */}
-  {viewMode === 'split' && rightLayout === 'vertical' && (
-    <>
-      <RightColumnResizeHandle
-        onResize={(delta) => setRightColumnWidth(w => Math.max(280, Math.min(900, w - delta)))}
-        onDoubleClick={() => setRightColumnWidth(380)}
-      />
+  {/* Vertical right panel — visible when user has toggled it to vertical, regardless of view mode */}
+{rightLayout === 'vertical' && (
+  <>
+    <RightColumnResizeHandle
+      onResize={(delta) => setRightColumnWidth(w => Math.max(280, Math.min(900, w - delta)))}
+      onDoubleClick={() => setRightColumnWidth(380)}
+    />
+    <RightPanel
+      rightTab={rightTab}
+      setRightTab={setRightTab}
+      highlightCount={highlightCount}
+      pinnedCount={pinned.length}
+      rightLayout={rightLayout}
+      onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
+      width={rightColumnWidth}
+      ddx={ddx} setDdx={setDdx}
+      plan={plan} setPlan={setPlan}
+      committedDdx={committedDdx}
+      handleCommitDdx={handleCommitDdx}
+      handleUncommitDdx={handleUncommitDdx}
+      setShowRevealModal={setShowRevealModal}
+      ddxView={ddxView} setDdxView={setDdxView}
+      annotations={annotations} setAnnotations={setAnnotations}
+      researchQuery={researchQuery} setResearchQuery={setResearchQuery}
+      sendToResearch={sendToResearch}
+      pinned={pinned} unpin={unpin} setLightbox={setLightbox}
+      setCompareElements={setCompareElements}
+    />
+  </>
+)}
+</div>
+
+  {{/* Horizontal bottom strip — visible only when user has toggled to horizontal layout */}
+{rightLayout === 'horizontal' && (
+  <>
+    <HorizontalResizeHandle
+      height={horizontalHeight}
+      onResize={(delta) => setHorizontalHeight(h => Math.max(120, Math.min(600, h - delta)))}
+    />
+    <div className="flex-shrink-0 border-t border-stone-200" style={{ height: horizontalHeight }}>
       <RightPanel
         rightTab={rightTab}
         setRightTab={setRightTab}
         highlightCount={highlightCount}
         pinnedCount={pinned.length}
-        rightLayout={rightLayout}
+        rightLayout={'horizontal'}
         onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
-        width={rightColumnWidth}
         ddx={ddx} setDdx={setDdx}
         plan={plan} setPlan={setPlan}
         committedDdx={committedDdx}
@@ -321,41 +353,9 @@ useEffect(() => {
         pinned={pinned} unpin={unpin} setLightbox={setLightbox}
         setCompareElements={setCompareElements}
       />
-    </>
-  )}
-</div>
-
-  {/* Horizontal bottom strip — visible in horizontal layout OR in focused modes so DDx is still accessible */}
-  {(rightLayout === 'horizontal' || viewMode !== 'split') && (
-    <>
-      <HorizontalResizeHandle
-        height={horizontalHeight}
-        onResize={(delta) => setHorizontalHeight(h => Math.max(120, Math.min(600, h - delta)))}
-      />
-      <div className="flex-shrink-0 border-t border-stone-200" style={{ height: horizontalHeight }}>
-        <RightPanel
-          rightTab={rightTab}
-          setRightTab={setRightTab}
-          highlightCount={highlightCount}
-          pinnedCount={pinned.length}
-          rightLayout={'horizontal'}
-          onToggleLayout={() => setRightLayout(l => l === 'vertical' ? 'horizontal' : 'vertical')}
-          ddx={ddx} setDdx={setDdx}
-          plan={plan} setPlan={setPlan}
-          committedDdx={committedDdx}
-          handleCommitDdx={handleCommitDdx}
-          handleUncommitDdx={handleUncommitDdx}
-          setShowRevealModal={setShowRevealModal}
-          ddxView={ddxView} setDdxView={setDdxView}
-          annotations={annotations} setAnnotations={setAnnotations}
-          researchQuery={researchQuery} setResearchQuery={setResearchQuery}
-          sendToResearch={sendToResearch}
-          pinned={pinned} unpin={unpin} setLightbox={setLightbox}
-          setCompareElements={setCompareElements}
-        />
-      </div>
-    </>
-  )}
+    </div>
+  </>
+)}
 </div>
 
       {lightbox && (
